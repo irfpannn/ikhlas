@@ -6,9 +6,9 @@ const router = useRouter()
 
 // All payment categories
 const categories = ref([
-  { id: 1, name: 'Zakat Pendapatan', icon: '💳', type: 'action' },
-  { id: 2, name: 'Zakat Wang Simpanan', icon: '💰', type: 'action' },
-  { id: 3, name: 'Zakat Saham', icon: '📱', type: 'action' },
+  { id: 1, name: 'Zakat Pendapatan', icon: '💳', type: 'bill' },
+  { id: 2, name: 'Zakat Wang Simpanan', icon: '💰', type: 'bill' },
+  { id: 3, name: 'Zakat Saham', icon: '📱', type: 'bill' },
   { id: 4, name: 'Zakat Emas', icon: '📶', type: 'bill' },
   { id: 5, name: 'Zakat Pertanian', icon: '📡', type: 'bill' },
   { id: 6, name: 'Zakat Ternakan', icon: '🥛', type: 'bill' },
