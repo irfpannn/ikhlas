@@ -1,6 +1,9 @@
 <script setup>
 import Button from '@/volt/Button.vue'
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 // User data
 const userData = ref({
@@ -39,6 +42,11 @@ const formatCurrency = (amount) => {
     maximumFractionDigits: 2
   }).format(amount)
 }
+
+// Function to navigate to categories page
+const viewAllCategories = () => {
+  router.push('/categories')
+}
 </script>
 
 <template>
@@ -46,7 +54,7 @@ const formatCurrency = (amount) => {
     <!-- Header with logo and profile -->
     <div class="flex justify-between items-center mb-4">
       <div class="flex items-center">
-        <div class="bg-blue-500 text-white rounded-full p-1 mr-2">
+        <div class="bg-[#75a868] text-white rounded-full p-1 mr-2">
           <span class="text-xs">O</span>
         </div>
         <span class="font-semibold">Ikhlas</span>
@@ -57,21 +65,21 @@ const formatCurrency = (amount) => {
     </div>
 
     <!-- Balance Card -->
-    <div class="bg-blue-500 rounded-xl p-4 text-white mb-4">
+    <div class="bg-[#75a868] rounded-xl p-4 text-white mb-4">
       <div class="flex justify-between items-center mb-2">
         <div>
           <p class="text-xs opacity-80">Your Balance</p>
           <p class="text-xl font-bold">RM {{ formatCurrency(userData.balance) }}</p>
         </div>
-        <button class="bg-white text-blue-500 text-xs px-3 py-1 rounded-full">Top Up</button>
+        <button class="bg-white text-[#75a868] text-xs px-3 py-1 rounded-full">Top Up</button>
       </div>
       
       <!-- Action buttons -->
       <div class="flex justify-between mt-4">
-        <button class="bg-blue-400 flex-1 mr-2 py-2 rounded-lg text-center">
+        <button class="bg-[#217e0a] flex-1 mr-2 py-2 rounded-lg text-center">
           <span>Send</span>
         </button>
-        <button class="bg-blue-400 flex-1 ml-2 py-2 rounded-lg text-center">
+        <button class="bg-[#217e0a] flex-1 ml-2 py-2 rounded-lg text-center">
           <span>Request</span>
         </button>
       </div>
@@ -81,24 +89,37 @@ const formatCurrency = (amount) => {
     <div class="bg-white rounded-xl p-3 mb-4 flex justify-between items-center">
       <div class="flex items-center">
         <div class="bg-blue-100 p-2 rounded-full mr-3">
-          <span class="text-blue-500 text-xl">🎁</span>
+          <span class="text-[#75a868] text-xl">🎁</span>
         </div>
         <div>
           <p class="font-semibold">Alipay+ Rewards</p>
           <p class="text-xs text-gray-500">Recommend: 2</p>
         </div>
       </div>
-      <button class="bg-blue-500 text-white text-xs px-3 py-1 rounded-full">Claim Now</button>
+      <button class="bg-[#75a868] text-white text-xs px-3 py-1 rounded-full">Claim Now</button>
     </div>
 
     <!-- Categories Grid -->
     <div class="bg-white rounded-xl p-4 mb-4">
       <div class="grid grid-cols-4 gap-3">
-        <div v-for="category in categories" :key="category.id" class="flex flex-col items-center">
+        <div 
+          v-for="category in categories.slice(0, 7)" 
+          :key="category.id" 
+          class="flex flex-col items-center"
+        >
           <div class="bg-gray-100 p-2 rounded-lg mb-1 w-12 h-12 flex items-center justify-center">
             <span class="text-xl">{{ category.icon }}</span>
           </div>
           <p class="text-xs text-center">{{ category.name }}</p>
+        </div>
+        <div 
+          class="flex flex-col items-center cursor-pointer" 
+          @click="viewAllCategories"
+        >
+          <div class="bg-gray-100 p-2 rounded-lg mb-1 w-12 h-12 flex items-center justify-center">
+            <span class="text-xl">📋</span>
+          </div>
+          <p class="text-xs text-center">View All</p>
         </div>
       </div>
     </div>
@@ -107,7 +128,7 @@ const formatCurrency = (amount) => {
     <div class="bg-white rounded-xl p-4">
       <div class="flex justify-between items-center mb-3">
         <h3 class="font-semibold">History</h3>
-        <button class="text-blue-500 text-xs">View All</button>
+        <button class="text-[#75a868] text-xs">View All</button>
       </div>
       
       <div v-for="transaction in userData.transactions" :key="transaction.id" class="flex justify-between items-center py-2 border-b border-gray-100">
@@ -128,7 +149,7 @@ const formatCurrency = (amount) => {
 
     <!-- Bottom Navigation -->
     <div class="fixed bottom-0 left-0 right-0 bg-white p-3 flex justify-between items-center border-t">
-      <button class="flex flex-col items-center text-blue-500">
+      <button class="flex flex-col items-center text-[#75a868]">
         <span class="text-xl">🏠</span>
         <span class="text-xs">Home</span>
       </button>
@@ -137,7 +158,7 @@ const formatCurrency = (amount) => {
         <span class="text-xs">History</span>
       </button>
       <div class="relative">
-        <button class="bg-blue-500 text-white rounded-full p-4 -mt-8">
+        <button class="bg-[#75a868] text-white rounded-full p-4 -mt-8">
           <span class="text-xl">💰</span>
         </button>
       </div>
