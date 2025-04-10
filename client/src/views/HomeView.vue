@@ -56,6 +56,11 @@ const formatCurrency = (amount) => {
 const viewAllCategories = () => {
   router.push('/categories')
 }
+
+// Function to navigate to zakat pendapatan page
+const goToZakatPendapatan = () => {
+  router.push('/zakat-pendapatan')
+}
 </script>
 
 <template>
@@ -143,6 +148,8 @@ const viewAllCategories = () => {
               v-for="category in categories.slice(0, 7)"
               :key="category.id"
               class="flex flex-col items-center"
+              :class="{'cursor-pointer': category.name === 'Zakat Pendapatan'}"
+              @click="category.name === 'Zakat Pendapatan' ? goToZakatPendapatan() : null"
             >
               <div
                 class="bg-gray-100 p-2 rounded-lg mb-1 w-12 h-12 flex items-center justify-center"

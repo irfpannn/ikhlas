@@ -1,50 +1,57 @@
 <script setup>
-import { Button } from '@/components/ui/button'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
 
 const navigate = (path) => {
   router.push(path)
 }
+
+// Check if the current route matches the given path
+const isActive = (path) => {
+  return route.path === path
+}
 </script>
 
 <template>
-  <div
-    class="fixed bottom-0 left-0 right-0 bg-white p-2 flex justify-between items-center border-t"
-  >
-    <Button class="flex-col items-center h-full w-1/6" @click="navigate('/')" variant="ghost">
-      <span class="text-lg">🏠</span>
-      <span class="text-xs">Home</span>
-    </Button>
-
-    <Button
-      class="flex-col items-center h-full w-1/6"
-      variant="ghost"
-      @click="navigate('/history')"
-    >
-      <span class="text-lg">📊</span>
-      <span class="text-xs">History</span>
-    </Button>
-
-    <div class="relative w-1/5 flex justify-center">
-      <Button class="bg-primary text-primary-foreground rounded-full h-full p-4 -mt-8">
-        <span class="text-xl">💰</span>
-      </Button>
+  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+    <div class="flex justify-around items-center h-16">
+      <div 
+        class="flex flex-col items-center cursor-pointer"
+        :class="{ 'text-[#75a868]': isActive('/') }"
+        @click="navigate('/')"
+      >
+        <span class="text-xl">🏠</span>
+        <span class="text-xs">Home</span>
+      </div>
+      
+      <div 
+        class="flex flex-col items-center cursor-pointer"
+        :class="{ 'text-[#75a868]': isActive('/categories') }"
+        @click="navigate('/categories')"
+      >
+        <span class="text-xl">📋</span>
+        <span class="text-xs">Categories</span>
+      </div>
+      
+      <div 
+        class="flex flex-col items-center cursor-pointer"
+        :class="{ 'text-[#75a868]': isActive('/history') || isActive('/transaction-history') }"
+        @click="navigate('/history')"
+      >
+        <span class="text-xl">📊</span>
+        <span class="text-xs">History</span>
+      </div>
+      
+      <div 
+        class="flex flex-col items-center cursor-pointer"
+        :class="{ 'text-[#75a868]': isActive('/profile') }"
+        @click="navigate('/profile')"
+      >
+        <span class="text-xl">👤</span>
+        <span class="text-xs">Profile</span>
+      </div>
     </div>
-
-    <Button variant="ghost" class="flex-col items-center h-full w-1/6" @click="navigate('/pocket')">
-      <span class="text-lg">🎁</span>
-      <span class="text-xs">Pocket</span>
-    </Button>
-
-    <Button
-      variant="ghost"
-      class="flex-col items-center h-full w-1/6"
-      @click="navigate('/profile')"
-    >
-      <span class="text-lg">👤</span>
-      <span class="text-xs">Me</span>
-    </Button>
   </div>
 </template>
