@@ -1,6 +1,9 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { Button } from '@/components/ui/button'
+import { BottomNavigation } from '@/components/ui/bottom-navigation'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 
 const router = useRouter()
 
@@ -26,7 +29,7 @@ const categories = ref([
   // { id: 18, name: 'Shipping', icon: '📦', type: 'bill' },
   // { id: 19, name: 'Travel', icon: '✈️', type: 'bill' },
   // { id: 20, name: 'Water', icon: '💧', type: 'bill' },
-  { id: 21, name: 'More', icon: '•••', type: 'bill' }
+  { id: 21, name: 'More', icon: '•••', type: 'bill' },
 ])
 
 const goBack = () => {
@@ -41,37 +44,52 @@ const handleCategoryClick = (category) => {
 </script>
 
 <template>
-  <div class="flex flex-col min-h-screen bg-gray-100">
-    <!-- Header with back button -->
-    <div class="bg-[#75a868] text-white p-4 rounded-b-3xl">
+  <div class="flex flex-col min-h-dvh bg-gray-100 overflow-y-auto pb-20">
+    <!-- Header with back button - sticky -->
+    <div class="bg-[#75a868] text-white p-4 rounded-b-3xl sticky top-0 z-10">
       <div class="flex items-center mb-4">
-        <button @click="goBack" class="mr-2">
+        <Button
+          variant="ghost"
+          class="text-white hover:text-white hover:bg-[#217e0a]/50 mr-2 p-2"
+          @click="goBack"
+        >
           <span class="text-xl">←</span>
-        </button>
+        </Button>
         <h1 class="text-lg font-semibold">More Categories</h1>
         <div class="ml-auto">
-          <span class="text-xl">🔔</span>
+          <Button variant="ghost" class="text-white hover:text-white hover:bg-[#217e0a]/50 p-2">
+            <span class="text-xl">🔔</span>
+          </Button>
         </div>
       </div>
 
       <!-- Quick action buttons -->
       <div class="flex justify-between mt-2 mb-4">
         <div class="flex flex-col items-center">
-          <div class="bg-[#217e0a] p-3 rounded-full mb-1">
-            <span class="text-white text-xl">💳</span>
-          </div>
+          <Button
+            variant="secondary"
+            class="bg-[#217e0a] hover:bg-[#217e0a]/90 p-3 rounded-full mb-1 h-auto w-auto"
+          >
+            <span class="text-xl">💳</span>
+          </Button>
           <span class="text-xs text-white">Send Money</span>
         </div>
         <div class="flex flex-col items-center">
-          <div class="bg-[#217e0a] p-3 rounded-full mb-1">
+          <Button
+            variant="secondary"
+            class="bg-[#217e0a] hover:bg-[#217e0a]/90 p-3 rounded-full mb-1 h-auto w-auto"
+          >
             <span class="text-white text-xl">💰</span>
-          </div>
+          </Button>
           <span class="text-xs text-white">Request Money</span>
         </div>
         <div class="flex flex-col items-center">
-          <div class="bg-[#217e0a] p-3 rounded-full mb-1">
+          <Button
+            variant="secondary"
+            class="bg-[#217e0a] hover:bg-[#217e0a]/90 p-3 rounded-full mb-1 h-auto w-auto"
+          >
             <span class="text-white text-xl">📱</span>
-          </div>
+          </Button>
           <span class="text-xs text-white">Scan & Pay</span>
         </div>
       </div>
@@ -79,51 +97,37 @@ const handleCategoryClick = (category) => {
 
     <!-- Add Bill Section -->
     <div class="p-4">
-      <h2 class="text-md font-semibold mb-3">Add Bill</h2>
-      
-      <!-- Categories Grid -->
-      <div class="grid grid-cols-4 gap-4">
-        <div 
-          v-for="category in categories.filter(c => c.type === 'bill')" 
-          :key="category.id" 
-          class="flex flex-col items-center mb-4"
-          @click="handleCategoryClick(category)"
-        >
-          <div class="bg-white p-3 rounded-lg mb-1 w-14 h-14 flex items-center justify-center shadow-sm">
-            <span class="text-xl">{{ category.icon }}</span>
+      <Card class="shadow-sm pb-2">
+        <CardHeader class="pb-2">
+          <CardTitle class="text-base">Add Bill</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <!-- Categories Grid -->
+          <div class="grid grid-cols-4 gap-4">
+            <div
+              v-for="category in categories.filter((c) => c.type === 'bill')"
+              :key="category.id"
+              class="flex flex-col items-center mb-4"
+              @click="handleCategoryClick(category)"
+            >
+              <Button
+                variant="outline"
+                class="bg-white p-3 rounded-lg mb-1 w-14 h-14 flex items-center justify-center hover:bg-gray-50 border-none shadow-sm"
+              >
+                <span class="text-xl">{{ category.icon }}</span>
+              </Button>
+              <p class="text-xs text-center">{{ category.name }}</p>
+            </div>
           </div>
-          <p class="text-xs text-center">{{ category.name }}</p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
 
     <!-- Bottom Navigation -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white p-3 flex justify-between items-center border-t">
-      <button class="flex flex-col items-center text-gray-400">
-        <span class="text-xl">🏠</span>
-        <span class="text-xs">Home</span>
-      </button>
-      <button class="flex flex-col items-center text-gray-400">
-        <span class="text-xl">📊</span>
-        <span class="text-xs">History</span>
-      </button>
-      <div class="relative">
-        <button class="bg-blue-500 text-white rounded-full p-4 -mt-8">
-          <span class="text-xl">💰</span>
-        </button>
-      </div>
-      <button class="flex flex-col items-center text-gray-400">
-        <span class="text-xl">🎁</span>
-        <span class="text-xs">Pocket</span>
-      </button>
-      <button class="flex flex-col items-center text-gray-400">
-        <span class="text-xl">👤</span>
-        <span class="text-xs">Me</span>
-      </button>
-    </div>
+    <BottomNavigation />
   </div>
 </template>
 
 <style scoped>
 /* Custom styles for the categories page */
-</style> 
+</style>
