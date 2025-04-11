@@ -19,7 +19,7 @@ const transactions = ref([
     asnafWallet: '0x9s8r7q6p5o4n3m2l1k0j9i8h7g6f5e4d3c2b1a0',
     asnafName: 'Ahmad bin Abdullah',
     asnafCategory: 'Fakir',
-    evidenceImage: '/images/evidence1.jpg',
+    evidenceImage: 'bantuan.jpg',
     description: 'Monthly zakat payment for education support'
   },
   {
@@ -31,7 +31,7 @@ const transactions = ref([
     asnafWallet: '0x5t4s3r2q1p0o9n8m7l6k5j4i3h2g1f0e9d8c7b6a',
     asnafName: 'Fatimah binti Ismail',
     asnafCategory: 'Miskin',
-    evidenceImage: '/images/evidence2.jpg',
+    evidenceImage: 'bantuan.jpg',
     description: 'Food and shelter assistance program'
   },
   {
@@ -43,7 +43,7 @@ const transactions = ref([
     asnafWallet: '0x3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1a2b',
     asnafName: 'Muhammad bin Hassan',
     asnafCategory: 'Fi-sabilillah',
-    evidenceImage: '/images/evidence3.jpg',
+    evidenceImage: 'bantuan.jpg',
     description: 'Community development project funding'
   }
 ])
