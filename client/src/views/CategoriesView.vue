@@ -16,20 +16,18 @@ const categories = ref([
   { id: 5, name: 'Zakat Pertanian', icon: '📡', type: 'bill' },
   { id: 6, name: 'Zakat Ternakan', icon: '🥛', type: 'bill' },
   { id: 7, name: 'Zakat Fitrah', icon: '🙏', type: 'bill' },
-  { id: 8, name: 'Audit Zakat', icon: '🛒', type: 'bill' },
-  { id: 9, name: 'Donation', icon: '🏫', type: 'bill' },
-  { id: 10, name: 'Asnaf Reporting', icon: '⚡', type: 'bill' },
-  { id: 11, name: 'Zakat Calculator', icon: '🔥', type: 'bill' },
-  { id: 12, name: 'Zakat Reporting', icon: '🏥', type: 'bill' },
   { id: 13, name: 'Zakat Statistics', icon: '🛡️', type: 'bill' },
-  { id: 14, name: 'Zakat Information', icon: '☎️', type: 'bill' },
+  { id: 10, name: 'Asnaf Reporting', icon: '⚡', type: 'bill' },
+  { id: 11, name: 'Donation', icon: '🏫', type: 'bill' },
+  { id: 8, name: 'Audit Zakat', icon: '🛒', type: 'bill' },
+  { id: 14, name: 'Distribution Sources', icon: '☎️', type: 'bill' },
   // { id: 15, name: 'Mobile', icon: '📱', type: 'bill' },
   // { id: 16, name: 'Mutual Fund', icon: '📊', type: 'bill' },
   // { id: 17, name: 'Rental', icon: '🏠', type: 'bill' },
   // { id: 18, name: 'Shipping', icon: '📦', type: 'bill' },
   // { id: 19, name: 'Travel', icon: '✈️', type: 'bill' },
   // { id: 20, name: 'Water', icon: '💧', type: 'bill' },
-  { id: 21, name: 'More', icon: '•••', type: 'bill' },
+  // { id: 21, name: 'More', icon: '•••', type: 'bill' },
 ])
 
 const goBack = () => {
@@ -44,6 +42,8 @@ const handleCategoryClick = (category) => {
     router.push('/asnaf-reporting')
   } else if (category.name === 'Audit Zakat') {
     router.push('/audit-zakat')
+  } else if (category.name === 'Distribution Sources') {
+    router.push('/distribution-sources')
   } else {
     // For other categories, just log for now
     console.log(`Selected category: ${category.name}`)

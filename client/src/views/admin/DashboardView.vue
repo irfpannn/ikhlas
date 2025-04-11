@@ -1,0 +1,2941 @@
+<template>
+  <div class="admin-dashboard">
+    <header class="dashboard-header">
+      <h1>Admin Dashboard</h1>
+      <button @click="handleLogout" class="logout-btn">Logout</button>
+    </header>
+    
+    <div class="dashboard-stats">
+      <div class="stat-card">
+        <h3>Total Users</h3>
+        <p class="stat-value">{{ totalUsers }}</p>
+      </div>
+      <div class="stat-card">
+        <h3>Total Zakat (RM)</h3>
+        <p class="stat-value">RM {{ totalZakatRM.toFixed(2) }}</p>
+      </div>
+      <div class="stat-card">
+        <h3>Total Zakat (Crypto)</h3>
+        <p class="stat-value">{{ totalZakatCrypto.toFixed(8) }} BTC</p>
+      </div>
+      <div class="stat-card">
+        <h3>Distributed Zakat</h3>
+        <p class="stat-value">RM {{ totalDistributedRM.toFixed(2) }}</p>
+      </div>
+    </div>
+    
+    <div class="dashboard-tabs">
+      <button 
+        @click="activeTab = 'payments'" 
+        :class="{ 'active-tab': activeTab === 'payments' }"
+        class="tab-btn"
+      >
+        Zakat Payments
+      </button>
+      <button 
+        @click="activeTab = 'distributions'" 
+        :class="{ 'active-tab': activeTab === 'distributions' }"
+        class="tab-btn"
+      >
+        Zakat Distributions
+      </button>
+      <button 
+        @click="activeTab = 'asnaf'" 
+        :class="{ 'active-tab': activeTab === 'asnaf' }"
+        class="tab-btn"
+      >
+        Asnaf Listing
+      </button>
+      <button 
+        @click="activeTab = 'reports'" 
+        :class="{ 'active-tab': activeTab === 'reports' }"
+        class="tab-btn"
+      >
+        Asnaf Reports
+      </button>
+    </div>
+    
+    <!-- Zakat Payments Tab -->
+    <div v-if="activeTab === 'payments'" class="users-table-container">
+      <h2>Zakat Payments</h2>
+      <div v-if="loading" class="loading">Loading data...</div>
+      <table v-else class="users-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Date</th>
+            <th>Amount (RM)</th>
+            <th>Amount (Crypto)</th>
+            <th>Wallet Address</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="payment in zakatPayments" :key="payment.id">
+            <td>{{ payment.userName }}</td>
+            <td>{{ formatDate(payment.date) }}</td>
+            <td>RM {{ payment.amountRM.toFixed(2) }}</td>
+            <td>{{ payment.amountCrypto.toFixed(8) }} {{ payment.cryptoType }}</td>
+            <td class="wallet-address">{{ payment.walletAddress.substring(0, 10) }}...{{ payment.walletAddress.substring(payment.walletAddress.length - 6) }}</td>
+            <td>
+              <span :class="'status-badge ' + payment.status.toLowerCase()">
+                {{ payment.status }}
+              </span>
+            </td>
+            <td>
+              <button @click="viewDetails(payment)" class="action-btn view-btn">View</button>
+            </td>
+          </tr>
+          <tr v-if="zakatPayments.length === 0">
+            <td colspan="7" class="no-data">No zakat payments found</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Zakat Distributions Tab -->
+    <div v-if="activeTab === 'distributions'" class="users-table-container">
+      <h2>Zakat Distributions</h2>
+      <div class="action-bar">
+        <button @click="showAddDistributionModal = true" class="add-btn">Add New Distribution</button>
+      </div>
+      <div v-if="loadingDistributions" class="loading">Loading data...</div>
+      <table v-else class="users-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Recipient</th>
+            <th>Category</th>
+            <th>Amount (RM)</th>
+            <th>Description</th>
+            <th>Source</th>
+            <th>Evidence</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="distribution in zakatDistributions" :key="distribution.id">
+            <td>{{ formatDate(distribution.date) }}</td>
+            <td>{{ distribution.recipientName }}</td>
+            <td>{{ distribution.category }}</td>
+            <td>RM {{ distribution.amountRM.toFixed(2) }}</td>
+            <td>{{ distribution.description }}</td>
+            <td>
+              <div v-if="distribution.sourcePayments && distribution.sourcePayments.length > 0" class="source-payments">
+                <button @click="viewSourceDetails(distribution)" class="source-btn">
+                  {{ distribution.sourcePayments.length }} donor(s)
+                </button>
+              </div>
+              <span v-else>Not specified</span>
+            </td>
+            <td>
+              <a v-if="distribution.evidenceUrl" :href="distribution.evidenceUrl" target="_blank" class="evidence-link">
+                View Evidence
+              </a>
+              <span v-else>No evidence</span>
+            </td>
+            <td>
+              <button @click="editDistribution(distribution)" class="action-btn edit-btn">Edit</button>
+            </td>
+          </tr>
+          <tr v-if="zakatDistributions.length === 0">
+            <td colspan="8" class="no-data">No zakat distributions found</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Asnaf Listing Tab -->
+    <div v-if="activeTab === 'asnaf'" class="users-table-container">
+      <h2>Asnaf (Eligible Recipients) Listing</h2>
+      <div class="action-bar">
+        <button @click="showAddAsnafModal = true" class="add-btn">Add New Asnaf</button>
+      </div>
+      <div v-if="loadingAsnaf" class="loading">Loading data...</div>
+      <div v-else class="asnaf-categories">
+        <div v-for="(asnafList, category) in groupedAsnaf" :key="category" class="asnaf-category">
+          <h3>{{ category }} <span class="asnaf-count">({{ asnafList.length }})</span></h3>
+          <div class="asnaf-cards">
+            <div v-for="asnaf in asnafList" :key="asnaf.id" class="asnaf-card">
+              <div class="asnaf-header">
+                <h4>{{ asnaf.name }}</h4>
+                <div class="asnaf-actions">
+                  <button @click="editAsnaf(asnaf)" class="action-btn edit-btn">Edit</button>
+                </div>
+              </div>
+              <div class="asnaf-details">
+                <p><strong>Contact:</strong> {{ asnaf.contact }}</p>
+                <p><strong>Location:</strong> {{ asnaf.location }}</p>
+                <p><strong>Needs:</strong> {{ asnaf.needs }}</p>
+                <p><strong>Status:</strong> 
+                  <span :class="'status-badge ' + asnaf.status.toLowerCase()">
+                    {{ asnaf.status }}
+                  </span>
+                </p>
+                <p v-if="asnaf.notes"><strong>Notes:</strong> {{ asnaf.notes }}</p>
+              </div>
+            </div>
+            <div v-if="asnafList.length === 0" class="no-data">No recipients in this category</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Asnaf Reports Tab -->
+    <div v-if="activeTab === 'reports'" class="users-table-container">
+      <h2>Asnaf Reports</h2>
+      <div v-if="loadingReports" class="loading">Loading reports...</div>
+      <div v-else>
+        <div class="reports-filter">
+          <select v-model="reportStatusFilter" class="filter-select">
+            <option value="all">All Reports</option>
+            <option value="pending">Pending</option>
+            <option value="verified">Verified</option>
+            <option value="rejected">Rejected</option>
+            <option value="converted">Converted to Asnaf</option>
+          </select>
+        </div>
+        
+        <div class="reports-grid">
+          <div v-for="report in filteredReports" :key="report.id" class="report-card">
+            <div class="report-header">
+              <h3>{{ report.name }}</h3>
+              <span :class="'status-badge ' + report.status.toLowerCase()">{{ report.status }}</span>
+            </div>
+            
+            <div class="report-details">
+              <p><strong>Reported on:</strong> {{ formatDate(report.reportDate) }}</p>
+              <p><strong>Address:</strong> {{ report.address }}</p>
+              <p v-if="report.phoneNumber"><strong>Phone:</strong> {{ report.phoneNumber }}</p>
+              <p><strong>Description:</strong> {{ report.description }}</p>
+              <p v-if="report.location"><strong>Location:</strong> {{ report.location.address }}</p>
+            </div>
+            
+            <div class="report-images" v-if="report.images && report.images.length > 0">
+              <h4>Images ({{ report.images.length }})</h4>
+              <div class="image-thumbnails">
+                <div v-for="(image, index) in report.images" :key="index" class="image-thumbnail" @click="viewImage(image.url)">
+                  <img :src="image.url" alt="Report evidence" />
+                </div>
+              </div>
+            </div>
+            
+            <div class="report-actions">
+              <button v-if="report.status === 'Pending'" @click="verifyReport(report)" class="action-btn approve-btn">Verify</button>
+              <button v-if="report.status === 'Pending'" @click="rejectReport(report)" class="action-btn reject-btn">Reject</button>
+              <button 
+                v-if="report.status === 'Verified'" 
+                @click="openConvertModal(report)" 
+                class="action-btn convert-btn"
+              >
+                Convert to Asnaf
+              </button>
+              <button @click="viewReportDetails(report)" class="action-btn view-btn">View Details</button>
+            </div>
+          </div>
+          
+          <div v-if="filteredReports.length === 0" class="no-data">
+            No reports found matching the selected filter
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Payment Details Modal -->
+    <div v-if="selectedPayment" class="modal">
+      <div class="modal-content">
+        <span class="close-btn" @click="selectedPayment = null">&times;</span>
+        <h2>Payment Details</h2>
+        <div class="payment-details">
+          <div class="detail-row">
+            <span class="detail-label">User:</span>
+            <span class="detail-value">{{ selectedPayment.userName }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Email:</span>
+            <span class="detail-value">{{ selectedPayment.userEmail }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Date:</span>
+            <span class="detail-value">{{ formatDate(selectedPayment.date) }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Amount (RM):</span>
+            <span class="detail-value">RM {{ selectedPayment.amountRM.toFixed(2) }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Amount (Crypto):</span>
+            <span class="detail-value">{{ selectedPayment.amountCrypto.toFixed(8) }} {{ selectedPayment.cryptoType }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Wallet Address:</span>
+            <span class="detail-value wallet-address">{{ selectedPayment.walletAddress }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Transaction ID:</span>
+            <span class="detail-value">{{ selectedPayment.transactionId }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Status:</span>
+            <span class="detail-value status-badge" :class="selectedPayment.status.toLowerCase()">
+              {{ selectedPayment.status }}
+            </span>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button 
+            v-if="selectedPayment.status === 'Pending'" 
+            @click="updatePaymentStatus(selectedPayment.id, 'Approved')" 
+            class="approve-btn"
+          >
+            Approve
+          </button>
+          <button 
+            v-if="selectedPayment.status === 'Pending'" 
+            @click="updatePaymentStatus(selectedPayment.id, 'Rejected')" 
+            class="reject-btn"
+          >
+            Reject
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Add Distribution Modal -->
+    <div v-if="showAddDistributionModal" class="modal">
+      <div class="modal-content distribution-modal">
+        <span class="close-btn" @click="showAddDistributionModal = false">&times;</span>
+        <h2>{{ editingDistribution ? 'Edit Distribution' : 'Add New Distribution' }}</h2>
+        <form @submit.prevent="saveDistribution" class="distribution-form">
+          <div class="form-group">
+            <label for="recipientSelect">Select Recipient</label>
+            <div class="recipient-selection">
+              <select 
+                id="recipientSelect" 
+                v-model="selectedAsnafId"
+                @change="handleAsnafSelection"
+              >
+                <option value="">Select from Asnaf list or enter manually</option>
+                <optgroup v-for="(asnafList, category) in groupedAsnaf" :key="category" :label="category">
+                  <option 
+                    v-for="asnaf in asnafList" 
+                    :key="asnaf.id" 
+                    :value="asnaf.id"
+                  >
+                    {{ asnaf.name }}
+                  </option>
+                </optgroup>
+              </select>
+              <button type="button" @click="showAddAsnafModal = true" class="add-recipient-btn">
+                <i class="fas fa-plus"></i> New
+              </button>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="recipientName">Recipient Name</label>
+            <input 
+              type="text" 
+              id="recipientName" 
+              v-model="distributionForm.recipientName" 
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" v-model="distributionForm.category" required>
+              <option value="">Select a category</option>
+              <option value="Poor">Poor (Fakir)</option>
+              <option value="Needy">Needy (Miskin)</option>
+              <option value="Zakat Administrator">Zakat Administrator (Amil)</option>
+              <option value="New Muslim">New Muslim (Muallaf)</option>
+              <option value="Slave">To Free Slaves (Riqab)</option>
+              <option value="Debtor">Debtor (Gharimin)</option>
+              <option value="Allah's Cause">Allah's Cause (Fi Sabilillah)</option>
+              <option value="Traveler">Traveler (Ibnus Sabil)</option>
+            </select>
+          </div>
+          
+          <!-- Recipient details preview when selected from asnaf list -->
+          <div v-if="selectedAsnafDetails" class="recipient-preview">
+            <div class="recipient-preview-header">
+              <h4>Recipient Details</h4>
+            </div>
+            <div class="recipient-preview-content">
+              <p><strong>Contact:</strong> {{ selectedAsnafDetails.contact }}</p>
+              <p><strong>Location:</strong> {{ selectedAsnafDetails.location }}</p>
+              <p><strong>Needs:</strong> {{ selectedAsnafDetails.needs }}</p>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="amountRM">Amount (RM)</label>
+            <input 
+              type="number" 
+              id="amountRM" 
+              v-model="distributionForm.amountRM" 
+              step="0.01" 
+              min="0" 
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="description">Description</label>
+            <textarea 
+              id="description" 
+              v-model="distributionForm.description" 
+              rows="3"
+              required
+            ></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="evidence">Evidence (Image/PDF)</label>
+            <input 
+              type="file" 
+              id="evidence" 
+              @change="handleFileUpload" 
+              accept="image/*,application/pdf"
+            />
+            <div v-if="uploadProgress > 0 && uploadProgress < 100" class="progress-bar">
+              <div class="progress" :style="{ width: uploadProgress + '%' }"></div>
+              <span>{{ uploadProgress }}%</span>
+            </div>
+            <div v-if="distributionForm.evidenceUrl" class="evidence-preview">
+              <a :href="distributionForm.evidenceUrl" target="_blank">View Current Evidence</a>
+            </div>
+          </div>
+          
+          <!-- New section for selecting source payments -->
+          <div class="form-group source-payments-section">
+            <label>Source of Funds</label>
+            <div class="available-funds">
+              <p>Available Zakat Funds: <strong>RM {{ availableZakatFunds.toFixed(2) }}</strong></p>
+            </div>
+            
+            <div class="source-selection">
+              <div class="source-header">
+                <h4>Select Source Payments</h4>
+                <p class="source-help">Select which donations to use for this distribution</p>
+              </div>
+              
+              <div v-if="loading" class="loading">Loading available payments...</div>
+              <div v-else-if="availablePayments.length === 0" class="no-data">No available payments</div>
+              <div v-else class="payment-selection-list">
+                <div v-for="payment in availablePayments" :key="payment.id" class="payment-selection-item">
+                  <label class="payment-checkbox">
+                    <input 
+                      type="checkbox" 
+                      :value="payment.id" 
+                      v-model="selectedPaymentIds"
+                      @change="updateSelectedAmount"
+                    />
+                    <div class="payment-info">
+                      <div class="payment-user">{{ payment.userName }}</div>
+                      <div class="payment-amount">RM {{ payment.amountRM.toFixed(2) }}</div>
+                      <div class="payment-date">{{ formatDate(payment.date) }}</div>
+                      <div class="payment-wallet">{{ payment.walletAddress.substring(0, 8) }}...{{ payment.walletAddress.substring(payment.walletAddress.length - 6) }}</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+              
+              <div class="selected-amount">
+                <p>Selected Amount: <strong>RM {{ selectedAmount.toFixed(2) }}</strong></p>
+                <p :class="{'amount-warning': selectedAmount < distributionForm.amountRM}">
+                  {{ selectedAmount >= distributionForm.amountRM ? '✓ Sufficient funds selected' : '⚠️ Insufficient funds selected' }}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" @click="showAddDistributionModal = false" class="cancel-btn">Cancel</button>
+            <button type="submit" class="save-btn" :disabled="uploading || selectedAmount < distributionForm.amountRM">
+              {{ editingDistribution ? 'Update' : 'Save' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Add/Edit Asnaf Modal -->
+    <div v-if="showAddAsnafModal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn" @click="showAddAsnafModal = false">&times;</span>
+        <h2>{{ editingAsnaf ? 'Edit Asnaf Recipient' : 'Add New Asnaf Recipient' }}</h2>
+        <form @submit.prevent="saveAsnaf" class="distribution-form">
+          <div class="form-group">
+            <label for="asnafName">Name</label>
+            <input 
+              type="text" 
+              id="asnafName" 
+              v-model="asnafForm.name" 
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="asnafCategory">Category</label>
+            <select id="asnafCategory" v-model="asnafForm.category" required>
+              <option value="">Select a category</option>
+              <option value="Poor (Fakir)">Poor (Fakir)</option>
+              <option value="Needy (Miskin)">Needy (Miskin)</option>
+              <option value="Zakat Administrator (Amil)">Zakat Administrator (Amil)</option>
+              <option value="New Muslim (Muallaf)">New Muslim (Muallaf)</option>
+              <option value="To Free Slaves (Riqab)">To Free Slaves (Riqab)</option>
+              <option value="Debtor (Gharimin)">Debtor (Gharimin)</option>
+              <option value="Allah's Cause (Fi Sabilillah)">Allah's Cause (Fi Sabilillah)</option>
+              <option value="Traveler (Ibnus Sabil)">Traveler (Ibnus Sabil)</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="asnafContact">Contact</label>
+            <input 
+              type="text" 
+              id="asnafContact" 
+              v-model="asnafForm.contact" 
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="asnafLocation">Location</label>
+            <input 
+              type="text" 
+              id="asnafLocation" 
+              v-model="asnafForm.location" 
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="asnafNeeds">Needs</label>
+            <textarea 
+              id="asnafNeeds" 
+              v-model="asnafForm.needs" 
+              rows="2"
+              required
+            ></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="asnafStatus">Status</label>
+            <select id="asnafStatus" v-model="asnafForm.status" required>
+              <option value="Active">Active</option>
+              <option value="Pending">Pending</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="asnafNotes">Notes (Optional)</label>
+            <textarea 
+              id="asnafNotes" 
+              v-model="asnafForm.notes" 
+              rows="2"
+            ></textarea>
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" @click="showAddAsnafModal = false" class="cancel-btn">Cancel</button>
+            <button type="submit" class="save-btn">
+              {{ editingAsnaf ? 'Update' : 'Save' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Source Payments Details Modal -->
+    <div v-if="selectedDistribution" class="modal">
+      <div class="modal-content">
+        <span class="close-btn" @click="selectedDistribution = null">&times;</span>
+        <h2>Distribution Source Details</h2>
+        <div class="distribution-summary">
+          <p><strong>Recipient:</strong> {{ selectedDistribution.recipientName }}</p>
+          <p><strong>Amount:</strong> RM {{ selectedDistribution.amountRM.toFixed(2) }}</p>
+          <p><strong>Date:</strong> {{ formatDate(selectedDistribution.date) }}</p>
+        </div>
+        
+        <h3>Source Payments</h3>
+        <div class="source-payments-list">
+          <div v-for="(source, index) in selectedDistributionSources" :key="index" class="source-payment-item">
+            <div class="source-payment-header">
+              <span class="source-payment-user">{{ source.userName }}</span>
+              <span class="source-payment-amount">RM {{ source.amountRM.toFixed(2) }}</span>
+            </div>
+            <div class="source-payment-details">
+              <p><strong>Date:</strong> {{ formatDate(source.date) }}</p>
+              <p><strong>Wallet:</strong> <span class="wallet-address">{{ source.walletAddress }}</span></p>
+              <p><strong>Transaction ID:</strong> {{ source.transactionId }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Report Details Modal -->
+    <div v-if="selectedReport" class="modal report-modal">
+      <div class="modal-content report-full-details">
+        <span class="close-btn" @click="selectedReport = null">&times;</span>
+        <h2>Report Details</h2>
+        
+        <div class="detail-row">
+          <span class="detail-label">Name:</span>
+          <span class="detail-value">{{ selectedReport.name }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Status:</span>
+          <span class="detail-value">
+            <span :class="'status-badge ' + selectedReport.status.toLowerCase()">
+              {{ selectedReport.status }}
+            </span>
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Reported on:</span>
+          <span class="detail-value">{{ formatDate(selectedReport.reportDate) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Address:</span>
+          <span class="detail-value">{{ selectedReport.address }}</span>
+        </div>
+        <div class="detail-row" v-if="selectedReport.phoneNumber">
+          <span class="detail-label">Phone Number:</span>
+          <span class="detail-value">{{ selectedReport.phoneNumber }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Description:</span>
+          <span class="detail-value">{{ selectedReport.description }}</span>
+        </div>
+        <div class="detail-row" v-if="selectedReport.location">
+          <span class="detail-label">Location:</span>
+          <span class="detail-value">
+            {{ selectedReport.location.address }}<br>
+            <small>Lat: {{ selectedReport.location.latitude }}, Long: {{ selectedReport.location.longitude }}</small>
+          </span>
+        </div>
+        <div class="detail-row" v-if="selectedReport.reportedBy">
+          <span class="detail-label">Reported By:</span>
+          <span class="detail-value">{{ selectedReport.reportedBy }}</span>
+        </div>
+        <div class="detail-row" v-if="selectedReport.verifiedBy">
+          <span class="detail-label">Verified By:</span>
+          <span class="detail-value">{{ selectedReport.verifiedBy }} on {{ formatDate(selectedReport.verifiedDate) }}</span>
+        </div>
+        <div class="detail-row" v-if="selectedReport.rejectedBy">
+          <span class="detail-label">Rejected By:</span>
+          <span class="detail-value">{{ selectedReport.rejectedBy }} on {{ formatDate(selectedReport.rejectedDate) }}</span>
+        </div>
+        <div class="detail-row" v-if="selectedReport.notes">
+          <span class="detail-label">Notes:</span>
+          <span class="detail-value">{{ selectedReport.notes }}</span>
+        </div>
+      </div>
+      
+      <div v-if="selectedReport.images && selectedReport.images.length > 0" class="report-full-images">
+        <h3>Images</h3>
+        <div class="image-gallery">
+          <div v-for="(image, index) in selectedReport.images" :key="index" class="gallery-image">
+            <img :src="image.url" alt="Report evidence" @click="viewImage(image.url)" />
+          </div>
+        </div>
+      </div>
+      
+      <div v-if="selectedReport.status === 'Pending'" class="report-action-form">
+        <h3>Take Action</h3>
+        <div class="form-group">
+          <label for="reportNotes">Notes</label>
+          <textarea id="reportNotes" v-model="reportActionNotes" rows="3" placeholder="Add notes about this report"></textarea>
+        </div>
+        <div class="form-actions">
+          <button @click="verifyReport(selectedReport)" class="approve-btn">Verify Report</button>
+          <button @click="rejectReport(selectedReport)" class="reject-btn">Reject Report</button>
+        </div>
+      </div>
+      
+      <div v-if="selectedReport.status === 'Verified'" class="report-action-form">
+        <h3>Convert to Asnaf</h3>
+        <p class="help-text">Convert this verified report into an asnaf recipient record</p>
+        <div class="form-group">
+          <label for="asnafCategory">Asnaf Category</label>
+          <select id="asnafCategory" v-model="conversionCategory">
+            <option value="">Select a category</option>
+            <option value="Poor (Fakir)">Poor (Fakir)</option>
+            <option value="Needy (Miskin)">Needy (Miskin)</option>
+            <option value="Zakat Administrator (Amil)">Zakat Administrator (Amil)</option>
+            <option value="New Muslim (Muallaf)">New Muslim (Muallaf)</option>
+            <option value="To Free Slaves (Riqab)">To Free Slaves (Riqab)</option>
+            <option value="Debtor (Gharimin)">Debtor (Gharimin)</option>
+            <option value="Allah's Cause (Fi Sabilillah)">Allah's Cause (Fi Sabilillah)</option>
+            <option value="Traveler (Ibnus Sabil)">Traveler (Ibnus Sabil)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="asnafNeeds">Needs</label>
+          <textarea id="asnafNeeds" v-model="conversionNeeds" rows="2" placeholder="Describe the needs of this asnaf"></textarea>
+        </div>
+        <div class="form-actions">
+          <button @click="showConvertModal = true" class="convert-btn" :disabled="!conversionCategory">Convert to Asnaf</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Image Viewer Modal -->
+    <div v-if="selectedImage" class="modal image-viewer-modal" @click="selectedImage = null">
+      <div class="image-viewer-content" @click.stop>
+        <span class="close-btn" @click="selectedImage = null">&times;</span>
+        <img :src="selectedImage" alt="Report evidence" class="full-size-image" />
+      </div>
+    </div>
+    
+    <!-- Update the Convert to Asnaf functionality to use a dedicated modal -->
+    <!-- Add this new modal for Convert to Asnaf -->
+    <div v-if="showConvertModal" class="modal">
+      <div class="modal-content convert-modal">
+        <span class="close-btn" @click="showConvertModal = false">&times;</span>
+        <h2>Convert to Asnaf</h2>
+        <p class="help-text">Convert this verified report into an asnaf recipient record</p>
+        
+        <div class="form-group">
+          <label for="asnafCategory">Asnaf Category</label>
+          <select id="asnafCategory" v-model="conversionCategory" required>
+            <option value="">Select a category</option>
+            <option value="Poor (Fakir)">Poor (Fakir)</option>
+            <option value="Needy (Miskin)">Needy (Miskin)</option>
+            <option value="Zakat Administrator (Amil)">Zakat Administrator (Amil)</option>
+            <option value="New Muslim (Muallaf)">New Muslim (Muallaf)</option>
+            <option value="To Free Slaves (Riqab)">To Free Slaves (Riqab)</option>
+            <option value="Debtor (Gharimin)">Debtor (Gharimin)</option>
+            <option value="Allah's Cause (Fi Sabilillah)">Allah's Cause (Fi Sabilillah)</option>
+            <option value="Traveler (Ibnus Sabil)">Traveler (Ibnus Sabil)</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="asnafNeeds">Needs</label>
+          <textarea 
+            id="asnafNeeds" 
+            v-model="conversionNeeds" 
+            rows="4" 
+            placeholder="Describe the needs of this asnaf"
+            required
+          ></textarea>
+        </div>
+        
+        <div class="form-actions">
+          <button @click="showConvertModal = false" class="cancel-btn">Cancel</button>
+          <button 
+            @click="confirmConvertToAsnaf" 
+            class="convert-btn" 
+            :disabled="!conversionCategory"
+          >
+            Convert to Asnaf
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { ref, onMounted, computed, watch } from 'vue';
+import { getAuth, signOut } from 'firebase/auth';
+import { getFirestore, collection, getDocs, doc, updateDoc, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { useRouter } from 'vue-router';
+
+export default {
+  name: 'AdminDashboardView',
+  setup() {
+    const router = useRouter();
+    const db = getFirestore();
+    const storage = getStorage();
+    const zakatPayments = ref([]);
+    const zakatDistributions = ref([]);
+    const loading = ref(true);
+    const loadingDistributions = ref(true);
+    const selectedPayment = ref(null);
+    const activeTab = ref('payments');
+    const showAddDistributionModal = ref(false);
+    const editingDistribution = ref(null);
+    const uploadProgress = ref(0);
+    const uploading = ref(false);
+    
+    const distributionForm = ref({
+      recipientName: '',
+      category: '',
+      amountRM: 0,
+      description: '',
+      evidenceUrl: '',
+      date: null
+    });
+    
+    const asnafRecipients = ref([]);
+    const loadingAsnaf = ref(true);
+    const showAddAsnafModal = ref(false);
+    const editingAsnaf = ref(null);
+    
+    const asnafForm = ref({
+      name: '',
+      category: '',
+      contact: '',
+      location: '',
+      needs: '',
+      status: 'Active',
+      notes: ''
+    });
+    
+    const totalUsers = computed(() => {
+      // Get unique users who have made payments
+      const uniqueUsers = new Set(zakatPayments.value.map(payment => payment.userId));
+      return uniqueUsers.size;
+    });
+    
+    const totalZakatRM = computed(() => {
+      return zakatPayments.value.reduce((total, payment) => {
+        return total + payment.amountRM;
+      }, 0);
+    });
+    
+    const totalZakatCrypto = computed(() => {
+      return zakatPayments.value.reduce((total, payment) => {
+        return total + payment.amountCrypto;
+      }, 0);
+    });
+    
+    const totalDistributedRM = computed(() => {
+      return zakatDistributions.value.reduce((total, dist) => {
+        return total + dist.amountRM;
+      }, 0);
+    });
+    
+    // Group asnaf by category
+    const groupedAsnaf = computed(() => {
+      const grouped = {};
+      const categories = [
+        'Poor (Fakir)', 
+        'Needy (Miskin)', 
+        'Zakat Administrator (Amil)', 
+        'New Muslim (Muallaf)',
+        'To Free Slaves (Riqab)',
+        'Debtor (Gharimin)',
+        'Allah\'s Cause (Fi Sabilillah)',
+        'Traveler (Ibnus Sabil)'
+      ];
+      
+      // Initialize all categories
+      categories.forEach(category => {
+        grouped[category] = [];
+      });
+      
+      // Populate with data
+      asnafRecipients.value.forEach(asnaf => {
+        if (grouped[asnaf.category]) {
+          grouped[asnaf.category].push(asnaf);
+        } else {
+          // Handle any miscategorized entries
+          if (!grouped['Other']) grouped['Other'] = [];
+          grouped['Other'].push(asnaf);
+        }
+      });
+      
+      return grouped;
+    });
+    
+    const fetchZakatPayments = async () => {
+      try {
+        loading.value = true;
+        
+        // In a real app, this would fetch from Firestore
+        // For now, we'll use dummy data
+        const dummyPayments = [
+          {
+            id: '1',
+            userId: 'user1',
+            userName: 'Ahmad bin Abdullah',
+            userEmail: 'ahmad@example.com',
+            date: new Date(2023, 10, 15, 9, 30), // Nov 15, 2023, 9:30 AM
+            amountRM: 2500.00,
+            amountCrypto: 0.03245,
+            cryptoType: 'BTC',
+            transactionId: 'tx_btc_123456789',
+            walletAddress: '0x1A2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0',
+            status: 'Approved'
+          },
+          {
+            id: '2',
+            userId: 'user2',
+            userName: 'Fatimah binti Hassan',
+            userEmail: 'fatimah@example.com',
+            date: new Date(2023, 10, 18, 14, 45), // Nov 18, 2023, 2:45 PM
+            amountRM: 1200.00,
+            amountCrypto: 0.01560,
+            cryptoType: 'BTC',
+            transactionId: 'tx_btc_987654321',
+            walletAddress: '0x2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1',
+            status: 'Approved'
+          },
+          {
+            id: '3',
+            userId: 'user3',
+            userName: 'Muhammad bin Ibrahim',
+            userEmail: 'muhammad@example.com',
+            date: new Date(2023, 11, 5, 11, 20), // Dec 5, 2023, 11:20 AM
+            amountRM: 3000.00,
+            amountCrypto: 0.03896,
+            cryptoType: 'BTC',
+            transactionId: 'tx_btc_456789123',
+            walletAddress: '0x3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2',
+            status: 'Approved'
+          },
+          {
+            id: '4',
+            userId: 'user4',
+            userName: 'Nurul binti Aziz',
+            userEmail: 'nurul@example.com',
+            date: new Date(2023, 11, 12, 16, 10), // Dec 12, 2023, 4:10 PM
+            amountRM: 1800.00,
+            amountCrypto: 0.02338,
+            cryptoType: 'BTC',
+            transactionId: 'tx_btc_789123456',
+            walletAddress: '0x4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3',
+            status: 'Approved'
+          },
+          {
+            id: '5',
+            userId: 'user5',
+            userName: 'Ismail bin Yusof',
+            userEmail: 'ismail@example.com',
+            date: new Date(2023, 11, 20, 10, 5), // Dec 20, 2023, 10:05 AM
+            amountRM: 5000.00,
+            amountCrypto: 0.06494,
+            cryptoType: 'BTC',
+            transactionId: 'tx_btc_321654987',
+            walletAddress: '0x5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4',
+            status: 'Approved'
+          },
+          {
+            id: '7',
+            userId: 'user7',
+            userName: 'Hakim bin Razak',
+            userEmail: 'hakim@example.com',
+            date: new Date(2024, 0, 15, 9, 50), // Jan 15, 2024, 9:50 AM
+            amountRM: 1500.00,
+            amountCrypto: 0.01948,
+            cryptoType: 'BTC',
+            transactionId: 'tx_btc_987321654',
+            walletAddress: '0x7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4X5Y6',
+            status: 'Pending'
+          },
+          {
+            id: '8',
+            userId: 'user8',
+            userName: 'Aishah binti Kamal',
+            userEmail: 'aishah@example.com',
+            date: new Date(2024, 0, 22, 15, 40), // Jan 22, 2024, 3:40 PM
+            amountRM: 3500.00,
+            amountCrypto: 0.04545,
+            cryptoType: 'BTC',
+            transactionId: 'tx_btc_123789456',
+            walletAddress: '0x8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4X5Y6Z7',
+            status: 'Pending'
+          },
+          {
+            id: '9',
+            userId: 'user1',
+            userName: 'Ahmad bin Abdullah',
+            userEmail: 'ahmad@example.com',
+            date: new Date(2024, 1, 5, 11, 15), // Feb 5, 2024, 11:15 AM
+            amountRM: 2000.00,
+            amountCrypto: 0.02597,
+            cryptoType: 'BTC',
+            transactionId: 'tx_btc_456123789',
+            walletAddress: '0x1A2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0',
+            status: 'Pending'
+          },
+          {
+            id: '10',
+            userId: 'user9',
+            userName: 'Siti binti Rahman',
+            userEmail: 'siti@example.com',
+            date: new Date(2024, 1, 10, 14, 30), // Feb 10, 2024, 2:30 PM
+            amountRM: 1000.00,
+            amountCrypto: 0.01299,
+            cryptoType: 'BTC',
+            transactionId: 'tx_btc_789456123',
+            walletAddress: '0x9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4X5Y6Z7A8',
+            status: 'Rejected'
+          }
+        ];
+        
+        zakatPayments.value = dummyPayments;
+        
+        // Comment out the Firestore code for now
+        /*
+        const querySnapshot = await getDocs(collection(db, 'zakatPayments'));
+        const payments = [];
+        
+        querySnapshot.forEach((doc) => {
+          payments.push({
+            id: doc.id,
+            ...doc.data(),
+            date: doc.data().date?.toDate() || new Date()
+          });
+        });
+        
+        zakatPayments.value = payments;
+        */
+        
+      } catch (error) {
+        console.error('Error fetching zakat payments:', error);
+      } finally {
+        loading.value = false;
+      }
+    };
+    
+    const fetchZakatDistributions = async () => {
+      try {
+        loadingDistributions.value = true;
+        
+        // In a real app, this would fetch from Firestore
+        // For now, we'll use dummy data with source payments
+        const dummyDistributions = [
+          {
+            id: '1',
+            recipientName: 'Zamir bin Abdullah',
+            category: 'Poor',
+            amountRM: 3700.00,
+            description: 'Monthly assistance for basic necessities',
+            evidenceUrl: 'https://example.com/evidence1.pdf',
+            date: new Date(2023, 10, 20, 10, 0), // Nov 20, 2023, 10:00 AM
+            sourcePayments: ['1', '2'] // IDs of source payments
+          },
+          {
+            id: '2',
+            recipientName: 'Fatimah binti Hassan',
+            category: 'Poor',
+            amountRM: 800.00,
+            description: 'Education support for children',
+            evidenceUrl: 'https://example.com/evidence2.pdf',
+            date: new Date(2023, 11, 5, 14, 30), // Dec 5, 2023, 2:30 PM
+            sourcePayments: ['3'] // IDs of source payments
+          },
+          {
+            id: '3',
+            recipientName: 'Muhammad bin Ibrahim',
+            category: 'Needy',
+            amountRM: 1200.00,
+            description: 'Medical treatment assistance',
+            evidenceUrl: 'https://example.com/evidence3.pdf',
+            date: new Date(2023, 11, 15, 11, 45), // Dec 15, 2023, 11:45 AM
+            sourcePayments: ['4'] // IDs of source payments
+          },
+          {
+            id: '4',
+            recipientName: 'Nurul Iman Foundation',
+            category: 'Zakat Administrator',
+            amountRM: 2000.00,
+            description: 'Operational costs for zakat distribution',
+            evidenceUrl: 'https://example.com/evidence4.pdf',
+            date: new Date(2023, 11, 28, 9, 15), // Dec 28, 2023, 9:15 AM
+            sourcePayments: ['5'] // IDs of source payments
+          },
+          {
+            id: '5',
+            recipientName: 'Ali bin Razak',
+            category: 'New Muslim',
+            amountRM: 1500.00,
+            description: 'Support for Islamic education and community integration',
+            evidenceUrl: 'https://example.com/evidence5.pdf',
+            date: new Date(2024, 0, 10, 13, 0), // Jan 10, 2024, 1:00 PM
+            sourcePayments: ['6'] // IDs of source payments
+          },
+          {
+            id: '6',
+            recipientName: 'Refugee Support Center',
+            category: 'Allah\'s Cause',
+            amountRM: 3000.00,
+            description: 'Funding for refugee education program',
+            evidenceUrl: 'https://example.com/evidence6.pdf',
+            date: new Date(2024, 0, 22, 15, 30), // Jan 22, 2024, 3:30 PM
+            sourcePayments: ['7'] // IDs of source payments
+          },
+          {
+            id: '7',
+            recipientName: 'Zainab binti Omar',
+            category: 'Debtor',
+            amountRM: 2500.00,
+            description: 'Assistance with medical debt',
+            evidenceUrl: 'https://example.com/evidence7.pdf',
+            date: new Date(2024, 1, 5, 10, 45), // Feb 5, 2024, 10:45 AM
+            sourcePayments: ['8'] // IDs of source payments
+          }
+        ];
+        
+        zakatDistributions.value = dummyDistributions;
+        
+        // Comment out the Firestore code for now
+        /*
+        const querySnapshot = await getDocs(collection(db, 'zakatDistributions'));
+        const distributions = [];
+        
+        querySnapshot.forEach((doc) => {
+          distributions.push({
+            id: doc.id,
+            ...doc.data(),
+            date: doc.data().date?.toDate() || new Date(),
+            sourcePayments: doc.data().sourcePayments || []
+          });
+        });
+        
+        zakatDistributions.value = distributions;
+        */
+        
+      } catch (error) {
+        console.error('Error fetching zakat distributions:', error);
+      } finally {
+        loadingDistributions.value = false;
+      }
+    };
+    
+    const fetchAsnafRecipients = async () => {
+      try {
+        loadingAsnaf.value = true;
+        
+        // In a real app, this would fetch from Firestore
+        // For now, we'll use dummy data
+        const dummyAsnaf = [
+          {
+            id: '1',
+            name: 'Ahmad bin Abdullah',
+            category: 'Poor (Fakir)',
+            contact: '012-3456789',
+            location: 'Kampung Baru, Kuala Lumpur',
+            needs: 'Basic necessities, medical support',
+            status: 'Active',
+            notes: 'Single father with 3 children'
+          },
+          {
+            id: '2',
+            name: 'Fatimah binti Hassan',
+            category: 'Poor (Fakir)',
+            contact: '019-8765432',
+            location: 'Chow Kit, Kuala Lumpur',
+            needs: 'Food, education for children',
+            status: 'Active',
+            notes: 'Widow with 2 school-age children'
+          },
+          {
+            id: '3',
+            name: 'Muhammad bin Ibrahim',
+            category: 'Needy (Miskin)',
+            contact: '013-5557777',
+            location: 'Sentul, Kuala Lumpur',
+            needs: 'Rent assistance, job training',
+            status: 'Active',
+            notes: 'Recently lost job due to disability'
+          },
+          {
+            id: '4',
+            name: 'Nurul Iman Foundation',
+            category: 'Zakat Administrator (Amil)',
+            contact: '03-21234567',
+            location: 'Shah Alam, Selangor',
+            needs: 'Operational costs',
+            status: 'Active',
+            notes: 'Local zakat distribution organization'
+          },
+          {
+            id: '5',
+            name: 'Ali bin Razak',
+            category: 'New Muslim (Muallaf)',
+            contact: '014-9998888',
+            location: 'Petaling Jaya, Selangor',
+            needs: 'Islamic education, community support',
+            status: 'Active',
+            notes: 'Converted 6 months ago'
+          },
+          {
+            id: '6',
+            name: 'Refugee Support Center',
+            category: 'Allah\'s Cause (Fi Sabilillah)',
+            contact: '03-87654321',
+            location: 'Ampang, Kuala Lumpur',
+            needs: 'Funding for refugee education program',
+            status: 'Active',
+            notes: 'Supporting 50 refugee children'
+          },
+          {
+            id: '7',
+            name: 'Zainab binti Omar',
+            category: 'Debtor (Gharimin)',
+            contact: '017-1112222',
+            location: 'Klang, Selangor',
+            needs: 'Medical debt assistance',
+            status: 'Pending',
+            notes: 'Needs help with hospital bills'
+          },
+          {
+            id: '8',
+            name: 'Ismail bin Yusof',
+            category: 'Traveler (Ibnus Sabil)',
+            contact: '018-3334444',
+            location: 'Currently stranded in Kuala Lumpur',
+            needs: 'Temporary accommodation, travel funds',
+            status: 'Active',
+            notes: 'Student who lost wallet and documents'
+          }
+        ];
+        
+        asnafRecipients.value = dummyAsnaf;
+        
+        // In a real implementation, you would fetch from Firestore like this:
+        /*
+        const querySnapshot = await getDocs(collection(db, 'asnafRecipients'));
+        const recipients = [];
+        
+        querySnapshot.forEach((doc) => {
+          recipients.push({
+            id: doc.id,
+            ...doc.data()
+          });
+        });
+        
+        asnafRecipients.value = recipients;
+        */
+        
+      } catch (error) {
+        console.error('Error fetching asnaf recipients:', error);
+      } finally {
+        loadingAsnaf.value = false;
+      }
+    };
+    
+    const formatDate = (date) => {
+      return new Date(date).toLocaleDateString('en-MY', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    };
+    
+    const viewDetails = (payment) => {
+      selectedPayment.value = payment;
+    };
+    
+    const updatePaymentStatus = async (paymentId, status) => {
+      try {
+        const paymentRef = doc(db, 'zakatPayments', paymentId);
+        await updateDoc(paymentRef, {
+          status: status
+        });
+        
+        // Update local state
+        const index = zakatPayments.value.findIndex(p => p.id === paymentId);
+        if (index !== -1) {
+          zakatPayments.value[index].status = status;
+        }
+        
+        // Close modal
+        selectedPayment.value = null;
+      } catch (error) {
+        console.error('Error updating payment status:', error);
+      }
+    };
+    
+    const selectedDistribution = ref(null);
+    const selectedDistributionSources = ref([]);
+    const availablePayments = ref([]);
+    const selectedPaymentIds = ref([]);
+    const selectedAmount = ref(0);
+    
+    // Computed property for available zakat funds
+    const availableZakatFunds = computed(() => {
+      // Total zakat received minus total distributed
+      return totalZakatRM.value - totalDistributedRM.value;
+    });
+    
+    const fetchAvailablePayments = () => {
+      // In a real app, this would fetch payments that still have available funds
+      // For now, we'll filter the approved payments that haven't been fully used
+      availablePayments.value = zakatPayments.value.filter(payment => 
+        payment.status === 'Approved' && 
+        (!payment.usedAmount || payment.usedAmount < payment.amountRM)
+      ).map(payment => ({
+        ...payment,
+        // Calculate remaining amount
+        remainingAmount: payment.usedAmount ? payment.amountRM - payment.usedAmount : payment.amountRM
+      }));
+    };
+    
+    const updateSelectedAmount = () => {
+      selectedAmount.value = 0;
+      selectedPaymentIds.value.forEach(id => {
+        const payment = availablePayments.value.find(p => p.id === id);
+        if (payment) {
+          selectedAmount.value += payment.remainingAmount;
+        }
+      });
+    };
+    
+    const viewSourceDetails = (distribution) => {
+      selectedDistribution.value = distribution;
+      
+      // Find the source payments based on the IDs stored in the distribution
+      if (distribution.sourcePayments && distribution.sourcePayments.length > 0) {
+        selectedDistributionSources.value = distribution.sourcePayments.map(sourceId => {
+          const payment = zakatPayments.value.find(p => p.id === sourceId);
+          return payment || { 
+            userName: 'Unknown', 
+            amountRM: 0, 
+            date: new Date(), 
+            walletAddress: 'N/A',
+            transactionId: 'N/A'
+          };
+        });
+      } else {
+        selectedDistributionSources.value = [];
+      }
+    };
+    
+    const editDistribution = (distribution) => {
+      editingDistribution.value = distribution;
+      distributionForm.value = {
+        recipientName: distribution.recipientName,
+        category: distribution.category,
+        amountRM: distribution.amountRM,
+        description: distribution.description,
+        evidenceUrl: distribution.evidenceUrl,
+        date: distribution.date
+      };
+      
+      // Set selected payment IDs if they exist
+      selectedPaymentIds.value = distribution.sourcePayments || [];
+      updateSelectedAmount();
+      
+      showAddDistributionModal.value = true;
+    };
+    
+    const saveDistribution = async () => {
+      try {
+        if (uploading.value) {
+          alert('Please wait for the file to finish uploading');
+          return;
+        }
+        
+        if (selectedAmount.value < distributionForm.value.amountRM) {
+          alert('Insufficient funds selected. Please select more source payments.');
+          return;
+        }
+        
+        const distributionData = {
+          ...distributionForm.value,
+          amountRM: Number(distributionForm.value.amountRM),
+          date: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          // Store reference to the asnaf if selected from list
+          asnafId: selectedAsnafId.value || null,
+          // Store the source payment IDs
+          sourcePayments: selectedPaymentIds.value
+        };
+        
+        if (editingDistribution.value) {
+          // Update existing distribution
+          const distributionRef = doc(db, 'zakatDistributions', editingDistribution.value.id);
+          await updateDoc(distributionRef, distributionData);
+          
+          // Update local state
+          const index = zakatDistributions.value.findIndex(d => d.id === editingDistribution.value.id);
+          if (index !== -1) {
+            zakatDistributions.value[index] = {
+              ...zakatDistributions.value[index],
+              ...distributionData,
+              date: new Date()
+            };
+          }
+        } else {
+          // Add new distribution
+          const docRef = await addDoc(collection(db, 'zakatDistributions'), distributionData);
+          
+          // Add to local state
+          zakatDistributions.value.push({
+            id: docRef.id,
+            ...distributionData,
+            date: new Date()
+          });
+        }
+        
+        // Update the used amount for each source payment
+        // In a real implementation, you would update this in Firestore
+        selectedPaymentIds.value.forEach(paymentId => {
+          const paymentIndex = zakatPayments.value.findIndex(p => p.id === paymentId);
+          if (paymentIndex !== -1) {
+            if (!zakatPayments.value[paymentIndex].usedAmount) {
+              zakatPayments.value[paymentIndex].usedAmount = 0;
+            }
+            zakatPayments.value[paymentIndex].usedAmount += distributionForm.value.amountRM / selectedPaymentIds.value.length;
+          }
+        });
+        
+        // Update asnaf record with distribution reference
+        if (selectedAsnafId.value) {
+          // In a real implementation, you would update the asnaf record in Firestore
+          console.log(`Updated asnaf ${selectedAsnafId.value} with new distribution reference`);
+        }
+        
+        resetDistributionForm();
+        showAddDistributionModal.value = false;
+      } catch (error) {
+        console.error('Error saving distribution:', error);
+        alert('Error saving distribution. Please try again.');
+      }
+    };
+    
+    const resetDistributionForm = () => {
+      distributionForm.value = {
+        recipientName: '',
+        category: '',
+        amountRM: 0,
+        description: '',
+        evidenceUrl: '',
+        date: null
+      };
+      editingDistribution.value = null;
+      uploadProgress.value = 0;
+      selectedAsnafId.value = '';
+      selectedAsnafDetails.value = null;
+      selectedPaymentIds.value = [];
+      selectedAmount.value = 0;
+    };
+    
+    const editAsnaf = (asnaf) => {
+      editingAsnaf.value = asnaf;
+      asnafForm.value = { ...asnaf };
+      showAddAsnafModal.value = true;
+    };
+    
+    const resetAsnafForm = () => {
+      asnafForm.value = {
+        name: '',
+        category: '',
+        contact: '',
+        location: '',
+        needs: '',
+        status: 'Active',
+        notes: ''
+      };
+      editingAsnaf.value = null;
+    };
+    
+    const saveAsnaf = async () => {
+      try {
+        // In a real app, this would save to Firestore
+        if (editingAsnaf.value) {
+          // Update existing asnaf
+          const index = asnafRecipients.value.findIndex(a => a.id === editingAsnaf.value.id);
+          if (index !== -1) {
+            asnafRecipients.value[index] = {
+              ...asnafRecipients.value[index],
+              ...asnafForm.value
+            };
+          }
+          
+          // In a real implementation:
+          /*
+          const asnafRef = doc(db, 'asnafRecipients', editingAsnaf.value.id);
+          await updateDoc(asnafRef, asnafForm.value);
+          */
+        } else {
+          // Add new asnaf
+          const newAsnaf = {
+            id: Date.now().toString(), // Generate a dummy ID
+            ...asnafForm.value
+          };
+          asnafRecipients.value.push(newAsnaf);
+          
+          // In a real implementation:
+          /*
+          const docRef = await addDoc(collection(db, 'asnafRecipients'), asnafForm.value);
+          asnafRecipients.value.push({
+            id: docRef.id,
+            ...asnafForm.value
+          });
+          */
+        }
+        
+        resetAsnafForm();
+        showAddAsnafModal.value = false;
+      } catch (error) {
+        console.error('Error saving asnaf:', error);
+        alert('Error saving asnaf recipient. Please try again.');
+      }
+    };
+    
+    const handleLogout = async () => {
+      try {
+        const auth = getAuth();
+        await signOut(auth);
+        router.push('/admin/login');
+      } catch (error) {
+        console.error('Error signing out:', error);
+      }
+    };
+    
+    const selectedAsnafId = ref('');
+    const selectedAsnafDetails = ref(null);
+    
+    const handleAsnafSelection = () => {
+      if (selectedAsnafId.value) {
+        const selectedAsnaf = asnafRecipients.value.find(asnaf => asnaf.id === selectedAsnafId.value);
+        if (selectedAsnaf) {
+          // Populate the distribution form with asnaf details
+          distributionForm.value.recipientName = selectedAsnaf.name;
+          
+          // Convert category format if needed
+          const categoryMap = {
+            'Poor (Fakir)': 'Poor',
+            'Needy (Miskin)': 'Needy',
+            'Zakat Administrator (Amil)': 'Zakat Administrator',
+            'New Muslim (Muallaf)': 'New Muslim',
+            'To Free Slaves (Riqab)': 'Slave',
+            'Debtor (Gharimin)': 'Debtor',
+            'Allah\'s Cause (Fi Sabilillah)': 'Allah\'s Cause',
+            'Traveler (Ibnus Sabil)': 'Traveler'
+          };
+          
+          distributionForm.value.category = categoryMap[selectedAsnaf.category] || selectedAsnaf.category;
+          
+          // Store selected asnaf details for display
+          selectedAsnafDetails.value = selectedAsnaf;
+        }
+      } else {
+        selectedAsnafDetails.value = null;
+      }
+    };
+    
+    const handleFileUpload = async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      try {
+        uploading.value = true;
+        uploadProgress.value = 0;
+        
+        // Create a storage reference
+        const fileRef = storageRef(storage, `distribution-evidence/${Date.now()}_${file.name}`);
+        
+        // Upload the file with progress tracking
+        const uploadTask = uploadBytesResumable(fileRef, file);
+        
+        // Monitor upload progress
+        uploadTask.on('state_changed', 
+          (snapshot) => {
+            // Track progress
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            uploadProgress.value = Math.round(progress);
+          },
+          (error) => {
+            // Handle errors
+            console.error('Upload error:', error);
+            alert('Error uploading file. Please try again.');
+            uploading.value = false;
+          },
+          async () => {
+            // Upload completed successfully
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            distributionForm.value.evidenceUrl = downloadURL;
+            uploading.value = false;
+          }
+        );
+      } catch (error) {
+        console.error('File upload error:', error);
+        alert('Error uploading file. Please try again.');
+        uploading.value = false;
+      }
+    };
+    
+    onMounted(() => {
+      fetchZakatPayments();
+      fetchZakatDistributions();
+      fetchAsnafRecipients();
+    });
+    
+    // Watch for changes in activeTab to load available payments when needed
+    watch(activeTab, (newTab) => {
+      if (newTab === 'distributions') {
+        fetchAvailablePayments();
+      }
+    });
+    
+    // Watch for showAddDistributionModal to load available payments when opened
+    watch(showAddDistributionModal, (isOpen) => {
+      if (isOpen) {
+        fetchAvailablePayments();
+      }
+    });
+    
+    // Add these new refs for the asnaf reports feature
+    const asnafReports = ref([]);
+    const loadingReports = ref(true);
+    const reportStatusFilter = ref('all');
+    const selectedReport = ref(null);
+    const reportActionNotes = ref('');
+    const selectedImage = ref(null);
+    const conversionCategory = ref('');
+    const conversionNeeds = ref('');
+    
+    // Add this computed property for filtered reports
+    const filteredReports = computed(() => {
+      if (reportStatusFilter.value === 'all') {
+        return asnafReports.value;
+      } else {
+        return asnafReports.value.filter(report => 
+          report.status.toLowerCase() === reportStatusFilter.value
+        );
+      }
+    });
+    
+    // Add this function to fetch asnaf reports
+    const fetchAsnafReports = async () => {
+      try {
+        loadingReports.value = true;
+        
+        // In a real app, this would fetch from Firestore
+        // For now, we'll use dummy data
+        const dummyReports = [
+          {
+            id: '1',
+            name: 'Rohani binti Ismail',
+            address: 'Kampung Baru, Jalan Masjid India, Kuala Lumpur',
+            phoneNumber: '012-3456789',
+            description: 'Single mother with 4 children, living in poor conditions. The house is in disrepair and they need assistance with basic necessities and school supplies for the children.',
+            location: {
+              latitude: 3.1590,
+              longitude: 101.6969,
+              address: 'Kampung Baru, Kuala Lumpur'
+            },
+            images: [
+              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' },
+              { id: 2, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
+            ],
+            reportDate: new Date(2024, 0, 15), // Jan 15, 2024
+            status: 'Pending',
+            reportedBy: 'Ahmad bin Abdullah (User ID: user1)',
+            notes: ''
+          },
+          {
+            id: '2',
+            name: 'Hassan bin Omar',
+            address: 'Flat Seri Kota, Blok C-15-3, Jalan Pudu, Kuala Lumpur',
+            phoneNumber: '019-8765432',
+            description: 'Elderly man living alone, unable to work due to health issues. Needs assistance with medical expenses and daily necessities.',
+            location: {
+              latitude: 3.1390,
+              longitude: 101.7169,
+              address: 'Jalan Pudu, Kuala Lumpur'
+            },
+            images: [
+              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
+            ],
+            reportDate: new Date(2024, 0, 20), // Jan 20, 2024
+            status: 'Verified',
+            reportedBy: 'Nurul binti Aziz (User ID: user4)',
+            verifiedBy: 'Admin (Fatimah)',
+            verifiedDate: new Date(2024, 0, 22), // Jan 22, 2024
+            notes: 'Verified through phone call and community leader confirmation'
+          },
+          {
+            id: '3',
+            name: 'Keluarga Zulkifli',
+            address: 'Taman Melati, Jalan 3/4, Gombak, Selangor',
+            phoneNumber: '013-9876543',
+            description: 'Family of 6 living in a small house. Father recently lost job due to company closure. Need assistance with rent and children\'s education expenses.',
+            location: {
+              latitude: 3.2290,
+              longitude: 101.7369,
+              address: 'Taman Melati, Gombak, Selangor'
+            },
+            images: [
+              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' },
+              { id: 2, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' },
+              { id: 3, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
+            ],
+            reportDate: new Date(2024, 1, 5), // Feb 5, 2024
+            status: 'Converted',
+            reportedBy: 'Ismail bin Yusof (User ID: user5)',
+            verifiedBy: 'Admin (Muhammad)',
+            verifiedDate: new Date(2024, 1, 7), // Feb 7, 2024
+            convertedBy: 'Admin (Muhammad)',
+            convertedDate: new Date(2024, 1, 10), // Feb 10, 2024
+            asnafId: '9', // Reference to the created asnaf record
+            notes: 'Converted to asnaf record. Family will receive monthly assistance.'
+          },
+          {
+            id: '4',
+            name: 'Aminah binti Kadir',
+            address: 'PPR Kerinchi, Blok D-10-5, Bangsar South, Kuala Lumpur',
+            phoneNumber: '014-5556666',
+            description: 'Widow with 2 young children. Working part-time but income insufficient for family needs. Children need school supplies and tuition assistance.',
+            location: {
+              latitude: 3.1090,
+              longitude: 101.6669,
+              address: 'PPR Kerinchi, Bangsar South, Kuala Lumpur'
+            },
+            images: [
+              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' },
+              { id: 2, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
+            ],
+            reportDate: new Date(2024, 1, 12), // Feb 12, 2024
+            status: 'Pending',
+            reportedBy: 'Siti binti Rahman (User ID: user9)',
+            notes: ''
+          },
+          {
+            id: '5',
+            name: 'Abdul Rahman bin Hamid',
+            address: 'Kampung Datuk Keramat, Jalan 3/27A, Kuala Lumpur',
+            phoneNumber: '',
+            description: 'Reported as a potential asnaf, but upon investigation, found to be receiving adequate support from family members and other sources.',
+            location: {
+              latitude: 3.1690,
+              longitude: 101.7269,
+              address: 'Kampung Datuk Keramat, Kuala Lumpur'
+            },
+            images: [
+              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
+            ],
+            reportDate: new Date(2024, 0, 10), // Jan 10, 2024
+            status: 'Rejected',
+            reportedBy: 'Hakim bin Razak (User ID: user7)',
+            rejectedBy: 'Admin (Fatimah)',
+            rejectedDate: new Date(2024, 0, 15), // Jan 15, 2024
+            notes: 'Rejected due to sufficient support from family. Already receiving monthly allowance from children.'
+          }
+        ];
+        
+        asnafReports.value = dummyReports;
+        
+        // In a real implementation, you would fetch from Firestore like this:
+        /*
+        const querySnapshot = await getDocs(collection(db, 'asnafReports'));
+        const reports = [];
+        
+        querySnapshot.forEach((doc) => {
+          reports.push({
+            id: doc.id,
+            ...doc.data(),
+            reportDate: doc.data().reportDate?.toDate() || new Date(),
+            verifiedDate: doc.data().verifiedDate?.toDate(),
+            rejectedDate: doc.data().rejectedDate?.toDate(),
+            convertedDate: doc.data().convertedDate?.toDate()
+          });
+        });
+        
+        asnafReports.value = reports;
+        */
+        
+      } catch (error) {
+        console.error('Error fetching asnaf reports:', error);
+      } finally {
+        loadingReports.value = false;
+      }
+    };
+    
+    // Function to view report details
+    const viewReportDetails = (report) => {
+      selectedReport.value = report;
+      reportActionNotes.value = report.notes || '';
+      
+      // If the report is verified and ready for conversion, set default values
+      if (report.status === 'Verified') {
+        conversionCategory.value = 'Needy (Miskin)'; // Default category
+        conversionNeeds.value = report.description; // Use description as default needs
+      }
+    };
+    
+    // Function to view full-size image
+    const viewImage = (imageUrl) => {
+      selectedImage.value = imageUrl;
+    };
+    
+    // Function to verify a report
+    const verifyReport = async (report) => {
+      try {
+        // In a real app, this would update the report in Firestore
+        const reportIndex = asnafReports.value.findIndex(r => r.id === report.id);
+        if (reportIndex !== -1) {
+          // Update the report status
+          asnafReports.value[reportIndex] = {
+            ...asnafReports.value[reportIndex],
+            status: 'Verified',
+            verifiedBy: 'Admin (Current User)', // In a real app, use the current admin's name
+            verifiedDate: new Date(),
+            notes: reportActionNotes.value
+          };
+          
+          // If we're in the modal, close it
+          if (selectedReport.value && selectedReport.value.id === report.id) {
+            selectedReport.value = null;
+          }
+          
+          alert('Report has been verified successfully');
+        }
+        
+        // In a real implementation, you would update in Firestore:
+        /*
+        const reportRef = doc(db, 'asnafReports', report.id);
+        await updateDoc(reportRef, {
+          status: 'Verified',
+          verifiedBy: 'Admin (Current User)', // Use actual admin name
+          verifiedDate: serverTimestamp(),
+          notes: reportActionNotes.value
+        });
+        */
+        
+      } catch (error) {
+        console.error('Error verifying report:', error);
+        alert('Error verifying report. Please try again.');
+      }
+    };
+    
+    // Function to reject a report
+    const rejectReport = async (report) => {
+      try {
+        // In a real app, this would update the report in Firestore
+        const reportIndex = asnafReports.value.findIndex(r => r.id === report.id);
+        if (reportIndex !== -1) {
+          // Update the report status
+          asnafReports.value[reportIndex] = {
+            ...asnafReports.value[reportIndex],
+            status: 'Rejected',
+            rejectedBy: 'Admin (Current User)', // In a real app, use the current admin's name
+            rejectedDate: new Date(),
+            notes: reportActionNotes.value
+          };
+          
+          // If we're in the modal, close it
+          if (selectedReport.value && selectedReport.value.id === report.id) {
+            selectedReport.value = null;
+          }
+          
+          alert('Report has been rejected');
+        }
+        
+        // In a real implementation, you would update in Firestore:
+        /*
+        const reportRef = doc(db, 'asnafReports', report.id);
+        await updateDoc(reportRef, {
+          status: 'Rejected',
+          rejectedBy: 'Admin (Current User)', // Use actual admin name
+          rejectedDate: serverTimestamp(),
+          notes: reportActionNotes.value
+        });
+        */
+        
+      } catch (error) {
+        console.error('Error rejecting report:', error);
+        alert('Error rejecting report. Please try again.');
+      }
+    };
+    
+    // Function to convert a verified report to an asnaf record
+    const convertToAsnaf = async (report) => {
+      try {
+        if (!conversionCategory && report.status === 'Verified') {
+          alert('Please select an asnaf category');
+          return;
+        }
+        
+        // In a real app, this would create a new asnaf record and update the report
+        
+        // 1. Create new asnaf record
+        const newAsnaf = {
+          id: Date.now().toString(), // Generate a dummy ID
+          name: report.name,
+          category: conversionCategory || 'Needy (Miskin)', // Default if not in modal
+          contact: report.phoneNumber || 'Not provided',
+          location: report.location?.address || report.address,
+          needs: conversionNeeds || report.description,
+          status: 'Active',
+          notes: `Created from report ID: ${report.id}. ${reportActionNotes.value}`.trim(),
+          createdFrom: report.id,
+          createdAt: new Date()
+        };
+        
+        // Add to asnaf recipients
+        asnafRecipients.value.push(newAsnaf);
+        
+        // 2. Update the report status
+        const reportIndex = asnafReports.value.findIndex(r => r.id === report.id);
+        if (reportIndex !== -1) {
+          asnafReports.value[reportIndex] = {
+            ...asnafReports.value[reportIndex],
+            status: 'Converted',
+            convertedBy: 'Admin (Current User)', // In a real app, use the current admin's name
+            convertedDate: new Date(),
+            asnafId: newAsnaf.id,
+            notes: `${asnafReports.value[reportIndex].notes} Converted to asnaf record ID: ${newAsnaf.id}`.trim()
+          };
+        }
+        
+        // If we're in the modal, close it
+        if (selectedReport.value && selectedReport.value.id === report.id) {
+          selectedReport.value = null;
+        }
+        
+        // Reset conversion form
+        conversionCategory.value = '';
+        conversionNeeds.value = '';
+        
+        alert('Report has been successfully converted to an asnaf record');
+        
+        // In a real implementation with Firestore:
+        /*
+        // 1. Create new asnaf record
+        const asnafData = {
+          name: report.name,
+          category: conversionCategory || 'Needy (Miskin)',
+          contact: report.phoneNumber || 'Not provided',
+          location: report.location?.address || report.address,
+          needs: conversionNeeds || report.description,
+          status: 'Active',
+          notes: `Created from report ID: ${report.id}. ${reportActionNotes.value}`.trim(),
+          createdFrom: report.id,
+          createdAt: serverTimestamp()
+        };
+        
+        const asnafRef = await addDoc(collection(db, 'asnafRecipients'), asnafData);
+        
+        // 2. Update the report status
+        const reportRef = doc(db, 'asnafReports', report.id);
+        await updateDoc(reportRef, {
+          status: 'Converted',
+          convertedBy: 'Admin (Current User)', // Use actual admin name
+          convertedDate: serverTimestamp(),
+          asnafId: asnafRef.id,
+          notes: `${report.notes || ''} Converted to asnaf record ID: ${asnafRef.id}`.trim()
+        });
+        */
+        
+      } catch (error) {
+        console.error('Error converting report to asnaf:', error);
+        alert('Error converting report to asnaf. Please try again.');
+      }
+    };
+    
+    onMounted(() => {
+      fetchZakatPayments();
+      fetchZakatDistributions();
+      fetchAsnafRecipients();
+      fetchAsnafReports(); // Add this new function call
+    });
+    
+    // Add these new refs to your setup function
+    const showConvertModal = ref(false);
+    const reportToConvert = ref(null);
+    
+    // Update the convertToAsnaf function to show the modal first
+    const openConvertModal = (report) => {
+      reportToConvert.value = report;
+      conversionCategory.value = 'Needy (Miskin)'; // Default category
+      conversionNeeds.value = report.description; // Use description as default needs
+      showConvertModal.value = true;
+    };
+    
+    // Add a new function to handle the actual conversion
+    const confirmConvertToAsnaf = async () => {
+      try {
+        if (!conversionCategory.value) {
+          alert('Please select an asnaf category');
+          return;
+        }
+        
+        const report = reportToConvert.value;
+        
+        // In a real app, this would create a new asnaf record and update the report
+        
+        // 1. Create new asnaf record
+        const newAsnaf = {
+          id: Date.now().toString(), // Generate a dummy ID
+          name: report.name,
+          category: conversionCategory.value,
+          contact: report.phoneNumber || 'Not provided',
+          location: report.location?.address || report.address,
+          needs: conversionNeeds.value,
+          status: 'Active',
+          notes: `Created from report ID: ${report.id}. ${reportActionNotes.value}`.trim(),
+          createdFrom: report.id,
+          createdAt: new Date()
+        };
+        
+        // Add to asnaf recipients
+        asnafRecipients.value.push(newAsnaf);
+        
+        // 2. Update the report status
+        const reportIndex = asnafReports.value.findIndex(r => r.id === report.id);
+        if (reportIndex !== -1) {
+          asnafReports.value[reportIndex] = {
+            ...asnafReports.value[reportIndex],
+            status: 'Converted',
+            convertedBy: 'Admin (Current User)', // In a real app, use the current admin's name
+            convertedDate: new Date(),
+            asnafId: newAsnaf.id,
+            notes: `${asnafReports.value[reportIndex].notes} Converted to asnaf record ID: ${newAsnaf.id}`.trim()
+          };
+        }
+        
+        // Close the modal
+        showConvertModal.value = false;
+        reportToConvert.value = null;
+        
+        // Reset conversion form
+        conversionCategory.value = '';
+        conversionNeeds.value = '';
+        
+        alert('Report has been successfully converted to an asnaf record');
+        
+      } catch (error) {
+        console.error('Error converting report to asnaf:', error);
+        alert('Error converting report to asnaf. Please try again.');
+      }
+    };
+    
+    return {
+      zakatPayments,
+      zakatDistributions,
+      loading,
+      loadingDistributions,
+      selectedPayment,
+      totalUsers,
+      totalZakatRM,
+      totalZakatCrypto,
+      totalDistributedRM,
+      formatDate,
+      viewDetails,
+      updatePaymentStatus,
+      handleLogout,
+      activeTab,
+      showAddDistributionModal,
+      distributionForm,
+      editingDistribution,
+      uploadProgress,
+      uploading,
+      editDistribution,
+      handleFileUpload,
+      saveDistribution,
+      asnafRecipients,
+      loadingAsnaf,
+      showAddAsnafModal,
+      asnafForm,
+      editingAsnaf,
+      groupedAsnaf,
+      editAsnaf,
+      saveAsnaf,
+      selectedAsnafId,
+      selectedAsnafDetails,
+      handleAsnafSelection,
+      selectedDistribution,
+      selectedDistributionSources,
+      availablePayments,
+      selectedPaymentIds,
+      selectedAmount,
+      availableZakatFunds,
+      updateSelectedAmount,
+      viewSourceDetails,
+      asnafReports,
+      loadingReports,
+      reportStatusFilter,
+      filteredReports,
+      selectedReport,
+      reportActionNotes,
+      selectedImage,
+      conversionCategory,
+      conversionNeeds,
+      viewReportDetails,
+      viewImage,
+      verifyReport,
+      rejectReport,
+      convertToAsnaf,
+      showConvertModal,
+      reportToConvert,
+      openConvertModal,
+      confirmConvertToAsnaf
+    };
+  }
+}
+</script>
+
+<style scoped>
+.admin-dashboard {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.logout-btn {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-top: 0.5rem;
+  color: #4CAF50;
+}
+
+.users-table-container {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.users-table th,
+.users-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.users-table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.status-badge.pending {
+  background-color: #FFC107;
+  color: #333;
+}
+
+.status-badge.approved {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.status-badge.rejected {
+  background-color: #f44336;
+  color: white;
+}
+
+.action-btn {
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.view-btn {
+  background-color: #2196F3;
+  color: white;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.no-data {
+  text-align: center;
+  color: #666;
+  padding: 1rem;
+}
+
+/* Modal styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 8px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.payment-details {
+  margin-top: 1.5rem;
+}
+
+.detail-row {
+  display: flex;
+  margin-bottom: 0.75rem;
+}
+
+.detail-label {
+  font-weight: 600;
+  width: 150px;
+}
+
+.modal-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.approve-btn {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.reject-btn {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.dashboard-tabs {
+  display: flex;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.tab-btn {
+  padding: 0.75rem 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.active-tab {
+  border-bottom: 3px solid #4CAF50;
+  color: #4CAF50;
+  font-weight: 600;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.add-btn {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.edit-btn {
+  background-color: #FF9800;
+  color: white;
+}
+
+.distribution-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.cancel-btn {
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.save-btn {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.save-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.evidence-link {
+  color: #2196F3;
+  text-decoration: underline;
+}
+
+.progress-bar {
+  height: 20px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+  background-color: #4CAF50;
+  transition: width 0.3s ease;
+}
+
+.progress-bar span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  line-height: 20px;
+  color: white;
+  font-size: 0.75rem;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.evidence-preview {
+  margin-top: 0.5rem;
+}
+
+.asnaf-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.asnaf-category h3 {
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+}
+
+.asnaf-count {
+  font-size: 0.9rem;
+  color: #666;
+  margin-left: 0.5rem;
+}
+
+.asnaf-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.asnaf-card {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.asnaf-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.asnaf-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.asnaf-details p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.asnaf-details .status-badge {
+  margin-left: 0.25rem;
+}
+
+.status-badge.active {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.status-badge.pending {
+  background-color: #FFC107;
+  color: #333;
+}
+
+.status-badge.inactive {
+  background-color: #9E9E9E;
+  color: white;
+}
+
+.recipient-selection {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.recipient-selection select {
+  flex: 1;
+}
+
+.add-recipient-btn {
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.recipient-preview {
+  background-color: #f5f5f9;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-top: 0.5rem;
+  border-left: 3px solid #4CAF50;
+}
+
+.recipient-preview-header {
+  margin-bottom: 0.5rem;
+}
+
+.recipient-preview-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #4CAF50;
+}
+
+.recipient-preview-content p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+}
+
+.wallet-address {
+  font-family: monospace;
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.distribution-modal {
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.source-payments-section {
+  margin-top: 1.5rem;
+  border-top: 1px solid #eee;
+  padding-top: 1.5rem;
+}
+
+.available-funds {
+  background-color: #f5f5f5;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.source-header {
+  margin-bottom: 1rem;
+}
+
+.source-header h4 {
+  margin: 0 0 0.25rem 0;
+  color: #333;
+}
+
+.source-help {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.payment-selection-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.payment-selection-item {
+  padding: 0.75rem;
+  border-bottom: 1px solid #eee;
+}
+
+.payment-selection-item:last-child {
+  border-bottom: none;
+}
+
+.payment-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+
+.payment-info {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.payment-user {
+  font-weight: 500;
+}
+
+.payment-amount {
+  font-weight: 600;
+  color: #4CAF50;
+  text-align: right;
+}
+
+.payment-date, .payment-wallet {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.selected-amount {
+  background-color: #e8f5e9;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.amount-warning {
+  color: #f44336;
+}
+
+.source-btn {
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.distribution-summary {
+  background-color: #f5f5f5;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+}
+
+.source-payments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.source-payment-item {
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  padding: 1rem;
+  border-left: 3px solid #4CAF50;
+}
+
+.source-payment-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.source-payment-user {
+  font-weight: 500;
+}
+
+.source-payment-amount {
+  font-weight: 600;
+  color: #4CAF50;
+}
+
+.source-payment-details p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+/* Add these styles to the existing <style> section */
+
+/* Asnaf Reports Styles */
+.reports-filter {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.filter-select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.reports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.report-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.report-header {
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #eee;
+}
+
+.report-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.report-details {
+  padding: 1rem;
+  flex-grow: 1;
+}
+
+.report-details p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.report-images {
+  padding: 0 1rem 1rem;
+}
+
+.report-images h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.image-thumbnails {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.image-thumbnail {
+  width: 80px;
+  height: 80px;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.image-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.report-actions {
+  padding: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  border-top: 1px solid #eee;
+}
+
+.convert-btn {
+  background-color: #673AB7;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.convert-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.status-badge.converted {
+  background-color: #673AB7;
+  color: white;
+}
+
+.status-badge.verified {
+  background-color: #2196F3;
+  color: white;
+}
+
+/* Report Modal Styles */
+.report-modal {
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.report-full-details {
+  margin-top: 1.5rem;
+}
+
+.report-full-images {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: white;
+  border-radius: 8px;
+}
+
+.report-full-images h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.gallery-image {
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  height: 150px;
+}
+
+.gallery-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.gallery-image img:hover {
+  transform: scale(1.05);
+}
+
+.report-action-form {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background-color: white;
+  border-radius: 8px;
+}
+
+.report-action-form h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.help-text {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+/* Image Viewer Modal */
+.image-viewer-modal {
+  background-color: rgba(0, 0, 0, 0.9);
+  padding: 0;
+}
+
+.image-viewer-content {
+  background: none;
+  max-width: 95%;
+  max-height: 95%;
+  box-shadow: none;
+  padding: 0;
+}
+
+.full-size-image {
+  max-width: 100%;
+  max-height: 95vh;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.image-viewer-content .close-btn {
+  position: absolute;
+  top: -2.5rem;
+  right: 0;
+  color: white;
+  font-size: 2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Convert to Asnaf Modal */
+.convert-modal {
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.convert-modal .close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.convert-modal .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.convert-modal .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.convert-modal .form-group select,
+.convert-modal .form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.convert-modal .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.convert-modal .cancel-btn {
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.convert-modal .convert-btn {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.convert-modal .convert-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+</style> 
