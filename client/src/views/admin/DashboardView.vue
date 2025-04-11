@@ -46,6 +46,13 @@
       >
         Asnaf Listing
       </button>
+      <button 
+        @click="activeTab = 'reports'" 
+        :class="{ 'active-tab': activeTab === 'reports' }"
+        class="tab-btn"
+      >
+        Asnaf Reports
+      </button>
     </div>
     
     <!-- Zakat Payments Tab -->
@@ -170,6 +177,66 @@
               </div>
             </div>
             <div v-if="asnafList.length === 0" class="no-data">No recipients in this category</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Asnaf Reports Tab -->
+    <div v-if="activeTab === 'reports'" class="users-table-container">
+      <h2>Asnaf Reports</h2>
+      <div v-if="loadingReports" class="loading">Loading reports...</div>
+      <div v-else>
+        <div class="reports-filter">
+          <select v-model="reportStatusFilter" class="filter-select">
+            <option value="all">All Reports</option>
+            <option value="pending">Pending</option>
+            <option value="verified">Verified</option>
+            <option value="rejected">Rejected</option>
+            <option value="converted">Converted to Asnaf</option>
+          </select>
+        </div>
+        
+        <div class="reports-grid">
+          <div v-for="report in filteredReports" :key="report.id" class="report-card">
+            <div class="report-header">
+              <h3>{{ report.name }}</h3>
+              <span :class="'status-badge ' + report.status.toLowerCase()">{{ report.status }}</span>
+            </div>
+            
+            <div class="report-details">
+              <p><strong>Reported on:</strong> {{ formatDate(report.reportDate) }}</p>
+              <p><strong>Address:</strong> {{ report.address }}</p>
+              <p v-if="report.phoneNumber"><strong>Phone:</strong> {{ report.phoneNumber }}</p>
+              <p><strong>Description:</strong> {{ report.description }}</p>
+              <p v-if="report.location"><strong>Location:</strong> {{ report.location.address }}</p>
+            </div>
+            
+            <div class="report-images" v-if="report.images && report.images.length > 0">
+              <h4>Images ({{ report.images.length }})</h4>
+              <div class="image-thumbnails">
+                <div v-for="(image, index) in report.images" :key="index" class="image-thumbnail" @click="viewImage(image.url)">
+                  <img :src="image.url" alt="Report evidence" />
+                </div>
+              </div>
+            </div>
+            
+            <div class="report-actions">
+              <button v-if="report.status === 'Pending'" @click="verifyReport(report)" class="action-btn approve-btn">Verify</button>
+              <button v-if="report.status === 'Pending'" @click="rejectReport(report)" class="action-btn reject-btn">Reject</button>
+              <button 
+                v-if="report.status === 'Verified'" 
+                @click="openConvertModal(report)" 
+                class="action-btn convert-btn"
+              >
+                Convert to Asnaf
+              </button>
+              <button @click="viewReportDetails(report)" class="action-btn view-btn">View Details</button>
+            </div>
+          </div>
+          
+          <div v-if="filteredReports.length === 0" class="no-data">
+            No reports found matching the selected filter
           </div>
         </div>
       </div>
@@ -508,6 +575,168 @@
               <p><strong>Transaction ID:</strong> {{ source.transactionId }}</p>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Report Details Modal -->
+    <div v-if="selectedReport" class="modal report-modal">
+      <div class="modal-content report-full-details">
+        <span class="close-btn" @click="selectedReport = null">&times;</span>
+        <h2>Report Details</h2>
+        
+        <div class="detail-row">
+          <span class="detail-label">Name:</span>
+          <span class="detail-value">{{ selectedReport.name }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Status:</span>
+          <span class="detail-value">
+            <span :class="'status-badge ' + selectedReport.status.toLowerCase()">
+              {{ selectedReport.status }}
+            </span>
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Reported on:</span>
+          <span class="detail-value">{{ formatDate(selectedReport.reportDate) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Address:</span>
+          <span class="detail-value">{{ selectedReport.address }}</span>
+        </div>
+        <div class="detail-row" v-if="selectedReport.phoneNumber">
+          <span class="detail-label">Phone Number:</span>
+          <span class="detail-value">{{ selectedReport.phoneNumber }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Description:</span>
+          <span class="detail-value">{{ selectedReport.description }}</span>
+        </div>
+        <div class="detail-row" v-if="selectedReport.location">
+          <span class="detail-label">Location:</span>
+          <span class="detail-value">
+            {{ selectedReport.location.address }}<br>
+            <small>Lat: {{ selectedReport.location.latitude }}, Long: {{ selectedReport.location.longitude }}</small>
+          </span>
+        </div>
+        <div class="detail-row" v-if="selectedReport.reportedBy">
+          <span class="detail-label">Reported By:</span>
+          <span class="detail-value">{{ selectedReport.reportedBy }}</span>
+        </div>
+        <div class="detail-row" v-if="selectedReport.verifiedBy">
+          <span class="detail-label">Verified By:</span>
+          <span class="detail-value">{{ selectedReport.verifiedBy }} on {{ formatDate(selectedReport.verifiedDate) }}</span>
+        </div>
+        <div class="detail-row" v-if="selectedReport.rejectedBy">
+          <span class="detail-label">Rejected By:</span>
+          <span class="detail-value">{{ selectedReport.rejectedBy }} on {{ formatDate(selectedReport.rejectedDate) }}</span>
+        </div>
+        <div class="detail-row" v-if="selectedReport.notes">
+          <span class="detail-label">Notes:</span>
+          <span class="detail-value">{{ selectedReport.notes }}</span>
+        </div>
+      </div>
+      
+      <div v-if="selectedReport.images && selectedReport.images.length > 0" class="report-full-images">
+        <h3>Images</h3>
+        <div class="image-gallery">
+          <div v-for="(image, index) in selectedReport.images" :key="index" class="gallery-image">
+            <img :src="image.url" alt="Report evidence" @click="viewImage(image.url)" />
+          </div>
+        </div>
+      </div>
+      
+      <div v-if="selectedReport.status === 'Pending'" class="report-action-form">
+        <h3>Take Action</h3>
+        <div class="form-group">
+          <label for="reportNotes">Notes</label>
+          <textarea id="reportNotes" v-model="reportActionNotes" rows="3" placeholder="Add notes about this report"></textarea>
+        </div>
+        <div class="form-actions">
+          <button @click="verifyReport(selectedReport)" class="approve-btn">Verify Report</button>
+          <button @click="rejectReport(selectedReport)" class="reject-btn">Reject Report</button>
+        </div>
+      </div>
+      
+      <div v-if="selectedReport.status === 'Verified'" class="report-action-form">
+        <h3>Convert to Asnaf</h3>
+        <p class="help-text">Convert this verified report into an asnaf recipient record</p>
+        <div class="form-group">
+          <label for="asnafCategory">Asnaf Category</label>
+          <select id="asnafCategory" v-model="conversionCategory">
+            <option value="">Select a category</option>
+            <option value="Poor (Fakir)">Poor (Fakir)</option>
+            <option value="Needy (Miskin)">Needy (Miskin)</option>
+            <option value="Zakat Administrator (Amil)">Zakat Administrator (Amil)</option>
+            <option value="New Muslim (Muallaf)">New Muslim (Muallaf)</option>
+            <option value="To Free Slaves (Riqab)">To Free Slaves (Riqab)</option>
+            <option value="Debtor (Gharimin)">Debtor (Gharimin)</option>
+            <option value="Allah's Cause (Fi Sabilillah)">Allah's Cause (Fi Sabilillah)</option>
+            <option value="Traveler (Ibnus Sabil)">Traveler (Ibnus Sabil)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="asnafNeeds">Needs</label>
+          <textarea id="asnafNeeds" v-model="conversionNeeds" rows="2" placeholder="Describe the needs of this asnaf"></textarea>
+        </div>
+        <div class="form-actions">
+          <button @click="showConvertModal = true" class="convert-btn" :disabled="!conversionCategory">Convert to Asnaf</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Image Viewer Modal -->
+    <div v-if="selectedImage" class="modal image-viewer-modal" @click="selectedImage = null">
+      <div class="image-viewer-content" @click.stop>
+        <span class="close-btn" @click="selectedImage = null">&times;</span>
+        <img :src="selectedImage" alt="Report evidence" class="full-size-image" />
+      </div>
+    </div>
+    
+    <!-- Update the Convert to Asnaf functionality to use a dedicated modal -->
+    <!-- Add this new modal for Convert to Asnaf -->
+    <div v-if="showConvertModal" class="modal">
+      <div class="modal-content convert-modal">
+        <span class="close-btn" @click="showConvertModal = false">&times;</span>
+        <h2>Convert to Asnaf</h2>
+        <p class="help-text">Convert this verified report into an asnaf recipient record</p>
+        
+        <div class="form-group">
+          <label for="asnafCategory">Asnaf Category</label>
+          <select id="asnafCategory" v-model="conversionCategory" required>
+            <option value="">Select a category</option>
+            <option value="Poor (Fakir)">Poor (Fakir)</option>
+            <option value="Needy (Miskin)">Needy (Miskin)</option>
+            <option value="Zakat Administrator (Amil)">Zakat Administrator (Amil)</option>
+            <option value="New Muslim (Muallaf)">New Muslim (Muallaf)</option>
+            <option value="To Free Slaves (Riqab)">To Free Slaves (Riqab)</option>
+            <option value="Debtor (Gharimin)">Debtor (Gharimin)</option>
+            <option value="Allah's Cause (Fi Sabilillah)">Allah's Cause (Fi Sabilillah)</option>
+            <option value="Traveler (Ibnus Sabil)">Traveler (Ibnus Sabil)</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="asnafNeeds">Needs</label>
+          <textarea 
+            id="asnafNeeds" 
+            v-model="conversionNeeds" 
+            rows="4" 
+            placeholder="Describe the needs of this asnaf"
+            required
+          ></textarea>
+        </div>
+        
+        <div class="form-actions">
+          <button @click="showConvertModal = false" class="cancel-btn">Cancel</button>
+          <button 
+            @click="confirmConvertToAsnaf" 
+            class="convert-btn" 
+            :disabled="!conversionCategory"
+          >
+            Convert to Asnaf
+          </button>
         </div>
       </div>
     </div>
@@ -1353,6 +1582,432 @@ export default {
       }
     });
     
+    // Add these new refs for the asnaf reports feature
+    const asnafReports = ref([]);
+    const loadingReports = ref(true);
+    const reportStatusFilter = ref('all');
+    const selectedReport = ref(null);
+    const reportActionNotes = ref('');
+    const selectedImage = ref(null);
+    const conversionCategory = ref('');
+    const conversionNeeds = ref('');
+    
+    // Add this computed property for filtered reports
+    const filteredReports = computed(() => {
+      if (reportStatusFilter.value === 'all') {
+        return asnafReports.value;
+      } else {
+        return asnafReports.value.filter(report => 
+          report.status.toLowerCase() === reportStatusFilter.value
+        );
+      }
+    });
+    
+    // Add this function to fetch asnaf reports
+    const fetchAsnafReports = async () => {
+      try {
+        loadingReports.value = true;
+        
+        // In a real app, this would fetch from Firestore
+        // For now, we'll use dummy data
+        const dummyReports = [
+          {
+            id: '1',
+            name: 'Rohani binti Ismail',
+            address: 'Kampung Baru, Jalan Masjid India, Kuala Lumpur',
+            phoneNumber: '012-3456789',
+            description: 'Single mother with 4 children, living in poor conditions. The house is in disrepair and they need assistance with basic necessities and school supplies for the children.',
+            location: {
+              latitude: 3.1590,
+              longitude: 101.6969,
+              address: 'Kampung Baru, Kuala Lumpur'
+            },
+            images: [
+              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' },
+              { id: 2, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
+            ],
+            reportDate: new Date(2024, 0, 15), // Jan 15, 2024
+            status: 'Pending',
+            reportedBy: 'Ahmad bin Abdullah (User ID: user1)',
+            notes: ''
+          },
+          {
+            id: '2',
+            name: 'Hassan bin Omar',
+            address: 'Flat Seri Kota, Blok C-15-3, Jalan Pudu, Kuala Lumpur',
+            phoneNumber: '019-8765432',
+            description: 'Elderly man living alone, unable to work due to health issues. Needs assistance with medical expenses and daily necessities.',
+            location: {
+              latitude: 3.1390,
+              longitude: 101.7169,
+              address: 'Jalan Pudu, Kuala Lumpur'
+            },
+            images: [
+              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
+            ],
+            reportDate: new Date(2024, 0, 20), // Jan 20, 2024
+            status: 'Verified',
+            reportedBy: 'Nurul binti Aziz (User ID: user4)',
+            verifiedBy: 'Admin (Fatimah)',
+            verifiedDate: new Date(2024, 0, 22), // Jan 22, 2024
+            notes: 'Verified through phone call and community leader confirmation'
+          },
+          {
+            id: '3',
+            name: 'Keluarga Zulkifli',
+            address: 'Taman Melati, Jalan 3/4, Gombak, Selangor',
+            phoneNumber: '013-9876543',
+            description: 'Family of 6 living in a small house. Father recently lost job due to company closure. Need assistance with rent and children\'s education expenses.',
+            location: {
+              latitude: 3.2290,
+              longitude: 101.7369,
+              address: 'Taman Melati, Gombak, Selangor'
+            },
+            images: [
+              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' },
+              { id: 2, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' },
+              { id: 3, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
+            ],
+            reportDate: new Date(2024, 1, 5), // Feb 5, 2024
+            status: 'Converted',
+            reportedBy: 'Ismail bin Yusof (User ID: user5)',
+            verifiedBy: 'Admin (Muhammad)',
+            verifiedDate: new Date(2024, 1, 7), // Feb 7, 2024
+            convertedBy: 'Admin (Muhammad)',
+            convertedDate: new Date(2024, 1, 10), // Feb 10, 2024
+            asnafId: '9', // Reference to the created asnaf record
+            notes: 'Converted to asnaf record. Family will receive monthly assistance.'
+          },
+          {
+            id: '4',
+            name: 'Aminah binti Kadir',
+            address: 'PPR Kerinchi, Blok D-10-5, Bangsar South, Kuala Lumpur',
+            phoneNumber: '014-5556666',
+            description: 'Widow with 2 young children. Working part-time but income insufficient for family needs. Children need school supplies and tuition assistance.',
+            location: {
+              latitude: 3.1090,
+              longitude: 101.6669,
+              address: 'PPR Kerinchi, Bangsar South, Kuala Lumpur'
+            },
+            images: [
+              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' },
+              { id: 2, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
+            ],
+            reportDate: new Date(2024, 1, 12), // Feb 12, 2024
+            status: 'Pending',
+            reportedBy: 'Siti binti Rahman (User ID: user9)',
+            notes: ''
+          },
+          {
+            id: '5',
+            name: 'Abdul Rahman bin Hamid',
+            address: 'Kampung Datuk Keramat, Jalan 3/27A, Kuala Lumpur',
+            phoneNumber: '',
+            description: 'Reported as a potential asnaf, but upon investigation, found to be receiving adequate support from family members and other sources.',
+            location: {
+              latitude: 3.1690,
+              longitude: 101.7269,
+              address: 'Kampung Datuk Keramat, Kuala Lumpur'
+            },
+            images: [
+              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
+            ],
+            reportDate: new Date(2024, 0, 10), // Jan 10, 2024
+            status: 'Rejected',
+            reportedBy: 'Hakim bin Razak (User ID: user7)',
+            rejectedBy: 'Admin (Fatimah)',
+            rejectedDate: new Date(2024, 0, 15), // Jan 15, 2024
+            notes: 'Rejected due to sufficient support from family. Already receiving monthly allowance from children.'
+          }
+        ];
+        
+        asnafReports.value = dummyReports;
+        
+        // In a real implementation, you would fetch from Firestore like this:
+        /*
+        const querySnapshot = await getDocs(collection(db, 'asnafReports'));
+        const reports = [];
+        
+        querySnapshot.forEach((doc) => {
+          reports.push({
+            id: doc.id,
+            ...doc.data(),
+            reportDate: doc.data().reportDate?.toDate() || new Date(),
+            verifiedDate: doc.data().verifiedDate?.toDate(),
+            rejectedDate: doc.data().rejectedDate?.toDate(),
+            convertedDate: doc.data().convertedDate?.toDate()
+          });
+        });
+        
+        asnafReports.value = reports;
+        */
+        
+      } catch (error) {
+        console.error('Error fetching asnaf reports:', error);
+      } finally {
+        loadingReports.value = false;
+      }
+    };
+    
+    // Function to view report details
+    const viewReportDetails = (report) => {
+      selectedReport.value = report;
+      reportActionNotes.value = report.notes || '';
+      
+      // If the report is verified and ready for conversion, set default values
+      if (report.status === 'Verified') {
+        conversionCategory.value = 'Needy (Miskin)'; // Default category
+        conversionNeeds.value = report.description; // Use description as default needs
+      }
+    };
+    
+    // Function to view full-size image
+    const viewImage = (imageUrl) => {
+      selectedImage.value = imageUrl;
+    };
+    
+    // Function to verify a report
+    const verifyReport = async (report) => {
+      try {
+        // In a real app, this would update the report in Firestore
+        const reportIndex = asnafReports.value.findIndex(r => r.id === report.id);
+        if (reportIndex !== -1) {
+          // Update the report status
+          asnafReports.value[reportIndex] = {
+            ...asnafReports.value[reportIndex],
+            status: 'Verified',
+            verifiedBy: 'Admin (Current User)', // In a real app, use the current admin's name
+            verifiedDate: new Date(),
+            notes: reportActionNotes.value
+          };
+          
+          // If we're in the modal, close it
+          if (selectedReport.value && selectedReport.value.id === report.id) {
+            selectedReport.value = null;
+          }
+          
+          alert('Report has been verified successfully');
+        }
+        
+        // In a real implementation, you would update in Firestore:
+        /*
+        const reportRef = doc(db, 'asnafReports', report.id);
+        await updateDoc(reportRef, {
+          status: 'Verified',
+          verifiedBy: 'Admin (Current User)', // Use actual admin name
+          verifiedDate: serverTimestamp(),
+          notes: reportActionNotes.value
+        });
+        */
+        
+      } catch (error) {
+        console.error('Error verifying report:', error);
+        alert('Error verifying report. Please try again.');
+      }
+    };
+    
+    // Function to reject a report
+    const rejectReport = async (report) => {
+      try {
+        // In a real app, this would update the report in Firestore
+        const reportIndex = asnafReports.value.findIndex(r => r.id === report.id);
+        if (reportIndex !== -1) {
+          // Update the report status
+          asnafReports.value[reportIndex] = {
+            ...asnafReports.value[reportIndex],
+            status: 'Rejected',
+            rejectedBy: 'Admin (Current User)', // In a real app, use the current admin's name
+            rejectedDate: new Date(),
+            notes: reportActionNotes.value
+          };
+          
+          // If we're in the modal, close it
+          if (selectedReport.value && selectedReport.value.id === report.id) {
+            selectedReport.value = null;
+          }
+          
+          alert('Report has been rejected');
+        }
+        
+        // In a real implementation, you would update in Firestore:
+        /*
+        const reportRef = doc(db, 'asnafReports', report.id);
+        await updateDoc(reportRef, {
+          status: 'Rejected',
+          rejectedBy: 'Admin (Current User)', // Use actual admin name
+          rejectedDate: serverTimestamp(),
+          notes: reportActionNotes.value
+        });
+        */
+        
+      } catch (error) {
+        console.error('Error rejecting report:', error);
+        alert('Error rejecting report. Please try again.');
+      }
+    };
+    
+    // Function to convert a verified report to an asnaf record
+    const convertToAsnaf = async (report) => {
+      try {
+        if (!conversionCategory && report.status === 'Verified') {
+          alert('Please select an asnaf category');
+          return;
+        }
+        
+        // In a real app, this would create a new asnaf record and update the report
+        
+        // 1. Create new asnaf record
+        const newAsnaf = {
+          id: Date.now().toString(), // Generate a dummy ID
+          name: report.name,
+          category: conversionCategory || 'Needy (Miskin)', // Default if not in modal
+          contact: report.phoneNumber || 'Not provided',
+          location: report.location?.address || report.address,
+          needs: conversionNeeds || report.description,
+          status: 'Active',
+          notes: `Created from report ID: ${report.id}. ${reportActionNotes.value}`.trim(),
+          createdFrom: report.id,
+          createdAt: new Date()
+        };
+        
+        // Add to asnaf recipients
+        asnafRecipients.value.push(newAsnaf);
+        
+        // 2. Update the report status
+        const reportIndex = asnafReports.value.findIndex(r => r.id === report.id);
+        if (reportIndex !== -1) {
+          asnafReports.value[reportIndex] = {
+            ...asnafReports.value[reportIndex],
+            status: 'Converted',
+            convertedBy: 'Admin (Current User)', // In a real app, use the current admin's name
+            convertedDate: new Date(),
+            asnafId: newAsnaf.id,
+            notes: `${asnafReports.value[reportIndex].notes} Converted to asnaf record ID: ${newAsnaf.id}`.trim()
+          };
+        }
+        
+        // If we're in the modal, close it
+        if (selectedReport.value && selectedReport.value.id === report.id) {
+          selectedReport.value = null;
+        }
+        
+        // Reset conversion form
+        conversionCategory.value = '';
+        conversionNeeds.value = '';
+        
+        alert('Report has been successfully converted to an asnaf record');
+        
+        // In a real implementation with Firestore:
+        /*
+        // 1. Create new asnaf record
+        const asnafData = {
+          name: report.name,
+          category: conversionCategory || 'Needy (Miskin)',
+          contact: report.phoneNumber || 'Not provided',
+          location: report.location?.address || report.address,
+          needs: conversionNeeds || report.description,
+          status: 'Active',
+          notes: `Created from report ID: ${report.id}. ${reportActionNotes.value}`.trim(),
+          createdFrom: report.id,
+          createdAt: serverTimestamp()
+        };
+        
+        const asnafRef = await addDoc(collection(db, 'asnafRecipients'), asnafData);
+        
+        // 2. Update the report status
+        const reportRef = doc(db, 'asnafReports', report.id);
+        await updateDoc(reportRef, {
+          status: 'Converted',
+          convertedBy: 'Admin (Current User)', // Use actual admin name
+          convertedDate: serverTimestamp(),
+          asnafId: asnafRef.id,
+          notes: `${report.notes || ''} Converted to asnaf record ID: ${asnafRef.id}`.trim()
+        });
+        */
+        
+      } catch (error) {
+        console.error('Error converting report to asnaf:', error);
+        alert('Error converting report to asnaf. Please try again.');
+      }
+    };
+    
+    onMounted(() => {
+      fetchZakatPayments();
+      fetchZakatDistributions();
+      fetchAsnafRecipients();
+      fetchAsnafReports(); // Add this new function call
+    });
+    
+    // Add these new refs to your setup function
+    const showConvertModal = ref(false);
+    const reportToConvert = ref(null);
+    
+    // Update the convertToAsnaf function to show the modal first
+    const openConvertModal = (report) => {
+      reportToConvert.value = report;
+      conversionCategory.value = 'Needy (Miskin)'; // Default category
+      conversionNeeds.value = report.description; // Use description as default needs
+      showConvertModal.value = true;
+    };
+    
+    // Add a new function to handle the actual conversion
+    const confirmConvertToAsnaf = async () => {
+      try {
+        if (!conversionCategory.value) {
+          alert('Please select an asnaf category');
+          return;
+        }
+        
+        const report = reportToConvert.value;
+        
+        // In a real app, this would create a new asnaf record and update the report
+        
+        // 1. Create new asnaf record
+        const newAsnaf = {
+          id: Date.now().toString(), // Generate a dummy ID
+          name: report.name,
+          category: conversionCategory.value,
+          contact: report.phoneNumber || 'Not provided',
+          location: report.location?.address || report.address,
+          needs: conversionNeeds.value,
+          status: 'Active',
+          notes: `Created from report ID: ${report.id}. ${reportActionNotes.value}`.trim(),
+          createdFrom: report.id,
+          createdAt: new Date()
+        };
+        
+        // Add to asnaf recipients
+        asnafRecipients.value.push(newAsnaf);
+        
+        // 2. Update the report status
+        const reportIndex = asnafReports.value.findIndex(r => r.id === report.id);
+        if (reportIndex !== -1) {
+          asnafReports.value[reportIndex] = {
+            ...asnafReports.value[reportIndex],
+            status: 'Converted',
+            convertedBy: 'Admin (Current User)', // In a real app, use the current admin's name
+            convertedDate: new Date(),
+            asnafId: newAsnaf.id,
+            notes: `${asnafReports.value[reportIndex].notes} Converted to asnaf record ID: ${newAsnaf.id}`.trim()
+          };
+        }
+        
+        // Close the modal
+        showConvertModal.value = false;
+        reportToConvert.value = null;
+        
+        // Reset conversion form
+        conversionCategory.value = '';
+        conversionNeeds.value = '';
+        
+        alert('Report has been successfully converted to an asnaf record');
+        
+      } catch (error) {
+        console.error('Error converting report to asnaf:', error);
+        alert('Error converting report to asnaf. Please try again.');
+      }
+    };
+    
     return {
       zakatPayments,
       zakatDistributions,
@@ -1395,7 +2050,24 @@ export default {
       availableZakatFunds,
       updateSelectedAmount,
       viewSourceDetails,
-      fetchAvailablePayments
+      asnafReports,
+      loadingReports,
+      reportStatusFilter,
+      filteredReports,
+      selectedReport,
+      reportActionNotes,
+      selectedImage,
+      conversionCategory,
+      conversionNeeds,
+      viewReportDetails,
+      viewImage,
+      verifyReport,
+      rejectReport,
+      convertToAsnaf,
+      showConvertModal,
+      reportToConvert,
+      openConvertModal,
+      confirmConvertToAsnaf
     };
   }
 }
@@ -1530,6 +2202,8 @@ export default {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .modal-content {
@@ -1537,8 +2211,11 @@ export default {
   border-radius: 8px;
   padding: 2rem;
   width: 90%;
-  max-width: 500px;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
   position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .close-btn {
@@ -1982,5 +2659,283 @@ export default {
 .source-payment-details p {
   margin: 0.5rem 0;
   font-size: 0.9rem;
+}
+
+/* Add these styles to the existing <style> section */
+
+/* Asnaf Reports Styles */
+.reports-filter {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.filter-select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.reports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.report-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.report-header {
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #eee;
+}
+
+.report-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.report-details {
+  padding: 1rem;
+  flex-grow: 1;
+}
+
+.report-details p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.report-images {
+  padding: 0 1rem 1rem;
+}
+
+.report-images h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.image-thumbnails {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.image-thumbnail {
+  width: 80px;
+  height: 80px;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.image-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.report-actions {
+  padding: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  border-top: 1px solid #eee;
+}
+
+.convert-btn {
+  background-color: #673AB7;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.convert-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.status-badge.converted {
+  background-color: #673AB7;
+  color: white;
+}
+
+.status-badge.verified {
+  background-color: #2196F3;
+  color: white;
+}
+
+/* Report Modal Styles */
+.report-modal {
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.report-full-details {
+  margin-top: 1.5rem;
+}
+
+.report-full-images {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: white;
+  border-radius: 8px;
+}
+
+.report-full-images h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.gallery-image {
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  height: 150px;
+}
+
+.gallery-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.gallery-image img:hover {
+  transform: scale(1.05);
+}
+
+.report-action-form {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background-color: white;
+  border-radius: 8px;
+}
+
+.report-action-form h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.help-text {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+/* Image Viewer Modal */
+.image-viewer-modal {
+  background-color: rgba(0, 0, 0, 0.9);
+  padding: 0;
+}
+
+.image-viewer-content {
+  background: none;
+  max-width: 95%;
+  max-height: 95%;
+  box-shadow: none;
+  padding: 0;
+}
+
+.full-size-image {
+  max-width: 100%;
+  max-height: 95vh;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.image-viewer-content .close-btn {
+  position: absolute;
+  top: -2.5rem;
+  right: 0;
+  color: white;
+  font-size: 2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Convert to Asnaf Modal */
+.convert-modal {
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.convert-modal .close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.convert-modal .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.convert-modal .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.convert-modal .form-group select,
+.convert-modal .form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.convert-modal .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.convert-modal .cancel-btn {
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.convert-modal .convert-btn {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.convert-modal .convert-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
 </style> 
