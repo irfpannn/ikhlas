@@ -42,6 +42,8 @@ const handleCategoryClick = (category) => {
     router.push('/zakat-pendapatan')
   } else if (category.name === 'Asnaf Reporting') {
     router.push('/asnaf-reporting')
+  } else if (category.name === 'Audit Zakat') {
+    router.push('/audit-zakat')
   } else {
     // For other categories, just log for now
     console.log(`Selected category: ${category.name}`)
