@@ -5,6 +5,7 @@ import ZakatPendapatanView from '@/views/ZakatPendapatanView.vue'
 import PaymentView from '@/views/PaymentView.vue'
 import TransactionHistoryView from '@/views/TransactionHistoryView.vue'
 import HistoryView from '@/views/HistoryView.vue'
+import AsnafReportingView from '@/views/AsnafReportingView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -38,6 +39,11 @@ const router = createRouter({
       path: '/history',
       name: 'history',
       component: HistoryView
+    },
+    {
+      path: '/asnaf-reporting',
+      name: 'asnaf-reporting',
+      component: AsnafReportingView
     }
     // Add other routes as needed
   ]

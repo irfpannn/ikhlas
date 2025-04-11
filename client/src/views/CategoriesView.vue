@@ -37,9 +37,15 @@ const goBack = () => {
 }
 
 const handleCategoryClick = (category) => {
-  // For now, just log the category. In a real app, you would navigate to the specific category page
-  console.log(`Selected category: ${category.name}`)
-  // router.push(`/category/${category.id}`)
+  // Navigate based on category name
+  if (category.name === 'Zakat Pendapatan') {
+    router.push('/zakat-pendapatan')
+  } else if (category.name === 'Asnaf Reporting') {
+    router.push('/asnaf-reporting')
+  } else {
+    // For other categories, just log for now
+    console.log(`Selected category: ${category.name}`)
+  }
 }
 </script>
 
@@ -107,7 +113,7 @@ const handleCategoryClick = (category) => {
             <div
               v-for="category in categories.filter((c) => c.type === 'bill')"
               :key="category.id"
-              class="flex flex-col items-center mb-4"
+              class="flex flex-col items-center mb-4 cursor-pointer"
               @click="handleCategoryClick(category)"
             >
               <Button

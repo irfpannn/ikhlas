@@ -8,6 +8,7 @@ import {
   CardTitle,
   CardContent,
 } from '@/components/ui/card'
+import BottomNavigation from '@/components/ui/bottom-navigation/BottomNavigation.vue'
 
 const router = useRouter()
 const transactions = ref([])
@@ -131,6 +132,9 @@ onMounted(() => {
         </CardContent>
       </Card>
     </div>
+    
+    <!-- Bottom Navigation -->
+    <BottomNavigation />
   </div>
 </template>
 
