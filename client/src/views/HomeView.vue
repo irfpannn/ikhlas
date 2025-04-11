@@ -148,7 +148,7 @@ const goToZakatPendapatan = () => {
               v-for="category in categories.slice(0, 7)"
               :key="category.id"
               class="flex flex-col items-center"
-              :class="{'cursor-pointer': category.name === 'Zakat Pendapatan'}"
+              :class="{ 'cursor-pointer': category.name === 'Zakat Pendapatan' }"
               @click="category.name === 'Zakat Pendapatan' ? goToZakatPendapatan() : null"
             >
               <div

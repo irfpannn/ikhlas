@@ -14,45 +14,50 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView
+      component: HomeView,
     },
     {
       path: '/categories',
       name: 'categories',
-      component: CategoriesView
+      component: CategoriesView,
     },
     {
       path: '/zakat-pendapatan',
       name: 'zakat-pendapatan',
-      component: ZakatPendapatanView
+      component: ZakatPendapatanView,
+    },
+    {
+      path: '/zakat-wang-simpanan',
+      name: 'zakat-wang-simpanan',
+      component: () => import('@/views/ZakatWangSimpananView.vue'),
     },
     {
       path: '/payment',
       name: 'payment',
-      component: PaymentView
+      component: PaymentView,
     },
     {
       path: '/transaction-history',
       name: 'transaction-history',
-      component: TransactionHistoryView
+      component: TransactionHistoryView,
     },
     {
       path: '/history',
       name: 'history',
-      component: HistoryView
+      component: HistoryView,
     },
     {
       path: '/asnaf-reporting',
       name: 'asnaf-reporting',
-      component: AsnafReportingView
+      component: AsnafReportingView,
     },
     {
       path: '/audit-zakat',
       name: 'audit-zakat',
-      component: AuditZakatView
-    }
+      component: AuditZakatView,
+    },
     // Add other routes as needed
-  ]
+  ],
 })
 
 export default router
