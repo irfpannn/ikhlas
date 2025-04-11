@@ -53,6 +53,14 @@ const router = createRouter({
       component: AuditZakatView
     },
     {
+      path: '/distribution-sources',
+      name: 'DistributionSources',
+      component: () => import('../views/DistributionSourcesView.vue'),
+      // meta: {
+      //   requiresAuth: true
+      // }
+    },
+    {
       path: '/admin/login',
       name: 'AdminLogin',
       component: () => import('../views/admin/LoginView.vue'),

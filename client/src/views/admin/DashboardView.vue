@@ -59,6 +59,7 @@
             <th>Date</th>
             <th>Amount (RM)</th>
             <th>Amount (Crypto)</th>
+            <th>Wallet Address</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
@@ -69,6 +70,7 @@
             <td>{{ formatDate(payment.date) }}</td>
             <td>RM {{ payment.amountRM.toFixed(2) }}</td>
             <td>{{ payment.amountCrypto.toFixed(8) }} {{ payment.cryptoType }}</td>
+            <td class="wallet-address">{{ payment.walletAddress.substring(0, 10) }}...{{ payment.walletAddress.substring(payment.walletAddress.length - 6) }}</td>
             <td>
               <span :class="'status-badge ' + payment.status.toLowerCase()">
                 {{ payment.status }}
@@ -79,7 +81,7 @@
             </td>
           </tr>
           <tr v-if="zakatPayments.length === 0">
-            <td colspan="6" class="no-data">No zakat payments found</td>
+            <td colspan="7" class="no-data">No zakat payments found</td>
           </tr>
         </tbody>
       </table>
@@ -100,6 +102,7 @@
             <th>Category</th>
             <th>Amount (RM)</th>
             <th>Description</th>
+            <th>Source</th>
             <th>Evidence</th>
             <th>Actions</th>
           </tr>
@@ -112,6 +115,14 @@
             <td>RM {{ distribution.amountRM.toFixed(2) }}</td>
             <td>{{ distribution.description }}</td>
             <td>
+              <div v-if="distribution.sourcePayments && distribution.sourcePayments.length > 0" class="source-payments">
+                <button @click="viewSourceDetails(distribution)" class="source-btn">
+                  {{ distribution.sourcePayments.length }} donor(s)
+                </button>
+              </div>
+              <span v-else>Not specified</span>
+            </td>
+            <td>
               <a v-if="distribution.evidenceUrl" :href="distribution.evidenceUrl" target="_blank" class="evidence-link">
                 View Evidence
               </a>
@@ -122,7 +133,7 @@
             </td>
           </tr>
           <tr v-if="zakatDistributions.length === 0">
-            <td colspan="7" class="no-data">No zakat distributions found</td>
+            <td colspan="8" class="no-data">No zakat distributions found</td>
           </tr>
         </tbody>
       </table>
@@ -191,6 +202,10 @@
             <span class="detail-value">{{ selectedPayment.amountCrypto.toFixed(8) }} {{ selectedPayment.cryptoType }}</span>
           </div>
           <div class="detail-row">
+            <span class="detail-label">Wallet Address:</span>
+            <span class="detail-value wallet-address">{{ selectedPayment.walletAddress }}</span>
+          </div>
+          <div class="detail-row">
             <span class="detail-label">Transaction ID:</span>
             <span class="detail-value">{{ selectedPayment.transactionId }}</span>
           </div>
@@ -222,7 +237,7 @@
     
     <!-- Add Distribution Modal -->
     <div v-if="showAddDistributionModal" class="modal">
-      <div class="modal-content">
+      <div class="modal-content distribution-modal">
         <span class="close-btn" @click="showAddDistributionModal = false">&times;</span>
         <h2>{{ editingDistribution ? 'Edit Distribution' : 'Add New Distribution' }}</h2>
         <form @submit.prevent="saveDistribution" class="distribution-form">
@@ -327,9 +342,52 @@
             </div>
           </div>
           
+          <!-- New section for selecting source payments -->
+          <div class="form-group source-payments-section">
+            <label>Source of Funds</label>
+            <div class="available-funds">
+              <p>Available Zakat Funds: <strong>RM {{ availableZakatFunds.toFixed(2) }}</strong></p>
+            </div>
+            
+            <div class="source-selection">
+              <div class="source-header">
+                <h4>Select Source Payments</h4>
+                <p class="source-help">Select which donations to use for this distribution</p>
+              </div>
+              
+              <div v-if="loading" class="loading">Loading available payments...</div>
+              <div v-else-if="availablePayments.length === 0" class="no-data">No available payments</div>
+              <div v-else class="payment-selection-list">
+                <div v-for="payment in availablePayments" :key="payment.id" class="payment-selection-item">
+                  <label class="payment-checkbox">
+                    <input 
+                      type="checkbox" 
+                      :value="payment.id" 
+                      v-model="selectedPaymentIds"
+                      @change="updateSelectedAmount"
+                    />
+                    <div class="payment-info">
+                      <div class="payment-user">{{ payment.userName }}</div>
+                      <div class="payment-amount">RM {{ payment.amountRM.toFixed(2) }}</div>
+                      <div class="payment-date">{{ formatDate(payment.date) }}</div>
+                      <div class="payment-wallet">{{ payment.walletAddress.substring(0, 8) }}...{{ payment.walletAddress.substring(payment.walletAddress.length - 6) }}</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+              
+              <div class="selected-amount">
+                <p>Selected Amount: <strong>RM {{ selectedAmount.toFixed(2) }}</strong></p>
+                <p :class="{'amount-warning': selectedAmount < distributionForm.amountRM}">
+                  {{ selectedAmount >= distributionForm.amountRM ? '✓ Sufficient funds selected' : '⚠️ Insufficient funds selected' }}
+                </p>
+              </div>
+            </div>
+          </div>
+          
           <div class="form-actions">
             <button type="button" @click="showAddDistributionModal = false" class="cancel-btn">Cancel</button>
-            <button type="submit" class="save-btn" :disabled="uploading">
+            <button type="submit" class="save-btn" :disabled="uploading || selectedAmount < distributionForm.amountRM">
               {{ editingDistribution ? 'Update' : 'Save' }}
             </button>
           </div>
@@ -425,11 +483,39 @@
         </form>
       </div>
     </div>
+    
+    <!-- Source Payments Details Modal -->
+    <div v-if="selectedDistribution" class="modal">
+      <div class="modal-content">
+        <span class="close-btn" @click="selectedDistribution = null">&times;</span>
+        <h2>Distribution Source Details</h2>
+        <div class="distribution-summary">
+          <p><strong>Recipient:</strong> {{ selectedDistribution.recipientName }}</p>
+          <p><strong>Amount:</strong> RM {{ selectedDistribution.amountRM.toFixed(2) }}</p>
+          <p><strong>Date:</strong> {{ formatDate(selectedDistribution.date) }}</p>
+        </div>
+        
+        <h3>Source Payments</h3>
+        <div class="source-payments-list">
+          <div v-for="(source, index) in selectedDistributionSources" :key="index" class="source-payment-item">
+            <div class="source-payment-header">
+              <span class="source-payment-user">{{ source.userName }}</span>
+              <span class="source-payment-amount">RM {{ source.amountRM.toFixed(2) }}</span>
+            </div>
+            <div class="source-payment-details">
+              <p><strong>Date:</strong> {{ formatDate(source.date) }}</p>
+              <p><strong>Wallet:</strong> <span class="wallet-address">{{ source.walletAddress }}</span></p>
+              <p><strong>Transaction ID:</strong> {{ source.transactionId }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { getAuth, signOut } from 'firebase/auth';
 import { getFirestore, collection, getDocs, doc, updateDoc, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
@@ -536,6 +622,133 @@ export default {
     const fetchZakatPayments = async () => {
       try {
         loading.value = true;
+        
+        // In a real app, this would fetch from Firestore
+        // For now, we'll use dummy data
+        const dummyPayments = [
+          {
+            id: '1',
+            userId: 'user1',
+            userName: 'Ahmad bin Abdullah',
+            userEmail: 'ahmad@example.com',
+            date: new Date(2023, 10, 15, 9, 30), // Nov 15, 2023, 9:30 AM
+            amountRM: 2500.00,
+            amountCrypto: 0.03245,
+            cryptoType: 'BTC',
+            transactionId: 'tx_btc_123456789',
+            walletAddress: '0x1A2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0',
+            status: 'Approved'
+          },
+          {
+            id: '2',
+            userId: 'user2',
+            userName: 'Fatimah binti Hassan',
+            userEmail: 'fatimah@example.com',
+            date: new Date(2023, 10, 18, 14, 45), // Nov 18, 2023, 2:45 PM
+            amountRM: 1200.00,
+            amountCrypto: 0.01560,
+            cryptoType: 'BTC',
+            transactionId: 'tx_btc_987654321',
+            walletAddress: '0x2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1',
+            status: 'Approved'
+          },
+          {
+            id: '3',
+            userId: 'user3',
+            userName: 'Muhammad bin Ibrahim',
+            userEmail: 'muhammad@example.com',
+            date: new Date(2023, 11, 5, 11, 20), // Dec 5, 2023, 11:20 AM
+            amountRM: 3000.00,
+            amountCrypto: 0.03896,
+            cryptoType: 'BTC',
+            transactionId: 'tx_btc_456789123',
+            walletAddress: '0x3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2',
+            status: 'Approved'
+          },
+          {
+            id: '4',
+            userId: 'user4',
+            userName: 'Nurul binti Aziz',
+            userEmail: 'nurul@example.com',
+            date: new Date(2023, 11, 12, 16, 10), // Dec 12, 2023, 4:10 PM
+            amountRM: 1800.00,
+            amountCrypto: 0.02338,
+            cryptoType: 'BTC',
+            transactionId: 'tx_btc_789123456',
+            walletAddress: '0x4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3',
+            status: 'Approved'
+          },
+          {
+            id: '5',
+            userId: 'user5',
+            userName: 'Ismail bin Yusof',
+            userEmail: 'ismail@example.com',
+            date: new Date(2023, 11, 20, 10, 5), // Dec 20, 2023, 10:05 AM
+            amountRM: 5000.00,
+            amountCrypto: 0.06494,
+            cryptoType: 'BTC',
+            transactionId: 'tx_btc_321654987',
+            walletAddress: '0x5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4',
+            status: 'Approved'
+          },
+          {
+            id: '7',
+            userId: 'user7',
+            userName: 'Hakim bin Razak',
+            userEmail: 'hakim@example.com',
+            date: new Date(2024, 0, 15, 9, 50), // Jan 15, 2024, 9:50 AM
+            amountRM: 1500.00,
+            amountCrypto: 0.01948,
+            cryptoType: 'BTC',
+            transactionId: 'tx_btc_987321654',
+            walletAddress: '0x7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4X5Y6',
+            status: 'Pending'
+          },
+          {
+            id: '8',
+            userId: 'user8',
+            userName: 'Aishah binti Kamal',
+            userEmail: 'aishah@example.com',
+            date: new Date(2024, 0, 22, 15, 40), // Jan 22, 2024, 3:40 PM
+            amountRM: 3500.00,
+            amountCrypto: 0.04545,
+            cryptoType: 'BTC',
+            transactionId: 'tx_btc_123789456',
+            walletAddress: '0x8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4X5Y6Z7',
+            status: 'Pending'
+          },
+          {
+            id: '9',
+            userId: 'user1',
+            userName: 'Ahmad bin Abdullah',
+            userEmail: 'ahmad@example.com',
+            date: new Date(2024, 1, 5, 11, 15), // Feb 5, 2024, 11:15 AM
+            amountRM: 2000.00,
+            amountCrypto: 0.02597,
+            cryptoType: 'BTC',
+            transactionId: 'tx_btc_456123789',
+            walletAddress: '0x1A2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0',
+            status: 'Pending'
+          },
+          {
+            id: '10',
+            userId: 'user9',
+            userName: 'Siti binti Rahman',
+            userEmail: 'siti@example.com',
+            date: new Date(2024, 1, 10, 14, 30), // Feb 10, 2024, 2:30 PM
+            amountRM: 1000.00,
+            amountCrypto: 0.01299,
+            cryptoType: 'BTC',
+            transactionId: 'tx_btc_789456123',
+            walletAddress: '0x9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4X5Y6Z7A8',
+            status: 'Rejected'
+          }
+        ];
+        
+        zakatPayments.value = dummyPayments;
+        
+        // Comment out the Firestore code for now
+        /*
         const querySnapshot = await getDocs(collection(db, 'zakatPayments'));
         const payments = [];
         
@@ -548,6 +761,8 @@ export default {
         });
         
         zakatPayments.value = payments;
+        */
+        
       } catch (error) {
         console.error('Error fetching zakat payments:', error);
       } finally {
@@ -558,6 +773,86 @@ export default {
     const fetchZakatDistributions = async () => {
       try {
         loadingDistributions.value = true;
+        
+        // In a real app, this would fetch from Firestore
+        // For now, we'll use dummy data with source payments
+        const dummyDistributions = [
+          {
+            id: '1',
+            recipientName: 'Zamir bin Abdullah',
+            category: 'Poor',
+            amountRM: 3700.00,
+            description: 'Monthly assistance for basic necessities',
+            evidenceUrl: 'https://example.com/evidence1.pdf',
+            date: new Date(2023, 10, 20, 10, 0), // Nov 20, 2023, 10:00 AM
+            sourcePayments: ['1', '2'] // IDs of source payments
+          },
+          {
+            id: '2',
+            recipientName: 'Fatimah binti Hassan',
+            category: 'Poor',
+            amountRM: 800.00,
+            description: 'Education support for children',
+            evidenceUrl: 'https://example.com/evidence2.pdf',
+            date: new Date(2023, 11, 5, 14, 30), // Dec 5, 2023, 2:30 PM
+            sourcePayments: ['3'] // IDs of source payments
+          },
+          {
+            id: '3',
+            recipientName: 'Muhammad bin Ibrahim',
+            category: 'Needy',
+            amountRM: 1200.00,
+            description: 'Medical treatment assistance',
+            evidenceUrl: 'https://example.com/evidence3.pdf',
+            date: new Date(2023, 11, 15, 11, 45), // Dec 15, 2023, 11:45 AM
+            sourcePayments: ['4'] // IDs of source payments
+          },
+          {
+            id: '4',
+            recipientName: 'Nurul Iman Foundation',
+            category: 'Zakat Administrator',
+            amountRM: 2000.00,
+            description: 'Operational costs for zakat distribution',
+            evidenceUrl: 'https://example.com/evidence4.pdf',
+            date: new Date(2023, 11, 28, 9, 15), // Dec 28, 2023, 9:15 AM
+            sourcePayments: ['5'] // IDs of source payments
+          },
+          {
+            id: '5',
+            recipientName: 'Ali bin Razak',
+            category: 'New Muslim',
+            amountRM: 1500.00,
+            description: 'Support for Islamic education and community integration',
+            evidenceUrl: 'https://example.com/evidence5.pdf',
+            date: new Date(2024, 0, 10, 13, 0), // Jan 10, 2024, 1:00 PM
+            sourcePayments: ['6'] // IDs of source payments
+          },
+          {
+            id: '6',
+            recipientName: 'Refugee Support Center',
+            category: 'Allah\'s Cause',
+            amountRM: 3000.00,
+            description: 'Funding for refugee education program',
+            evidenceUrl: 'https://example.com/evidence6.pdf',
+            date: new Date(2024, 0, 22, 15, 30), // Jan 22, 2024, 3:30 PM
+            sourcePayments: ['7'] // IDs of source payments
+          },
+          {
+            id: '7',
+            recipientName: 'Zainab binti Omar',
+            category: 'Debtor',
+            amountRM: 2500.00,
+            description: 'Assistance with medical debt',
+            evidenceUrl: 'https://example.com/evidence7.pdf',
+            date: new Date(2024, 1, 5, 10, 45), // Feb 5, 2024, 10:45 AM
+            sourcePayments: ['8'] // IDs of source payments
+          }
+        ];
+        
+        zakatDistributions.value = dummyDistributions;
+        
+        // Comment out the Firestore code for now
+        /*
         const querySnapshot = await getDocs(collection(db, 'zakatDistributions'));
         const distributions = [];
         
@@ -565,11 +860,14 @@ export default {
           distributions.push({
             id: doc.id,
             ...doc.data(),
-            date: doc.data().date?.toDate() || new Date()
+            date: doc.data().date?.toDate() || new Date(),
+            sourcePayments: doc.data().sourcePayments || []
           });
         });
         
         zakatDistributions.value = distributions;
+        */
+        
       } catch (error) {
         console.error('Error fetching zakat distributions:', error);
       } finally {
@@ -724,6 +1022,61 @@ export default {
       }
     };
     
+    const selectedDistribution = ref(null);
+    const selectedDistributionSources = ref([]);
+    const availablePayments = ref([]);
+    const selectedPaymentIds = ref([]);
+    const selectedAmount = ref(0);
+    
+    // Computed property for available zakat funds
+    const availableZakatFunds = computed(() => {
+      // Total zakat received minus total distributed
+      return totalZakatRM.value - totalDistributedRM.value;
+    });
+    
+    const fetchAvailablePayments = () => {
+      // In a real app, this would fetch payments that still have available funds
+      // For now, we'll filter the approved payments that haven't been fully used
+      availablePayments.value = zakatPayments.value.filter(payment => 
+        payment.status === 'Approved' && 
+        (!payment.usedAmount || payment.usedAmount < payment.amountRM)
+      ).map(payment => ({
+        ...payment,
+        // Calculate remaining amount
+        remainingAmount: payment.usedAmount ? payment.amountRM - payment.usedAmount : payment.amountRM
+      }));
+    };
+    
+    const updateSelectedAmount = () => {
+      selectedAmount.value = 0;
+      selectedPaymentIds.value.forEach(id => {
+        const payment = availablePayments.value.find(p => p.id === id);
+        if (payment) {
+          selectedAmount.value += payment.remainingAmount;
+        }
+      });
+    };
+    
+    const viewSourceDetails = (distribution) => {
+      selectedDistribution.value = distribution;
+      
+      // Find the source payments based on the IDs stored in the distribution
+      if (distribution.sourcePayments && distribution.sourcePayments.length > 0) {
+        selectedDistributionSources.value = distribution.sourcePayments.map(sourceId => {
+          const payment = zakatPayments.value.find(p => p.id === sourceId);
+          return payment || { 
+            userName: 'Unknown', 
+            amountRM: 0, 
+            date: new Date(), 
+            walletAddress: 'N/A',
+            transactionId: 'N/A'
+          };
+        });
+      } else {
+        selectedDistributionSources.value = [];
+      }
+    };
+    
     const editDistribution = (distribution) => {
       editingDistribution.value = distribution;
       distributionForm.value = {
@@ -734,78 +1087,12 @@ export default {
         evidenceUrl: distribution.evidenceUrl,
         date: distribution.date
       };
+      
+      // Set selected payment IDs if they exist
+      selectedPaymentIds.value = distribution.sourcePayments || [];
+      updateSelectedAmount();
+      
       showAddDistributionModal.value = true;
-    };
-    
-    const selectedAsnafId = ref('');
-    const selectedAsnafDetails = ref(null);
-    
-    const handleAsnafSelection = () => {
-      if (selectedAsnafId.value) {
-        const selectedAsnaf = asnafRecipients.value.find(asnaf => asnaf.id === selectedAsnafId.value);
-        if (selectedAsnaf) {
-          // Populate the distribution form with asnaf details
-          distributionForm.value.recipientName = selectedAsnaf.name;
-          
-          // Convert category format if needed
-          const categoryMap = {
-            'Poor (Fakir)': 'Poor',
-            'Needy (Miskin)': 'Needy',
-            'Zakat Administrator (Amil)': 'Zakat Administrator',
-            'New Muslim (Muallaf)': 'New Muslim',
-            'To Free Slaves (Riqab)': 'Slave',
-            'Debtor (Gharimin)': 'Debtor',
-            'Allah\'s Cause (Fi Sabilillah)': 'Allah\'s Cause',
-            'Traveler (Ibnus Sabil)': 'Traveler'
-          };
-          
-          distributionForm.value.category = categoryMap[selectedAsnaf.category] || selectedAsnaf.category;
-          
-          // Store selected asnaf details for display
-          selectedAsnafDetails.value = selectedAsnaf;
-        }
-      } else {
-        selectedAsnafDetails.value = null;
-      }
-    };
-    
-    const resetDistributionForm = () => {
-      distributionForm.value = {
-        recipientName: '',
-        category: '',
-        amountRM: 0,
-        description: '',
-        evidenceUrl: '',
-        date: null
-      };
-      editingDistribution.value = null;
-      uploadProgress.value = 0;
-      selectedAsnafId.value = '';
-      selectedAsnafDetails.value = null;
-    };
-    
-    const handleFileUpload = (event) => {
-      const file = event.target.files[0];
-      if (!file) return;
-      
-      uploading.value = true;
-      const fileRef = storageRef(storage, `zakat-evidence/${Date.now()}_${file.name}`);
-      const uploadTask = uploadBytesResumable(fileRef, file);
-      
-      uploadTask.on('state_changed', 
-        (snapshot) => {
-          uploadProgress.value = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-        },
-        (error) => {
-          console.error('Error uploading file:', error);
-          uploading.value = false;
-        },
-        async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          distributionForm.value.evidenceUrl = downloadURL;
-          uploading.value = false;
-        }
-      );
     };
     
     const saveDistribution = async () => {
@@ -815,13 +1102,20 @@ export default {
           return;
         }
         
+        if (selectedAmount.value < distributionForm.value.amountRM) {
+          alert('Insufficient funds selected. Please select more source payments.');
+          return;
+        }
+        
         const distributionData = {
           ...distributionForm.value,
           amountRM: Number(distributionForm.value.amountRM),
           date: serverTimestamp(),
           updatedAt: serverTimestamp(),
           // Store reference to the asnaf if selected from list
-          asnafId: selectedAsnafId.value || null
+          asnafId: selectedAsnafId.value || null,
+          // Store the source payment IDs
+          sourcePayments: selectedPaymentIds.value
         };
         
         if (editingDistribution.value) {
@@ -850,23 +1144,21 @@ export default {
           });
         }
         
+        // Update the used amount for each source payment
+        // In a real implementation, you would update this in Firestore
+        selectedPaymentIds.value.forEach(paymentId => {
+          const paymentIndex = zakatPayments.value.findIndex(p => p.id === paymentId);
+          if (paymentIndex !== -1) {
+            if (!zakatPayments.value[paymentIndex].usedAmount) {
+              zakatPayments.value[paymentIndex].usedAmount = 0;
+            }
+            zakatPayments.value[paymentIndex].usedAmount += distributionForm.value.amountRM / selectedPaymentIds.value.length;
+          }
+        });
+        
         // Update asnaf record with distribution reference
         if (selectedAsnafId.value) {
           // In a real implementation, you would update the asnaf record in Firestore
-          // to track that they received a distribution
-          /*
-          const asnafRef = doc(db, 'asnafRecipients', selectedAsnafId.value);
-          await updateDoc(asnafRef, {
-            lastDistribution: serverTimestamp(),
-            distributionHistory: arrayUnion({
-              id: docRef.id, // ID of the new distribution
-              date: new Date(),
-              amountRM: Number(distributionForm.value.amountRM)
-            })
-          });
-          */
-          
-          // For the demo, we'll just log this
           console.log(`Updated asnaf ${selectedAsnafId.value} with new distribution reference`);
         }
         
@@ -876,6 +1168,23 @@ export default {
         console.error('Error saving distribution:', error);
         alert('Error saving distribution. Please try again.');
       }
+    };
+    
+    const resetDistributionForm = () => {
+      distributionForm.value = {
+        recipientName: '',
+        category: '',
+        amountRM: 0,
+        description: '',
+        evidenceUrl: '',
+        date: null
+      };
+      editingDistribution.value = null;
+      uploadProgress.value = 0;
+      selectedAsnafId.value = '';
+      selectedAsnafDetails.value = null;
+      selectedPaymentIds.value = [];
+      selectedAmount.value = 0;
     };
     
     const editAsnaf = (asnaf) => {
@@ -951,10 +1260,97 @@ export default {
       }
     };
     
+    const selectedAsnafId = ref('');
+    const selectedAsnafDetails = ref(null);
+    
+    const handleAsnafSelection = () => {
+      if (selectedAsnafId.value) {
+        const selectedAsnaf = asnafRecipients.value.find(asnaf => asnaf.id === selectedAsnafId.value);
+        if (selectedAsnaf) {
+          // Populate the distribution form with asnaf details
+          distributionForm.value.recipientName = selectedAsnaf.name;
+          
+          // Convert category format if needed
+          const categoryMap = {
+            'Poor (Fakir)': 'Poor',
+            'Needy (Miskin)': 'Needy',
+            'Zakat Administrator (Amil)': 'Zakat Administrator',
+            'New Muslim (Muallaf)': 'New Muslim',
+            'To Free Slaves (Riqab)': 'Slave',
+            'Debtor (Gharimin)': 'Debtor',
+            'Allah\'s Cause (Fi Sabilillah)': 'Allah\'s Cause',
+            'Traveler (Ibnus Sabil)': 'Traveler'
+          };
+          
+          distributionForm.value.category = categoryMap[selectedAsnaf.category] || selectedAsnaf.category;
+          
+          // Store selected asnaf details for display
+          selectedAsnafDetails.value = selectedAsnaf;
+        }
+      } else {
+        selectedAsnafDetails.value = null;
+      }
+    };
+    
+    const handleFileUpload = async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      try {
+        uploading.value = true;
+        uploadProgress.value = 0;
+        
+        // Create a storage reference
+        const fileRef = storageRef(storage, `distribution-evidence/${Date.now()}_${file.name}`);
+        
+        // Upload the file with progress tracking
+        const uploadTask = uploadBytesResumable(fileRef, file);
+        
+        // Monitor upload progress
+        uploadTask.on('state_changed', 
+          (snapshot) => {
+            // Track progress
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            uploadProgress.value = Math.round(progress);
+          },
+          (error) => {
+            // Handle errors
+            console.error('Upload error:', error);
+            alert('Error uploading file. Please try again.');
+            uploading.value = false;
+          },
+          async () => {
+            // Upload completed successfully
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            distributionForm.value.evidenceUrl = downloadURL;
+            uploading.value = false;
+          }
+        );
+      } catch (error) {
+        console.error('File upload error:', error);
+        alert('Error uploading file. Please try again.');
+        uploading.value = false;
+      }
+    };
+    
     onMounted(() => {
       fetchZakatPayments();
       fetchZakatDistributions();
       fetchAsnafRecipients();
+    });
+    
+    // Watch for changes in activeTab to load available payments when needed
+    watch(activeTab, (newTab) => {
+      if (newTab === 'distributions') {
+        fetchAvailablePayments();
+      }
+    });
+    
+    // Watch for showAddDistributionModal to load available payments when opened
+    watch(showAddDistributionModal, (isOpen) => {
+      if (isOpen) {
+        fetchAvailablePayments();
+      }
     });
     
     return {
@@ -990,7 +1386,16 @@ export default {
       saveAsnaf,
       selectedAsnafId,
       selectedAsnafDetails,
-      handleAsnafSelection
+      handleAsnafSelection,
+      selectedDistribution,
+      selectedDistributionSources,
+      availablePayments,
+      selectedPaymentIds,
+      selectedAmount,
+      availableZakatFunds,
+      updateSelectedAmount,
+      viewSourceDetails,
+      fetchAvailablePayments
     };
   }
 }
@@ -1405,7 +1810,7 @@ export default {
 }
 
 .recipient-preview {
-  background-color: #f5f5f5;
+  background-color: #f5f5f9;
   border-radius: 4px;
   padding: 1rem;
   margin-top: 0.5rem;
@@ -1424,6 +1829,158 @@ export default {
 
 .recipient-preview-content p {
   margin: 0.25rem 0;
+  font-size: 0.9rem;
+}
+
+.wallet-address {
+  font-family: monospace;
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.distribution-modal {
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.source-payments-section {
+  margin-top: 1.5rem;
+  border-top: 1px solid #eee;
+  padding-top: 1.5rem;
+}
+
+.available-funds {
+  background-color: #f5f5f5;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.source-header {
+  margin-bottom: 1rem;
+}
+
+.source-header h4 {
+  margin: 0 0 0.25rem 0;
+  color: #333;
+}
+
+.source-help {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.payment-selection-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.payment-selection-item {
+  padding: 0.75rem;
+  border-bottom: 1px solid #eee;
+}
+
+.payment-selection-item:last-child {
+  border-bottom: none;
+}
+
+.payment-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+
+.payment-info {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.payment-user {
+  font-weight: 500;
+}
+
+.payment-amount {
+  font-weight: 600;
+  color: #4CAF50;
+  text-align: right;
+}
+
+.payment-date, .payment-wallet {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.selected-amount {
+  background-color: #e8f5e9;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.amount-warning {
+  color: #f44336;
+}
+
+.source-btn {
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.distribution-summary {
+  background-color: #f5f5f5;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+}
+
+.source-payments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.source-payment-item {
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  padding: 1rem;
+  border-left: 3px solid #4CAF50;
+}
+
+.source-payment-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.source-payment-user {
+  font-weight: 500;
+}
+
+.source-payment-amount {
+  font-weight: 600;
+  color: #4CAF50;
+}
+
+.source-payment-details p {
+  margin: 0.5rem 0;
   font-size: 0.9rem;
 }
 </style> 
