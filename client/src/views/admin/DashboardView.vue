@@ -579,109 +579,142 @@
       </div>
     </div>
     
-    <!-- Report Details Modal -->
+    <!-- Replace the existing Report Details Modal with this improved version -->
     <div v-if="selectedReport" class="modal report-modal">
-      <div class="modal-content report-full-details">
-        <span class="close-btn" @click="selectedReport = null">&times;</span>
-        <h2>Report Details</h2>
+      <div class="modal-content">
+        <div class="report-modal-header">
+          <h2>Report Details: {{ selectedReport.name }}</h2>
+          <span class="close-btn" @click="selectedReport = null">&times;</span>
+        </div>
         
-        <div class="detail-row">
-          <span class="detail-label">Name:</span>
-          <span class="detail-value">{{ selectedReport.name }}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Status:</span>
-          <span class="detail-value">
-            <span :class="'status-badge ' + selectedReport.status.toLowerCase()">
-              {{ selectedReport.status }}
-            </span>
-          </span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Reported on:</span>
-          <span class="detail-value">{{ formatDate(selectedReport.reportDate) }}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Address:</span>
-          <span class="detail-value">{{ selectedReport.address }}</span>
-        </div>
-        <div class="detail-row" v-if="selectedReport.phoneNumber">
-          <span class="detail-label">Phone Number:</span>
-          <span class="detail-value">{{ selectedReport.phoneNumber }}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Description:</span>
-          <span class="detail-value">{{ selectedReport.description }}</span>
-        </div>
-        <div class="detail-row" v-if="selectedReport.location">
-          <span class="detail-label">Location:</span>
-          <span class="detail-value">
-            {{ selectedReport.location.address }}<br>
-            <small>Lat: {{ selectedReport.location.latitude }}, Long: {{ selectedReport.location.longitude }}</small>
-          </span>
-        </div>
-        <div class="detail-row" v-if="selectedReport.reportedBy">
-          <span class="detail-label">Reported By:</span>
-          <span class="detail-value">{{ selectedReport.reportedBy }}</span>
-        </div>
-        <div class="detail-row" v-if="selectedReport.verifiedBy">
-          <span class="detail-label">Verified By:</span>
-          <span class="detail-value">{{ selectedReport.verifiedBy }} on {{ formatDate(selectedReport.verifiedDate) }}</span>
-        </div>
-        <div class="detail-row" v-if="selectedReport.rejectedBy">
-          <span class="detail-label">Rejected By:</span>
-          <span class="detail-value">{{ selectedReport.rejectedBy }} on {{ formatDate(selectedReport.rejectedDate) }}</span>
-        </div>
-        <div class="detail-row" v-if="selectedReport.notes">
-          <span class="detail-label">Notes:</span>
-          <span class="detail-value">{{ selectedReport.notes }}</span>
-        </div>
-      </div>
-      
-      <div v-if="selectedReport.images && selectedReport.images.length > 0" class="report-full-images">
-        <h3>Images</h3>
-        <div class="image-gallery">
-          <div v-for="(image, index) in selectedReport.images" :key="index" class="gallery-image">
-            <img :src="image.url" alt="Report evidence" @click="viewImage(image.url)" />
+        <div class="report-modal-body">
+          <!-- Overview Section -->
+          <div class="report-modal-section">
+            <div class="report-overview">
+              <div class="report-status">
+                <span :class="'report-status-badge ' + selectedReport.status.toLowerCase()">
+                  {{ selectedReport.status }}
+                </span>
+              </div>
+              
+              <div class="report-details-grid">
+                <div class="report-detail-card">
+                  <h4>Basic Information</h4>
+                  <div class="report-detail-item">
+                    <span class="report-detail-label">Reported on</span>
+                    <span class="report-detail-value">{{ formatDate(selectedReport.reportDate) }}</span>
+                  </div>
+                  <div class="report-detail-item">
+                    <span class="report-detail-label">Reported by</span>
+                    <span class="report-detail-value">{{ selectedReport.reportedBy || 'Anonymous' }}</span>
+                  </div>
+                  <div class="report-detail-item" v-if="selectedReport.verifiedBy">
+                    <span class="report-detail-label">Verified by</span>
+                    <span class="report-detail-value">
+                      {{ selectedReport.verifiedBy }} on {{ formatDate(selectedReport.verifiedDate) }}
+                    </span>
+                  </div>
+                  <div class="report-detail-item" v-if="selectedReport.rejectedBy">
+                    <span class="report-detail-label">Rejected by</span>
+                    <span class="report-detail-value">
+                      {{ selectedReport.rejectedBy }} on {{ formatDate(selectedReport.rejectedDate) }}
+                    </span>
+                  </div>
+                </div>
+                
+                <div class="report-detail-card">
+                  <h4>Contact Information</h4>
+                  <div class="report-detail-item">
+                    <span class="report-detail-label">Name</span>
+                    <span class="report-detail-value">{{ selectedReport.name }}</span>
+                  </div>
+                  <div class="report-detail-item">
+                    <span class="report-detail-label">Address</span>
+                    <span class="report-detail-value">{{ selectedReport.address }}</span>
+                  </div>
+                  <div class="report-detail-item" v-if="selectedReport.phoneNumber">
+                    <span class="report-detail-label">Phone Number</span>
+                    <span class="report-detail-value">{{ selectedReport.phoneNumber }}</span>
+                  </div>
+                </div>
+                
+                <div class="report-detail-card">
+                  <h4>Location</h4>
+                  <div class="report-detail-item" v-if="selectedReport.location">
+                    <span class="report-detail-label">Address</span>
+                    <span class="report-detail-value">{{ selectedReport.location.address }}</span>
+                  </div>
+                  <div class="report-detail-item" v-if="selectedReport.location">
+                    <span class="report-detail-label">Coordinates</span>
+                    <span class="report-detail-value">
+                      Lat: {{ selectedReport.location.latitude }}, Long: {{ selectedReport.location.longitude }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Description Section -->
+          <div class="report-modal-section">
+            <h3>Situation Description</h3>
+            <p>{{ selectedReport.description }}</p>
+            
+            <div v-if="selectedReport.notes" class="report-notes mt-4">
+              <h4>Additional Notes</h4>
+              <p>{{ selectedReport.notes }}</p>
+            </div>
+          </div>
+          
+          <!-- Images Section -->
+          <div v-if="selectedReport.images && selectedReport.images.length > 0" class="report-modal-section">
+            <h3>Evidence Images ({{ selectedReport.images.length }})</h3>
+            <div class="report-images-grid">
+              <div 
+                v-for="(image, index) in selectedReport.images" 
+                :key="index" 
+                class="report-image-card"
+                @click="viewImage(image.url)"
+              >
+                <img :src="image.url" alt="Report evidence" />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-      
-      <div v-if="selectedReport.status === 'Pending'" class="report-action-form">
-        <h3>Take Action</h3>
-        <div class="form-group">
-          <label for="reportNotes">Notes</label>
-          <textarea id="reportNotes" v-model="reportActionNotes" rows="3" placeholder="Add notes about this report"></textarea>
-        </div>
-        <div class="form-actions">
-          <button @click="verifyReport(selectedReport)" class="approve-btn">Verify Report</button>
-          <button @click="rejectReport(selectedReport)" class="reject-btn">Reject Report</button>
-        </div>
-      </div>
-      
-      <div v-if="selectedReport.status === 'Verified'" class="report-action-form">
-        <h3>Convert to Asnaf</h3>
-        <p class="help-text">Convert this verified report into an asnaf recipient record</p>
-        <div class="form-group">
-          <label for="asnafCategory">Asnaf Category</label>
-          <select id="asnafCategory" v-model="conversionCategory">
-            <option value="">Select a category</option>
-            <option value="Poor (Fakir)">Poor (Fakir)</option>
-            <option value="Needy (Miskin)">Needy (Miskin)</option>
-            <option value="Zakat Administrator (Amil)">Zakat Administrator (Amil)</option>
-            <option value="New Muslim (Muallaf)">New Muslim (Muallaf)</option>
-            <option value="To Free Slaves (Riqab)">To Free Slaves (Riqab)</option>
-            <option value="Debtor (Gharimin)">Debtor (Gharimin)</option>
-            <option value="Allah's Cause (Fi Sabilillah)">Allah's Cause (Fi Sabilillah)</option>
-            <option value="Traveler (Ibnus Sabil)">Traveler (Ibnus Sabil)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="asnafNeeds">Needs</label>
-          <textarea id="asnafNeeds" v-model="conversionNeeds" rows="2" placeholder="Describe the needs of this asnaf"></textarea>
-        </div>
-        <div class="form-actions">
-          <button @click="showConvertModal = true" class="convert-btn" :disabled="!conversionCategory">Convert to Asnaf</button>
+        
+        <!-- Action Section -->
+        <div v-if="selectedReport.status === 'Pending' || selectedReport.status === 'Verified'" class="report-action-section">
+          <div v-if="selectedReport.status === 'Pending'">
+            <h3>Take Action</h3>
+            <div class="form-group mb-4">
+              <label for="reportNotes">Notes</label>
+              <textarea 
+                id="reportNotes" 
+                v-model="reportActionNotes" 
+                rows="3" 
+                placeholder="Add notes about this report"
+                class="w-full p-2 border rounded"
+              ></textarea>
+            </div>
+            <div class="report-action-buttons">
+              <button @click="verifyReport(selectedReport)" class="report-action-button verify">
+                <span>✓</span> Verify Report
+              </button>
+              <button @click="rejectReport(selectedReport)" class="report-action-button reject">
+                <span>✕</span> Reject Report
+              </button>
+            </div>
+          </div>
+          
+          <div v-if="selectedReport.status === 'Verified'">
+            <h3>Convert to Asnaf</h3>
+            <p class="help-text mb-4">Convert this verified report into an asnaf recipient record</p>
+            <div class="report-action-buttons">
+              <button @click="openConvertModal(selectedReport)" class="report-action-button convert">
+                <span>→</span> Convert to Asnaf
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -2780,69 +2813,231 @@ export default {
 
 /* Report Modal Styles */
 .report-modal {
-  max-width: 700px;
+  padding: 2rem;
+}
+
+.report-modal .modal-content {
+  width: 90%;
+  height: 90%;
+  max-width: 1200px;
   max-height: 90vh;
-  overflow-y: auto;
-}
-
-.report-full-details {
-  margin-top: 1.5rem;
-}
-
-.report-full-images {
-  margin-top: 1.5rem;
-  padding: 1rem;
-  background-color: white;
-  border-radius: 8px;
-}
-
-.report-full-images h3 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-}
-
-.image-gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 1rem;
-}
-
-.gallery-image {
-  border-radius: 4px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
   overflow: hidden;
-  cursor: pointer;
-  height: 150px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
-.gallery-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
+.report-modal-header {
+  background-color: #f8f9fa;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
 }
 
-.gallery-image img:hover {
-  transform: scale(1.05);
+.report-modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
 }
 
-.report-action-form {
-  margin-top: 1.5rem;
+.report-modal-header .close-btn {
+  position: static;
+  font-size: 1.75rem;
+  color: #666;
+}
+
+.report-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.report-modal-section {
   padding: 1.5rem;
   background-color: white;
   border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e9ecef;
 }
 
-.report-action-form h3 {
+.report-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.report-status-badge.pending::before,
+.report-status-badge.verified::before,
+.report-status-badge.rejected::before,
+.report-status-badge.converted::before {
+  content: "";
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+}
+
+.report-status-badge.pending {
+  background-color: #fff8e1;
+  color: #f57c00;
+}
+
+.report-status-badge.pending::before {
+  background-color: #f57c00;
+}
+
+.report-status-badge.verified {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.report-status-badge.verified::before {
+  background-color: #1976d2;
+}
+
+.report-status-badge.rejected {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.report-status-badge.rejected::before {
+  background-color: #d32f2f;
+}
+
+.report-status-badge.converted {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.report-status-badge.converted::before {
+  background-color: #7b1fa2;
+}
+
+.report-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.report-detail-card {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.report-detail-card h4 {
   margin-top: 0;
   margin-bottom: 1rem;
-  font-size: 1.2rem;
+  font-size: 1rem;
+  color: #555;
 }
 
-.help-text {
+.report-detail-item {
+  margin-bottom: 0.75rem;
+}
+
+.report-detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.report-detail-label {
+  font-weight: 500;
   color: #666;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.report-detail-value {
+  color: #333;
+}
+
+.report-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.report-image-card {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  cursor: pointer;
+  height: 200px;
+  transition: transform 0.2s ease;
+}
+
+.report-image-card:hover {
+  transform: scale(1.03);
+}
+
+.report-image-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.report-action-section {
+  background-color: #f8f9fa;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e9ecef;
+  margin-top: auto;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+.report-action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.report-action-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.report-action-button.verify {
+  background-color: #4caf50;
+  color: white;
+}
+
+.report-action-button.reject {
+  background-color: #f44336;
+  color: white;
+}
+
+.report-action-button.convert {
+  background-color: #673ab7;
+  color: white;
+}
+
+.report-action-button.view {
+  background-color: #2196f3;
+  color: white;
 }
 
 /* Image Viewer Modal */
