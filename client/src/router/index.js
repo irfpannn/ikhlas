@@ -103,6 +103,11 @@ const router = createRouter({
       name: 'DonationSuccess',
       component: () => import('@/views/DonationSuccessView.vue')
     },
+    {
+      path: '/rewards',
+      name: 'rewards',
+      component: () => import('@/views/RewardsView.vue')
+    },
   ],
 })
 

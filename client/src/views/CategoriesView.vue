@@ -21,6 +21,8 @@ const categories = ref([
   { id: 11, name: 'Donation', icon: '🏫', type: 'bill' },
   { id: 8, name: 'Audit Zakat', icon: '🛒', type: 'bill' },
   { id: 14, name: 'Distribution Sources', icon: '☎️', type: 'bill' },
+  { id: 15, name: 'Manage Points', icon: '📦', type: 'bill' },
+  { id: 16, name: 'Rewards', icon: '🎁', type: 'bill' },
   // { id: 15, name: 'Mobile', icon: '📱', type: 'bill' },
   // { id: 16, name: 'Mutual Fund', icon: '📊', type: 'bill' },
   // { id: 17, name: 'Rental', icon: '🏠', type: 'bill' },
@@ -46,6 +48,8 @@ const handleCategoryClick = (category) => {
     router.push('/distribution-sources')
   } else if (category.name === 'Donation') {
     router.push('/donation')
+  } else if (category.name === 'Rewards') {
+    router.push('/rewards')
   } else {
     // For other categories, just log for now
     console.log(`Selected category: ${category.name}`)
