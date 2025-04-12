@@ -51,7 +51,7 @@ const userData = ref({
       time: '11:30',
       amount: -75,
       icon: '💰',
-    }
+    },
   ],
 })
 
@@ -61,9 +61,9 @@ const categories = [
   { id: 2, name: 'Zakat Wang Simpanan', icon: '🏦', routeName: 'zakat-wang-simpanan' }, // Savings: Bank
   { id: 3, name: 'Zakat Saham', icon: '📊', routeName: 'zakat-saham' }, // Stocks: Bar Chart
   { id: 4, name: 'Zakat Emas', icon: '💰', routeName: 'zakat-emas' }, // Gold: Money Bag (kept)
-  { id: 5, name: 'Zakat Pertanian', icon: '🌾', routeName: null }, // Agriculture: Sheaf of Rice
-  { id: 6, name: 'Zakat Ternakan', icon: '🐄', routeName: null }, // Livestock: Cow
-  { id: 7, name: 'Zakat Fitrah', icon: '🍚', routeName: null }, // Fitrah: Cooked Rice
+  { id: 5, name: 'Zakat Pertanian', icon: '🌾', routeName: 'payment' }, // Agriculture: Sheaf of Rice
+  { id: 6, name: 'Zakat Ternakan', icon: '🐄', routeName: 'payment' }, // Livestock: Cow
+  { id: 7, name: 'Zakat Fitrah', icon: '🍚', routeName: 'zakat-fitrah' }, // Fitrah: Cooked Rice
   // 'View All' is handled separately
 ]
 
@@ -74,6 +74,10 @@ const formatCurrency = (amount) => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount)
+}
+// Function to navigate to history page
+const goToHistory = () => {
+  router.push('/history') // Or use { name: 'history' }
 }
 
 // Function to navigate to categories page
@@ -171,9 +175,9 @@ const goToRewards = () => {
               <p class="text-xs text-gray-500">Recommend: 2</p>
             </div>
           </div>
-          <Button 
-            variant="default" 
-            size="sm" 
+          <Button
+            variant="default"
+            size="sm"
             class="bg-[#75a868] hover:bg-[#75a868]/90 text-white"
             @click="goToRewards"
           >
@@ -221,7 +225,9 @@ const goToRewards = () => {
       <Card class="shadow-sm">
         <CardHeader class="pb-2 flex flex-row items-center justify-between">
           <CardTitle class="text-base">History</CardTitle>
-          <Button variant="link" size="sm" class="text-[#75a868] -mr-3">View All</Button>
+          <Button variant="link" size="sm" class="text-[#75a868] -mr-3" @click="goToHistory"
+            >View All</Button
+          >
         </CardHeader>
         <CardContent class="pt-0">
           <div
@@ -258,5 +264,4 @@ const goToRewards = () => {
   </div>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

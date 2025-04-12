@@ -1,383 +1,255 @@
 <template>
-  <div class="profile-container">
-    <h1 class="profile-title">My Profile</h1>
-    
-    <div class="profile-card">
-      <div class="profile-header">
-        <div class="profile-avatar">
-          <img v-if="user.avatar" :src="user.avatar" alt="Profile Picture">
-          <div v-else class="avatar-placeholder">{{ getInitials(user.name) }}</div>
-        </div>
-        <div class="profile-info">
-          <h2>{{ user.name }}</h2>
-          <p>{{ user.email }}</p>
-          <p v-if="user.phone">{{ user.phone }}</p>
-        </div>
-      </div>
-      
-      <div class="profile-section">
-        <h3>Personal Information</h3>
-        <form @submit.prevent="updateProfile">
-          <div class="form-group">
-            <label for="name">Full Name</label>
-            <input type="text" id="name" v-model="user.name" />
+  <div class="flex flex-col min-h-screen bg-gray-100 overflow-y-auto pb-20">
+    <!-- Content wrapper with padding -->
+    <div class="p-4 flex-grow">
+      <h1 class="text-xl font-semibold text-center mb-5 text-gray-800">My Profile</h1>
+
+      <Card class="overflow-hidden shadow-sm mb-4">
+        <CardHeader class="bg-gray-50 p-4 flex flex-col sm:flex-row items-center gap-4">
+          <div
+            class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0"
+          >
+            <img
+              v-if="user.avatar"
+              :src="user.avatar"
+              alt="Profile Picture"
+              class="w-full h-full object-cover"
+            />
+            <span v-else class="text-2xl font-semibold text-gray-500">{{
+              getInitials(user.name)
+            }}</span>
           </div>
-          
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="email" v-model="user.email" />
+          <div class="text-center sm:text-left">
+            <h2 class="text-lg font-semibold text-gray-900">{{ user.name }}</h2>
+            <p class="text-sm text-gray-600">{{ user.email }}</p>
+            <p v-if="user.phone" class="text-sm text-gray-600">{{ user.phone }}</p>
           </div>
-          
-          <div class="form-group">
-            <label for="phone">Phone Number</label>
-            <input type="tel" id="phone" v-model="user.phone" />
+        </CardHeader>
+      </Card>
+
+      <Card class="overflow-hidden shadow-sm mb-4">
+        <CardContent class="p-4 space-y-5">
+          <div>
+            <h3 class="text-base font-semibold mb-3 text-gray-700">Personal Information</h3>
+            <form @submit.prevent="updateProfile" class="space-y-3">
+              <div class="grid grid-cols-1 gap-3">
+                <div>
+                  <Label for="name" class="text-xs font-medium text-gray-600">Full Name</Label>
+                  <Input id="name" type="text" v-model="user.name" class="mt-1 h-9 text-sm" />
+                </div>
+                <div>
+                  <Label for="email" class="text-xs font-medium text-gray-600">Email</Label>
+                  <Input id="email" type="email" v-model="user.email" class="mt-1 h-9 text-sm" />
+                </div>
+                <div>
+                  <Label for="phone" class="text-xs font-medium text-gray-600">Phone Number</Label>
+                  <Input id="phone" type="tel" v-model="user.phone" class="mt-1 h-9 text-sm" />
+                </div>
+                <div>
+                  <Label for="address" class="text-xs font-medium text-gray-600">Address</Label>
+                  <Textarea id="address" v-model="user.address" class="mt-1 min-h-[70px] text-sm" />
+                </div>
+              </div>
+              <Button
+                type="submit"
+                size="sm"
+                class="bg-[#75a868] hover:bg-[#75a868]/90 w-full sm:w-auto"
+                >Update Profile</Button
+              >
+            </form>
           </div>
-          
-          <div class="form-group">
-            <label for="address">Address</label>
-            <textarea id="address" v-model="user.address"></textarea>
-          </div>
-          
-          <button type="submit" class="btn-update">Update Profile</button>
-        </form>
-      </div>
-      
-      <div class="profile-section">
-        <h3>Donation History</h3>
-        <div v-if="donations.length > 0" class="donation-history">
-          <div v-for="(donation, index) in donations" :key="index" class="donation-item">
-            <div class="donation-details">
-              <p class="donation-amount">RM {{ donation.amount.toFixed(2) }}</p>
-              <p class="donation-date">{{ formatDate(donation.date) }}</p>
-              <p class="donation-category">{{ donation.category }}</p>
+        </CardContent>
+      </Card>
+
+      <Card class="overflow-hidden shadow-sm mb-4">
+        <CardHeader class="pb-2">
+          <CardTitle class="text-base">Donation History</CardTitle>
+        </CardHeader>
+        <CardContent class="pt-0">
+          <div v-if="donations.length > 0" class="space-y-2">
+            <div
+              v-for="(donation, index) in donations"
+              :key="index"
+              class="flex justify-between items-center p-3 bg-gray-50 rounded-md border border-gray-100"
+            >
+              <div>
+                <p class="font-medium text-sm text-gray-800">RM {{ donation.amount.toFixed(2) }}</p>
+                <p class="text-xs text-gray-500">
+                  {{ formatDate(donation.date) }} • {{ donation.category }}
+                </p>
+              </div>
+              <Badge
+                :variant="
+                  donation.status === 'Completed'
+                    ? 'success'
+                    : donation.status === 'Processing'
+                      ? 'warning'
+                      : 'secondary'
+                "
+                class="text-xs"
+                >{{ donation.status }}</Badge
+              >
             </div>
-            <div class="donation-status" :class="donation.status.toLowerCase()">
-              {{ donation.status }}
+          </div>
+          <div v-else class="text-center py-4 px-3 bg-gray-50 rounded-md border border-gray-100">
+            <p class="text-sm text-gray-500 mb-2">You haven't made any donations yet.</p>
+            <Button
+              variant="outline"
+              size="sm"
+              @click="$router.push('/donation')"
+              class="border-[#75a868] text-[#75a868] hover:bg-[#75a868]/10 hover:text-[#75a868]"
+              >Make a Donation</Button
+            >
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card class="overflow-hidden shadow-sm">
+        <CardHeader class="pb-2">
+          <CardTitle class="text-base">My Rewards</CardTitle>
+        </CardHeader>
+        <CardContent class="pt-0">
+          <div v-if="rewards.length > 0" class="space-y-2">
+            <div
+              v-for="(reward, index) in rewards"
+              :key="index"
+              class="flex justify-between items-center p-3 bg-gray-50 rounded-md border border-gray-100"
+            >
+              <div>
+                <h4 class="font-medium text-sm text-gray-800">{{ reward.name }}</h4>
+                <p class="text-xs text-gray-500">{{ reward.description }}</p>
+                <p class="text-xs text-gray-400" v-if="reward.expiryDate">
+                  Expires: {{ formatDate(reward.expiryDate) }}
+                </p>
+              </div>
+              <Badge
+                :variant="
+                  reward.status === 'Available'
+                    ? 'success'
+                    : reward.status === 'Claimed'
+                      ? 'info'
+                      : 'secondary'
+                "
+                class="text-xs"
+                >{{ reward.status }}</Badge
+              >
             </div>
           </div>
-        </div>
-        <div v-else class="no-donations">
-          <p>You haven't made any donations yet.</p>
-          <router-link to="/donation" class="btn-donate">Make a Donation</router-link>
-        </div>
-      </div>
-      
-      <div class="profile-section">
-        <h3>My Rewards</h3>
-        <div v-if="rewards.length > 0" class="rewards-list">
-          <div v-for="(reward, index) in rewards" :key="index" class="reward-item">
-            <div class="reward-info">
-              <h4>{{ reward.name }}</h4>
-              <p>{{ reward.description }}</p>
-              <p class="reward-expiry" v-if="reward.expiryDate">Expires: {{ formatDate(reward.expiryDate) }}</p>
-            </div>
-            <div class="reward-status" :class="reward.status.toLowerCase()">
-              {{ reward.status }}
-            </div>
+          <div v-else class="text-center py-4 px-3 bg-gray-50 rounded-md border border-gray-100">
+            <p class="text-sm text-gray-500 mb-2">You don't have any rewards yet.</p>
+            <Button
+              variant="outline"
+              size="sm"
+              @click="$router.push('/rewards')"
+              class="border-[#75a868] text-[#75a868] hover:bg-[#75a868]/10 hover:text-[#75a868]"
+              >View Available Rewards</Button
+            >
           </div>
-        </div>
-        <div v-else class="no-rewards">
-          <p>You don't have any rewards yet.</p>
-          <router-link to="/rewards" class="btn-rewards">View Available Rewards</router-link>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
+
+    <!-- Bottom Navigation -->
+    <BottomNavigation />
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ProfileView',
-  data() {
-    return {
-      user: {
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        phone: '+60 12 345 6789',
-        address: '123 Main Street, Kuala Lumpur, Malaysia',
-        avatar: null
-      },
-      donations: [
-        {
-          amount: 100.00,
-          date: new Date('2023-10-15'),
-          category: 'Fakir (Poor)',
-          status: 'Completed'
-        },
-        {
-          amount: 50.00,
-          date: new Date('2023-09-01'),
-          category: 'Miskin (Needy)',
-          status: 'Completed'
-        },
-        {
-          amount: 75.00,
-          date: new Date('2023-11-05'),
-          category: 'Fi Sabilillah',
-          status: 'Processing'
-        }
-      ],
-      rewards: [
-        {
-          name: 'Tax Deduction Certificate',
-          description: 'Certificate for tax deduction purposes for your donation of RM 100.00',
-          status: 'Available',
-          expiryDate: new Date('2024-04-30')
-        },
-        {
-          name: 'Donation Badge',
-          description: 'Silver donor badge for your contribution',
-          status: 'Claimed',
-          expiryDate: null
-        }
-      ]
-    }
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card' // Added CardTitle
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { BottomNavigation } from '@/components/ui/bottom-navigation' // Import BottomNavigation
+
+const router = useRouter()
+
+const user = ref({
+  name: 'Bima Sakti', // Updated to match HomeView example
+  email: 'bima.sakti@example.com',
+  phone: '081987378782', // Updated to match HomeView example
+  address: '123 Jalan Merdeka, Kuala Lumpur, 50480',
+  avatar: null, // Example: '/path/to/avatar.jpg' or null
+})
+
+const donations = ref([
+  {
+    amount: 100.0,
+    date: new Date('2023-10-15'),
+    category: 'Fakir (Poor)',
+    status: 'Completed',
   },
-  methods: {
-    updateProfile() {
-      // Here you would implement the logic to update the user profile
-      // For example, making an API call to your backend
-      alert('Profile updated successfully!');
-    },
-    formatDate(date) {
-      return new Date(date).toLocaleDateString('en-MY', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
-    },
-    getInitials(name) {
-      if (!name) return '';
-      return name
-        .split(' ')
-        .map(part => part.charAt(0))
-        .join('')
-        .toUpperCase();
-    }
-  }
+  {
+    amount: 50.0,
+    date: new Date('2023-09-01'),
+    category: 'Miskin (Needy)',
+    status: 'Completed',
+  },
+  {
+    amount: 75.0,
+    date: new Date('2023-11-05'),
+    category: 'Fi Sabilillah',
+    status: 'Processing',
+  },
+])
+
+const rewards = ref([
+  {
+    id: 101, // Added ID for consistency
+    name: 'Tax Deduction Certificate',
+    description: 'Certificate for tax deduction purposes for your donation of RM 100.00',
+    status: 'Available',
+    expiryDate: new Date('2024-12-31'), // Extended expiry
+  },
+  {
+    id: 102, // Added ID
+    name: 'ZUS Coffee Voucher', // Example reward
+    description: 'RM5 off any beverage',
+    status: 'Available',
+    expiryDate: new Date('2024-08-31'),
+  },
+  {
+    id: 103, // Added ID
+    name: 'Donation Badge',
+    description: 'Silver donor badge for your contribution',
+    status: 'Claimed',
+    expiryDate: null,
+  },
+])
+
+const updateProfile = () => {
+  // Here you would implement the logic to update the user profile
+  // For example, making an API call to your backend
+  // Consider using a notification system instead of alert
+  console.log('Profile update submitted:', user.value)
+  alert('Profile updated successfully!') // Placeholder
 }
+
+const formatDate = (date) => {
+  if (!date) return ''
+  return new Date(date).toLocaleDateString('en-MY', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+const getInitials = (name) => {
+  if (!name) return ''
+  return name
+    .split(' ')
+    .map((part) => part.charAt(0))
+    .slice(0, 2) // Limit to 2 initials
+    .join('')
+    .toUpperCase()
+}
+
+// Define badge variants if not already globally defined or part of the Badge component logic
+// This is conceptual - actual implementation depends on how Badge variants are handled
+// You might need to adjust the :variant binding based on your Badge component setup
+// e.g., using computed properties or a mapping function.
 </script>
-
-<style scoped>
-.profile-container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-.profile-title {
-  text-align: center;
-  margin-bottom: 2rem;
-  color: #2c3e50;
-}
-
-.profile-card {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.profile-header {
-  display: flex;
-  padding: 2rem;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.profile-avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  overflow: hidden;
-  margin-right: 2rem;
-  background-color: #e9ecef;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.profile-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.avatar-placeholder {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #6c757d;
-}
-
-.profile-info h2 {
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-  color: #343a40;
-}
-
-.profile-info p {
-  margin: 0.25rem 0;
-  color: #6c757d;
-}
-
-.profile-section {
-  padding: 2rem;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.profile-section:last-child {
-  border-bottom: none;
-}
-
-.profile-section h3 {
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  color: #343a40;
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #495057;
-}
-
-.form-group input,
-.form-group textarea {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 1rem;
-}
-
-.form-group textarea {
-  min-height: 100px;
-  resize: vertical;
-}
-
-.btn-update {
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.btn-update:hover {
-  background-color: #218838;
-}
-
-.donation-history,
-.rewards-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.donation-item,
-.reward-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  border-left: 4px solid #6c757d;
-}
-
-.donation-details p,
-.reward-info p {
-  margin: 0.25rem 0;
-}
-
-.donation-amount,
-.reward-info h4 {
-  font-weight: bold;
-  color: #343a40;
-  margin-top: 0;
-}
-
-.donation-date,
-.donation-category,
-.reward-expiry {
-  color: #6c757d;
-  font-size: 0.9rem;
-}
-
-.donation-status,
-.reward-status {
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  font-weight: 500;
-}
-
-.donation-status.completed,
-.reward-status.available,
-.reward-status.claimed {
-  background-color: #d4edda;
-  color: #155724;
-}
-
-.donation-status.processing {
-  background-color: #fff3cd;
-  color: #856404;
-}
-
-.no-donations,
-.no-rewards {
-  text-align: center;
-  padding: 2rem;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-}
-
-.btn-donate,
-.btn-rewards {
-  display: inline-block;
-  margin-top: 1rem;
-  background-color: #007bff;
-  color: white;
-  text-decoration: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.btn-donate:hover,
-.btn-rewards:hover {
-  background-color: #0069d9;
-}
-
-@media (max-width: 768px) {
-  .profile-header {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-  
-  .profile-avatar {
-    margin-right: 0;
-    margin-bottom: 1rem;
-  }
-  
-  .donation-item,
-  .reward-item {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .donation-status,
-  .reward-status {
-    margin-top: 1rem;
-    align-self: flex-start;
-  }
-}
-</style> 

@@ -60,6 +60,7 @@ const router = createRouter({
       name: 'payment',
       component: PaymentView,
     },
+
     {
       path: '/transaction-history',
       name: 'transaction-history',
@@ -109,35 +110,32 @@ const router = createRouter({
     {
       path: '/donation',
       name: 'donation',
-      component: () => import('@/views/DonationView.vue')
+      component: () => import('@/views/DonationView.vue'),
     },
     {
       path: '/donation/:id',
       name: 'DonationDetails',
-      component: () => import('@/views/DonationDetailsView.vue')
+      component: () => import('@/views/DonationDetailsView.vue'),
     },
     {
       path: '/donation/:id/payment',
       name: 'DonationPayment',
-      component: () => import('@/views/DonationPaymentView.vue')
+      component: () => import('@/views/DonationPaymentView.vue'),
     },
     {
       path: '/donation/:id/success',
       name: 'DonationSuccess',
-      component: () => import('@/views/DonationSuccessView.vue')
+      component: () => import('@/views/DonationSuccessView.vue'),
     },
     {
       path: '/rewards',
       name: 'rewards',
-      component: () => import('@/views/RewardsView.vue')
+      component: () => import('@/views/RewardsView.vue'),
     },
     {
       path: '/profile',
       name: 'profile',
       component: () => import('../views/ProfileView.vue'),
-      meta: {
-        requiresAuth: true
-      }
     },
   ],
 })
