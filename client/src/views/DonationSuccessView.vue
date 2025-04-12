@@ -18,6 +18,9 @@ const donationDate = ref(new Date().toLocaleDateString('en-MY', {
   minute: '2-digit'
 }))
 
+// Generate random reward points based on donation amount
+const rewardPoints = ref(Math.floor(Math.random() * 50) + 10) // Random points between 10-59
+
 // Sample donation campaigns (same as in DonationView)
 const campaigns = ref([
   {
@@ -97,6 +100,12 @@ const shareDonation = () => {
       <p class="text-gray-600 mb-4">Your donation has been processed successfully</p>
       <div class="text-2xl font-bold text-green-600 mb-1">{{ formatAmount(donationAmount) }}</div>
       <p class="text-sm text-gray-500">Receipt #{{ receiptNumber }}</p>
+      
+      <!-- Reward Points Banner -->
+      <div class="mt-4 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+        <div class="text-yellow-800 font-medium">🎉 You earned {{ rewardPoints }} points!</div>
+        <p class="text-xs text-yellow-700 mt-1">Points have been added to your rewards balance</p>
+      </div>
     </div>
 
     <!-- Donation Details -->

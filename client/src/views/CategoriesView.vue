@@ -21,7 +21,7 @@ const categories = ref([
   { id: 11, name: 'Donation', icon: '🏫', type: 'bill' },
   { id: 8, name: 'Audit Zakat', icon: '🛒', type: 'bill' },
   { id: 14, name: 'Distribution Sources', icon: '☎️', type: 'bill' },
-  { id: 15, name: 'Manage Points', icon: '📦', type: 'bill' },
+  // { id: 15, name: 'Manage Points', icon: '📦', type: 'bill' },
   { id: 16, name: 'Rewards', icon: '🎁', type: 'bill' },
   // { id: 15, name: 'Mobile', icon: '📱', type: 'bill' },
   // { id: 16, name: 'Mutual Fund', icon: '📊', type: 'bill' },
