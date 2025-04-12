@@ -83,6 +83,26 @@ const router = createRouter({
       component: () => import('../views/admin/ImpactMonitoringView.vue'),
       meta: { requiresAuth: true, requiresAdmin: true },
     },
+    {
+      path: '/donation',
+      name: 'donation',
+      component: () => import('@/views/DonationView.vue')
+    },
+    {
+      path: '/donation/:id',
+      name: 'DonationDetails',
+      component: () => import('@/views/DonationDetailsView.vue')
+    },
+    {
+      path: '/donation/:id/payment',
+      name: 'DonationPayment',
+      component: () => import('@/views/DonationPaymentView.vue')
+    },
+    {
+      path: '/donation/:id/success',
+      name: 'DonationSuccess',
+      component: () => import('@/views/DonationSuccessView.vue')
+    },
   ],
 })
 

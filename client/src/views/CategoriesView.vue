@@ -44,6 +44,8 @@ const handleCategoryClick = (category) => {
     router.push('/audit-zakat')
   } else if (category.name === 'Distribution Sources') {
     router.push('/distribution-sources')
+  } else if (category.name === 'Donation') {
+    router.push('/donation')
   } else {
     // For other categories, just log for now
     console.log(`Selected category: ${category.name}`)
