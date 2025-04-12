@@ -1499,7 +1499,7 @@ export default {
             name: 'Ahmad bin Abdullah',
             category: 'Poor (Fakir)',
             contact: '012-3456789',
-            location: 'Kampung Baru, Kuala Lumpur',
+            location: 'Balik Pulau, Pulau Pinang',
             needs: 'Basic necessities, medical support',
             status: 'Active',
             notes: 'Single father with 3 children'
@@ -1509,7 +1509,7 @@ export default {
             name: 'Fatimah binti Hassan',
             category: 'Poor (Fakir)',
             contact: '019-8765432',
-            location: 'Chow Kit, Kuala Lumpur',
+            location: 'Jelutong, Pulau Pinang',
             needs: 'Food, education for children',
             status: 'Active',
             notes: 'Widow with 2 school-age children'
@@ -1519,7 +1519,7 @@ export default {
             name: 'Muhammad bin Ibrahim',
             category: 'Needy (Miskin)',
             contact: '013-5557777',
-            location: 'Sentul, Kuala Lumpur',
+            location: 'Bayan Lepas, Pulau Pinang',
             needs: 'Rent assistance, job training',
             status: 'Active',
             notes: 'Recently lost job due to disability'
@@ -1528,8 +1528,8 @@ export default {
             id: '4',
             name: 'Nurul Iman Foundation',
             category: 'Zakat Administrator (Amil)',
-            contact: '03-21234567',
-            location: 'Shah Alam, Selangor',
+            contact: '04-2123456',
+            location: 'Georgetown, Pulau Pinang',
             needs: 'Operational costs',
             status: 'Active',
             notes: 'Local zakat distribution organization'
@@ -1539,7 +1539,7 @@ export default {
             name: 'Ali bin Razak',
             category: 'New Muslim (Muallaf)',
             contact: '014-9998888',
-            location: 'Petaling Jaya, Selangor',
+            location: 'Tanjung Bungah, Pulau Pinang',
             needs: 'Islamic education, community support',
             status: 'Active',
             notes: 'Converted 6 months ago'
@@ -1548,8 +1548,8 @@ export default {
             id: '6',
             name: 'Refugee Support Center',
             category: 'Allah\'s Cause (Fi Sabilillah)',
-            contact: '03-87654321',
-            location: 'Ampang, Kuala Lumpur',
+            contact: '04-8765432',
+            location: 'Butterworth, Pulau Pinang',
             needs: 'Funding for refugee education program',
             status: 'Active',
             notes: 'Supporting 50 refugee children'
@@ -1559,7 +1559,7 @@ export default {
             name: 'Zainab binti Omar',
             category: 'Debtor (Gharimin)',
             contact: '017-1112222',
-            location: 'Klang, Selangor',
+            location: 'Bukit Mertajam, Pulau Pinang',
             needs: 'Medical debt assistance',
             status: 'Pending',
             notes: 'Needs help with hospital bills'
@@ -1569,7 +1569,7 @@ export default {
             name: 'Ismail bin Yusof',
             category: 'Traveler (Ibnus Sabil)',
             contact: '018-3334444',
-            location: 'Currently stranded in Kuala Lumpur',
+            location: 'Currently stranded in Georgetown, Pulau Pinang',
             needs: 'Temporary accommodation, travel funds',
             status: 'Active',
             notes: 'Student who lost wallet and documents'
@@ -2003,13 +2003,13 @@ export default {
           {
             id: '1',
             name: 'Rohani binti Ismail',
-            address: 'Kampung Baru, Jalan Masjid India, Kuala Lumpur',
+            address: 'Kampung Melayu, Ayer Itam, Pulau Pinang',
             phoneNumber: '012-3456789',
             description: 'Single mother with 4 children, living in poor conditions. The house is in disrepair and they need assistance with basic necessities and school supplies for the children.',
             location: {
-              latitude: 3.1590,
-              longitude: 101.6969,
-              address: 'Kampung Baru, Kuala Lumpur'
+              latitude: 5.4164,
+              longitude: 100.2971,
+              address: 'Kampung Melayu, Ayer Itam, Pulau Pinang'
             },
             images: [
               { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' },
@@ -2023,13 +2023,13 @@ export default {
           {
             id: '2',
             name: 'Hassan bin Omar',
-            address: 'Flat Seri Kota, Blok C-15-3, Jalan Pudu, Kuala Lumpur',
+            address: 'Flat Seri Pinang, Blok C-15-3, Jalan Perak, Georgetown, Pulau Pinang',
             phoneNumber: '019-8765432',
             description: 'Elderly man living alone, unable to work due to health issues. Needs assistance with medical expenses and daily necessities.',
             location: {
-              latitude: 3.1390,
-              longitude: 101.7169,
-              address: 'Jalan Pudu, Kuala Lumpur'
+              latitude: 5.4065,
+              longitude: 100.3290,
+              address: 'Jalan Perak, Georgetown, Pulau Pinang'
             },
             images: [
               { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
@@ -2044,13 +2044,13 @@ export default {
           {
             id: '3',
             name: 'Keluarga Zulkifli',
-            address: 'Taman Melati, Jalan 3/4, Gombak, Selangor',
+            address: 'Taman Tun Sardon, Jalan 3/4, Gelugor, Pulau Pinang',
             phoneNumber: '013-9876543',
             description: 'Family of 6 living in a small house. Father recently lost job due to company closure. Need assistance with rent and children\'s education expenses.',
             location: {
-              latitude: 3.2290,
-              longitude: 101.7369,
-              address: 'Taman Melati, Gombak, Selangor'
+              latitude: 5.3790,
+              longitude: 100.3099,
+              address: 'Taman Tun Sardon, Gelugor, Pulau Pinang'
             },
             images: [
               { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' },
@@ -2070,13 +2070,13 @@ export default {
           {
             id: '4',
             name: 'Aminah binti Kadir',
-            address: 'PPR Kerinchi, Blok D-10-5, Bangsar South, Kuala Lumpur',
+            address: 'PPR Jalan Sungai, Blok D-10-5, Sungai Pinang, Pulau Pinang',
             phoneNumber: '014-5556666',
             description: 'Widow with 2 young children. Working part-time but income insufficient for family needs. Children need school supplies and tuition assistance.',
             location: {
-              latitude: 3.1090,
-              longitude: 101.6669,
-              address: 'PPR Kerinchi, Bangsar South, Kuala Lumpur'
+              latitude: 5.4090,
+              longitude: 100.3269,
+              address: 'PPR Jalan Sungai, Sungai Pinang, Pulau Pinang'
             },
             images: [
               { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' },
@@ -2090,13 +2090,13 @@ export default {
           {
             id: '5',
             name: 'Abdul Rahman bin Hamid',
-            address: 'Kampung Datuk Keramat, Jalan 3/27A, Kuala Lumpur',
+            address: 'Kampung Seronok, Jalan 3/27A, Bayan Lepas, Pulau Pinang',
             phoneNumber: '',
             description: 'Reported as a potential asnaf, but upon investigation, found to be receiving adequate support from family members and other sources.',
             location: {
-              latitude: 3.1690,
-              longitude: 101.7269,
-              address: 'Kampung Datuk Keramat, Kuala Lumpur'
+              latitude: 5.3290,
+              longitude: 100.2869,
+              address: 'Kampung Seronok, Bayan Lepas, Pulau Pinang'
             },
             images: [
               { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
@@ -2493,7 +2493,7 @@ export default {
           {
             id: '1',
             title: 'Education Support for Underprivileged Children',
-            description: 'Provided educational support to 25 children from low-income families in Kampung Baru. The assistance covered school fees, books, uniforms, and transportation costs for the entire academic year.',
+            description: 'Provided educational support to 25 children from low-income families in Balik Pulau, Penang. The assistance covered school fees, books, uniforms, and transportation costs for the entire academic year.',
             category: 'Poor',
             beneficiaries: 25,
             amount: 12500,
@@ -2512,7 +2512,7 @@ export default {
           {
             id: '2',
             title: 'Medical Assistance Program',
-            description: 'Provided financial assistance for medical treatments to 15 individuals from needy families. The support covered hospital bills, medication costs, and follow-up treatments for chronic conditions.',
+            description: 'Provided financial assistance for medical treatments to 15 individuals from needy families in Georgetown, Penang. The support covered hospital bills, medication costs, and follow-up treatments for chronic conditions.',
             category: 'Needy',
             beneficiaries: 15,
             amount: 9000,
@@ -2530,7 +2530,7 @@ export default {
           {
             id: '3',
             title: 'Housing Renovation for Elderly',
-            description: 'Renovated homes of 5 elderly individuals living in unsafe conditions. Repairs included fixing leaking roofs, improving sanitation facilities, and ensuring proper electrical wiring for safety.',
+            description: 'Renovated homes of 5 elderly individuals living in unsafe conditions in Butterworth, Penang. Repairs included fixing leaking roofs, improving sanitation facilities, and ensuring proper electrical wiring for safety.',
             category: 'Poor',
             beneficiaries: 5,
             amount: 15000,
@@ -2549,7 +2549,7 @@ export default {
           {
             id: '4',
             title: 'Micro-Business Support Initiative',
-            description: 'Provided financial and mentoring support to 8 small entrepreneurs from underprivileged backgrounds. The assistance helped them establish or expand their businesses, creating sustainable income sources.',
+            description: 'Provided financial and mentoring support to 8 small entrepreneurs from underprivileged backgrounds in Bayan Lepas, Penang. The assistance helped them establish or expand their businesses, creating sustainable income sources.',
             category: 'Debtor',
             beneficiaries: 8,
             amount: 16000,
@@ -2790,21 +2790,21 @@ export default {
         // In a real app, this would fetch from Firestore
         // For now, we'll use dummy data
         const dummyLocations = [
-          { id: '1', lat: 3.1590, lng: 101.6969, category: 'Poor (Fakir)', weight: 10 },
-          { id: '2', lat: 3.1390, lng: 101.7169, category: 'Poor (Fakir)', weight: 8 },
-          { id: '3', lat: 3.2290, lng: 101.7369, category: 'Needy (Miskin)', weight: 12 },
-          { id: '4', lat: 3.1090, lng: 101.6669, category: 'Needy (Miskin)', weight: 7 },
-          { id: '5', lat: 3.1690, lng: 101.7269, category: 'Debtor (Gharimin)', weight: 5 },
-          { id: '6', lat: 3.1490, lng: 101.7069, category: 'New Muslim (Muallaf)', weight: 6 },
-          { id: '7', lat: 3.1790, lng: 101.6869, category: 'Allah\'s Cause (Fi Sabilillah)', weight: 9 },
-          { id: '8', lat: 3.1290, lng: 101.7469, category: 'Traveler (Ibnus Sabil)', weight: 4 },
-          { id: '9', lat: 3.1190, lng: 101.6769, category: 'Poor (Fakir)', weight: 11 },
-          { id: '10', lat: 3.2090, lng: 101.7169, category: 'Needy (Miskin)', weight: 8 },
-          { id: '11', lat: 3.1490, lng: 101.6969, category: 'Poor (Fakir)', weight: 9 },
-          { id: '12', lat: 3.1590, lng: 101.7269, category: 'Zakat Administrator (Amil)', weight: 3 },
-          { id: '13', lat: 3.1890, lng: 101.6769, category: 'Debtor (Gharimin)', weight: 6 },
-          { id: '14', lat: 3.1390, lng: 101.7369, category: 'Poor (Fakir)', weight: 10 },
-          { id: '15', lat: 3.1690, lng: 101.6869, category: 'Needy (Miskin)', weight: 7 }
+          { id: '1', lat: 5.4164, lng: 100.2971, category: 'Poor (Fakir)', weight: 10 }, // Ayer Itam
+          { id: '2', lat: 5.4065, lng: 100.3290, category: 'Poor (Fakir)', weight: 8 }, // Georgetown
+          { id: '3', lat: 5.3790, lng: 100.3099, category: 'Needy (Miskin)', weight: 12 }, // Gelugor
+          { id: '4', lat: 5.4090, lng: 100.3269, category: 'Needy (Miskin)', weight: 7 }, // Sungai Pinang
+          { id: '5', lat: 5.3290, lng: 100.2869, category: 'Debtor (Gharimin)', weight: 5 }, // Bayan Lepas
+          { id: '6', lat: 5.4690, lng: 100.2369, category: 'New Muslim (Muallaf)', weight: 6 }, // Balik Pulau
+          { id: '7', lat: 5.3990, lng: 100.3069, category: 'Allah\'s Cause (Fi Sabilillah)', weight: 9 }, // Jelutong
+          { id: '8', lat: 5.4390, lng: 100.3169, category: 'Traveler (Ibnus Sabil)', weight: 4 }, // Pulau Tikus
+          { id: '9', lat: 5.4590, lng: 100.2869, category: 'Poor (Fakir)', weight: 11 }, // Tanjung Bungah
+          { id: '10', lat: 5.3990, lng: 100.3869, category: 'Needy (Miskin)', weight: 8 }, // Batu Ferringhi
+          { id: '11', lat: 5.4190, lng: 100.3969, category: 'Poor (Fakir)', weight: 9 }, // Teluk Bahang
+          { id: '12', lat: 5.3890, lng: 100.4069, category: 'Zakat Administrator (Amil)', weight: 3 }, // Batu Maung
+          { id: '13', lat: 5.4290, lng: 100.4169, category: 'Debtor (Gharimin)', weight: 6 }, // Teluk Kumbar
+          { id: '14', lat: 5.3990, lng: 100.3669, category: 'Poor (Fakir)', weight: 10 }, // Sungai Ara
+          { id: '15', lat: 5.4490, lng: 100.4269, category: 'Needy (Miskin)', weight: 7 } // Relau
         ];
         
         asnafLocations.value = dummyLocations;
