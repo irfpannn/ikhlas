@@ -22,12 +22,36 @@ const userData = ref({
   transactions: [
     {
       id: 1,
-      name: 'Kopi Pelabor',
-      date: '27 Nov 2023',
-      time: '10:33',
-      amount: -10,
-      icon: '☕',
+      name: 'Zakat Pendapatan',
+      date: '15 Jun 2023',
+      time: '14:25',
+      amount: -150,
+      icon: '📱',
     },
+    {
+      id: 2,
+      name: 'Zakat Fitrah',
+      date: '20 Apr 2023',
+      time: '09:15',
+      amount: -25,
+      icon: '⚡',
+    },
+    {
+      id: 3,
+      name: 'Top Up',
+      date: '10 Apr 2023',
+      time: '16:42',
+      amount: 500,
+      icon: '💰',
+    },
+    {
+      id: 4,
+      name: 'Zakat Emas',
+      date: '05 Mar 2023',
+      time: '11:30',
+      amount: -75,
+      icon: '💰',
+    }
   ],
 })
 
@@ -71,6 +95,11 @@ const goToCategory = (routeName) => {
     // import { toast } from 'vue-sonner';
     // toast.info('Halaman untuk kategori ini belum tersedia.');
   }
+}
+
+// Function to navigate to rewards page
+const goToRewards = () => {
+  router.push('/rewards')
 }
 </script>
 
@@ -138,11 +167,16 @@ const goToCategory = (routeName) => {
               <span class="text-[#75a868] text-xl">🎁</span>
             </div>
             <div>
-              <p class="font-semibold">Alipay+ Rewards</p>
+              <p class="font-semibold">Mydin Rewards</p>
               <p class="text-xs text-gray-500">Recommend: 2</p>
             </div>
           </div>
-          <Button variant="default" size="sm" class="bg-[#75a868] hover:bg-[#75a868]/90 text-white">
+          <Button 
+            variant="default" 
+            size="sm" 
+            class="bg-[#75a868] hover:bg-[#75a868]/90 text-white"
+            @click="goToRewards"
+          >
             Claim Now
           </Button>
         </CardContent>
@@ -225,5 +259,4 @@ const goToCategory = (routeName) => {
 </template>
 
 <style scoped>
-/* Add any additional custom styles here */
 </style>

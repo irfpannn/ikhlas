@@ -9,6 +9,8 @@ import BottomNavigation from '@/components/ui/bottom-navigation/BottomNavigation
 const router = useRouter()
 const isSubmitting = ref(false)
 const isSuccess = ref(false)
+// Generate random reward points for reporting
+const rewardPoints = ref(Math.floor(Math.random() * 30) + 20) // Random points between 20-49
 
 // Form data
 const formData = ref({
@@ -126,10 +128,16 @@ const submitReport = async () => {
         <CardContent class="p-6 text-center">
           <div class="text-4xl mb-4">✅</div>
           <h2 class="text-lg font-semibold text-green-800 mb-2">Laporan Berjaya Dihantar</h2>
-          <p class="text-green-700">
+          <p class="text-green-700 mb-4">
             Terima kasih atas laporan anda. Kami akan menyemak maklumat yang diberikan secepat
             mungkin.
           </p>
+          
+          <!-- Reward Points Banner -->
+          <div class="mt-2 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+            <div class="text-yellow-800 font-medium">🎉 Anda mendapat {{ rewardPoints }} mata ganjaran!</div>
+            <p class="text-xs text-yellow-700 mt-1">Mata telah ditambah ke baki ganjaran anda</p>
+          </div>
         </CardContent>
       </Card>
 
