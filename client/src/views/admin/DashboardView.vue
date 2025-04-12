@@ -3595,7 +3595,6 @@ export default {
 
 .story-metrics {
   padding: 0 1rem 1rem;
-  display: flex;
   justify-content: space-between;
 }
 

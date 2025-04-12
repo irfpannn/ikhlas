@@ -13,5 +13,14 @@
   { "id": "12", "lat": 5.3890, "lng": 100.4069, "category": "Zakat Administrator (Amil)", "weight": 3 },
   { "id": "13", "lat": 5.4290, "lng": 100.4169, "category": "Debtor (Gharimin)", "weight": 6 },
   { "id": "14", "lat": 5.3990, "lng": 100.3669, "category": "Poor (Fakir)", "weight": 10 },
-  { "id": "15", "lat": 5.4490, "lng": 100.4269, "category": "Needy (Miskin)", "weight": 7 }
+  { "id": "15", "lat": 5.4490, "lng": 100.4269, "category": "Needy (Miskin)", "weight": 7 },
+  { "id": "16", "lat": 5.4142, "lng": 100.3297, "category": "Poor (Fakir)", "weight": 9 },
+  { "id": "17", "lat": 5.4033, "lng": 100.3083, "category": "Needy (Miskin)", "weight": 11 },
+  { "id": "18", "lat": 5.3951, "lng": 100.3259, "category": "Debtor (Gharimin)", "weight": 7 },
+  { "id": "19", "lat": 5.4173, "lng": 100.3091, "category": "New Muslim (Muallaf)", "weight": 5 },
+  { "id": "20", "lat": 5.3863, "lng": 100.2976, "category": "Allah's Cause (Fi Sabilillah)", "weight": 8 },
+  { "id": "21", "lat": 5.4321, "lng": 100.3214, "category": "Traveler (Ibnus Sabil)", "weight": 6 },
+  { "id": "22", "lat": 5.4251, "lng": 100.3118, "category": "Zakat Administrator (Amil)", "weight": 4 },
+  { "id": "24", "lat": 5.4078, "lng": 100.3156, "category": "Needy (Miskin)", "weight": 9 },
+  { "id": "25", "lat": 5.3841, "lng": 100.3194, "category": "Poor (Fakir)", "weight": 12 }
 ] 
