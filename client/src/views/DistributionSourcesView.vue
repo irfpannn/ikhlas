@@ -27,27 +27,29 @@
         </CardHeader>
         <CardContent>
           <div class="flex flex-col space-y-2">
-            <Input 
-              v-model="searchQuery" 
-              placeholder="Search by recipient name or description..." 
+            <Input
+              v-model="searchQuery"
+              placeholder="Search by recipient name or description..."
               class="flex-grow"
               @keyup.enter="handleSearch"
             />
-            <select 
-              v-model="selectedCategory" 
-              class="w-full p-2 border border-gray-300 rounded-md"
-              @change="handleSearch"
-            >
-              <option value="">All Categories</option>
-              <option value="Poor">Poor (Fakir)</option>
-              <option value="Needy">Needy (Miskin)</option>
-              <option value="Zakat Administrator">Zakat Administrator (Amil)</option>
-              <option value="New Muslim">New Muslim (Muallaf)</option>
-              <option value="Slave">To Free Slaves (Riqab)</option>
-              <option value="Debtor">Debtor (Gharimin)</option>
-              <option value="Allah's Cause">Allah's Cause (Fi Sabilillah)</option>
-              <option value="Traveler">Traveler (Ibnus Sabil)</option>
-            </select>
+            <Select v-model="selectedCategory">
+              <SelectTrigger class="w-full">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem :value="undefined">All Categories</SelectItem>
+                  <SelectItem
+                    v-for="category in categories"
+                    :key="category.value"
+                    :value="category.value"
+                  >
+                    {{ category.label }}
+                  </SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -56,63 +58,72 @@
     <!-- Distributions List -->
     <div class="px-4">
       <h2 class="text-lg font-medium mb-3">Distribution History</h2>
-      
+
       <div v-if="loading" class="text-center py-8">
-        <div class="inline-block w-12 h-12 border-4 border-gray-200 border-t-[#75a868] rounded-full animate-spin"></div>
+        <div
+          class="inline-block w-12 h-12 border-4 border-gray-200 border-t-[#75a868] rounded-full animate-spin"
+        ></div>
         <p class="mt-4 text-gray-500">Loading distribution data...</p>
       </div>
-      
+
       <div v-else-if="filteredDistributions.length === 0" class="text-center py-8">
         <p class="text-gray-500">No distributions found</p>
         <p v-if="searchQuery || selectedCategory" class="text-sm text-gray-400 mt-2">
           Try adjusting your search filters
         </p>
       </div>
-      
+
       <div v-else class="space-y-4 mb-6">
-        <Card v-for="distribution in filteredDistributions" :key="distribution.id" class="shadow-sm overflow-hidden">
-          <CardHeader class="pb-2 bg-gray-50">
+        <Card
+          v-for="distribution in filteredDistributions"
+          :key="distribution.id"
+          class="shadow-sm overflow-hidden"
+        >
+          <CardHeader class="pb-2">
             <div class="flex justify-between items-center">
               <CardTitle class="text-base">{{ distribution.recipientName }}</CardTitle>
-              <span class="text-sm font-medium px-2 py-1 rounded-full" 
-                :class="{
-                  'bg-green-100 text-green-800': distribution.category === 'Poor' || distribution.category === 'Needy',
-                  'bg-blue-100 text-blue-800': distribution.category === 'Zakat Administrator',
-                  'bg-purple-100 text-purple-800': distribution.category === 'New Muslim',
-                  'bg-yellow-100 text-yellow-800': distribution.category === 'Debtor',
-                  'bg-indigo-100 text-indigo-800': distribution.category === 'Allah\'s Cause',
-                  'bg-orange-100 text-orange-800': distribution.category === 'Traveler',
-                  'bg-gray-100 text-gray-800': !['Poor', 'Needy', 'Zakat Administrator', 'New Muslim', 'Debtor', 'Allah\'s Cause', 'Traveler'].includes(distribution.category)
-                }">
+              <Badge :variant="getBadgeVariant(distribution.category)">
                 {{ distribution.category }}
-              </span>
+              </Badge>
             </div>
-            <p class="text-sm text-gray-500">{{ formatDate(distribution.date) }} • RM {{ distribution.amountRM.toFixed(2) }}</p>
+            <p class="text-sm text-gray-500">
+              {{ formatDate(distribution.date) }} • RM {{ distribution.amountRM.toFixed(2) }}
+            </p>
           </CardHeader>
-          
+
           <CardContent class="pt-4">
             <div class="space-y-4">
               <div>
                 <h3 class="text-sm font-medium text-gray-700">Description</h3>
                 <p class="text-sm text-gray-600 mt-1">{{ distribution.description }}</p>
               </div>
-              
+
               <div v-if="distribution.evidenceUrl" class="mt-2">
                 <h3 class="text-sm font-medium text-gray-700">Evidence</h3>
-                <a :href="distribution.evidenceUrl" target="_blank" 
-                   class="mt-1 inline-flex items-center text-sm text-blue-600 hover:text-blue-800">
+                <a
+                  :href="distribution.evidenceUrl"
+                  target="_blank"
+                  class="mt-1 inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+                >
                   <span class="mr-1">📄</span> View Documentation
                 </a>
               </div>
-              
+
               <div>
-                <h3 class="text-sm font-medium text-gray-700 mb-2">Source Contributions ({{ distribution.sourceDetails.length }})</h3>
+                <h3 class="text-sm font-medium text-gray-700 mb-2">
+                  Source Contributions ({{ distribution.sourceDetails.length }})
+                </h3>
                 <div class="space-y-2">
-                  <div v-for="(source, sIndex) in distribution.sourceDetails" :key="sIndex" 
-                       class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                  <div
+                    v-for="(source, sIndex) in distribution.sourceDetails"
+                    :key="sIndex"
+                    class="bg-gray-50 p-3 rounded-lg border border-gray-200"
+                  >
                     <div class="flex justify-between items-center mb-1">
                       <span class="font-medium text-sm">{{ source.userName }}</span>
-                      <span class="text-green-600 font-medium text-sm">RM {{ source.amountRM.toFixed(2) }}</span>
+                      <span class="text-green-600 font-medium text-sm"
+                        >RM {{ source.amountRM.toFixed(2) }}</span
+                      >
                     </div>
                     <div class="text-xs text-gray-500">{{ formatDate(source.date) }}</div>
                     <div class="mt-1">
@@ -124,8 +135,11 @@
                   </div>
                 </div>
               </div>
-              
-              <div v-if="isUserContributor(distribution)" class="bg-green-50 border border-green-200 rounded-lg p-3">
+
+              <div
+                v-if="isUserContributor(distribution)"
+                class="bg-green-50 border border-green-200 rounded-lg p-3"
+              >
                 <div class="flex items-center text-green-700">
                   <span class="mr-2">❤️</span>
                   <span class="text-sm font-medium">You contributed to this distribution</span>
@@ -133,8 +147,8 @@
               </div>
             </div>
           </CardContent>
-          
-          <CardFooter class="bg-gray-50 flex justify-between">
+
+          <CardFooter class="flex justify-between">
             <Button variant="outline" size="sm" class="text-xs">Share</Button>
             <Button variant="outline" size="sm" class="text-xs">View Details</Button>
           </CardFooter>
@@ -148,12 +162,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { BottomNavigation } from '@/components/ui/bottom-navigation'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge' // Import Badge
+// Import Select components
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 
@@ -163,14 +187,26 @@ const auth = getAuth()
 
 const loading = ref(true)
 const searchQuery = ref('')
-const selectedCategory = ref('')
+const selectedCategory = ref(undefined) // Initialize with undefined
 const distributions = ref([])
+
+// Define categories for the Select component
+const categories = ref([
+  { value: 'Poor', label: 'Poor (Fakir)' },
+  { value: 'Needy', label: 'Needy (Miskin)' },
+  { value: 'Zakat Administrator', label: 'Zakat Administrator (Amil)' },
+  { value: 'New Muslim', label: 'New Muslim (Muallaf)' },
+  { value: 'Slave', label: 'To Free Slaves (Riqab)' },
+  { value: 'Debtor', label: 'Debtor (Gharimin)' },
+  { value: "Allah's Cause", label: "Allah's Cause (Fi Sabilillah)" },
+  { value: 'Traveler', label: 'Traveler (Ibnus Sabil)' },
+])
 
 // Fetch distributions with their source payments
 const fetchDistributions = async () => {
   try {
     loading.value = true
-    
+
     // In a real app, this would fetch from Firestore
     // For now, we'll use dummy data similar to the admin dashboard
     const dummyDistributions = [
@@ -178,7 +214,7 @@ const fetchDistributions = async () => {
         id: '1',
         recipientName: 'Zamir bin Abdullah',
         category: 'Poor',
-        amountRM: 3700.00,
+        amountRM: 3700.0,
         description: 'Monthly assistance for basic necessities',
         evidenceUrl: 'https://example.com/evidence1.pdf',
         date: new Date(2023, 10, 20, 10, 0), // Nov 20, 2023, 10:00 AM
@@ -189,24 +225,24 @@ const fetchDistributions = async () => {
             userId: 'user1',
             userName: 'Ahmad bin Abdullah',
             date: new Date(2023, 10, 15, 9, 30),
-            amountRM: 2500.00,
-            walletAddress: '0x1A2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0'
+            amountRM: 2500.0,
+            walletAddress: '0x1A2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0',
           },
           {
             id: '2',
             userId: 'user2',
             userName: 'Fatimah binti Hassan',
             date: new Date(2023, 10, 18, 14, 45),
-            amountRM: 1200.00,
-            walletAddress: '0x2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1'
-          }
-        ]
+            amountRM: 1200.0,
+            walletAddress: '0x2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1',
+          },
+        ],
       },
       {
         id: '2',
         recipientName: 'Fatimah binti Hassan',
         category: 'Poor',
-        amountRM: 800.00,
+        amountRM: 800.0,
         description: 'Education support for children',
         evidenceUrl: 'https://example.com/evidence2.pdf',
         date: new Date(2023, 11, 5, 14, 30), // Dec 5, 2023, 2:30 PM
@@ -217,16 +253,16 @@ const fetchDistributions = async () => {
             userId: 'user3',
             userName: 'Muhammad bin Ibrahim',
             date: new Date(2023, 11, 5, 11, 20),
-            amountRM: 800.00,
-            walletAddress: '0x3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2'
-          }
-        ]
+            amountRM: 800.0,
+            walletAddress: '0x3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2',
+          },
+        ],
       },
       {
         id: '3',
         recipientName: 'Muhammad bin Ibrahim',
         category: 'Needy',
-        amountRM: 1200.00,
+        amountRM: 1200.0,
         description: 'Medical treatment assistance',
         evidenceUrl: 'https://example.com/evidence3.pdf',
         date: new Date(2023, 11, 15, 11, 45), // Dec 15, 2023, 11:45 AM
@@ -237,16 +273,16 @@ const fetchDistributions = async () => {
             userId: 'user4',
             userName: 'Nurul binti Aziz',
             date: new Date(2023, 11, 12, 16, 10),
-            amountRM: 1200.00,
-            walletAddress: '0x4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3'
-          }
-        ]
+            amountRM: 1200.0,
+            walletAddress: '0x4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3',
+          },
+        ],
       },
       {
         id: '4',
         recipientName: 'Nurul Iman Foundation',
         category: 'Zakat Administrator',
-        amountRM: 2000.00,
+        amountRM: 2000.0,
         description: 'Operational costs for zakat distribution',
         evidenceUrl: 'https://example.com/evidence4.pdf',
         date: new Date(2023, 11, 28, 9, 15), // Dec 28, 2023, 9:15 AM
@@ -257,16 +293,16 @@ const fetchDistributions = async () => {
             userId: 'user5',
             userName: 'Ismail bin Yusof',
             date: new Date(2023, 11, 20, 10, 5),
-            amountRM: 2000.00,
-            walletAddress: '0x5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4'
-          }
-        ]
+            amountRM: 2000.0,
+            walletAddress: '0x5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4',
+          },
+        ],
       },
       {
         id: '5',
         recipientName: 'Ali bin Razak',
         category: 'New Muslim',
-        amountRM: 1500.00,
+        amountRM: 1500.0,
         description: 'Support for Islamic education and community integration',
         evidenceUrl: 'https://example.com/evidence5.pdf',
         date: new Date(2024, 0, 10, 13, 0), // Jan 10, 2024, 1:00 PM
@@ -277,16 +313,16 @@ const fetchDistributions = async () => {
             userId: 'user6',
             userName: 'Zainab binti Omar',
             date: new Date(2024, 0, 5, 8, 15),
-            amountRM: 1500.00,
-            walletAddress: '0x6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4X5'
-          }
-        ]
+            amountRM: 1500.0,
+            walletAddress: '0x6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4X5',
+          },
+        ],
       },
       {
         id: '6',
         recipientName: 'Refugee Support Center',
-        category: 'Allah\'s Cause',
-        amountRM: 3000.00,
+        category: "Allah's Cause",
+        amountRM: 3000.0,
         description: 'Funding for refugee education program',
         evidenceUrl: 'https://example.com/evidence6.pdf',
         date: new Date(2024, 0, 22, 15, 30), // Jan 22, 2024, 3:30 PM
@@ -297,24 +333,24 @@ const fetchDistributions = async () => {
             userId: 'user7',
             userName: 'Hakim bin Razak',
             date: new Date(2024, 0, 15, 9, 50),
-            amountRM: 1500.00,
-            walletAddress: '0x7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4X5Y6'
+            amountRM: 1500.0,
+            walletAddress: '0x7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4X5Y6',
           },
           {
             id: '1',
             userId: 'user1',
             userName: 'Ahmad bin Abdullah',
             date: new Date(2023, 10, 15, 9, 30),
-            amountRM: 1500.00,
-            walletAddress: '0x1A2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0'
-          }
-        ]
+            amountRM: 1500.0,
+            walletAddress: '0x1A2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0',
+          },
+        ],
       },
       {
         id: '7',
         recipientName: 'Zainab binti Omar',
         category: 'Debtor',
-        amountRM: 2500.00,
+        amountRM: 2500.0,
         description: 'Assistance with medical debt',
         evidenceUrl: 'https://example.com/evidence7.pdf',
         date: new Date(2024, 1, 5, 10, 45), // Feb 5, 2024, 10:45 AM
@@ -325,18 +361,17 @@ const fetchDistributions = async () => {
             userId: 'user8',
             userName: 'Aishah binti Kamal',
             date: new Date(2024, 0, 22, 15, 40),
-            amountRM: 2500.00,
-            walletAddress: '0x8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4X5Y6Z7'
-          }
-        ]
-      }
+            amountRM: 2500.0,
+            walletAddress: '0x8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4X5Y6Z7',
+          },
+        ],
+      },
     ]
-    
+
     distributions.value = dummyDistributions
-    
+
     // In a real implementation, you would fetch from Firestore
     // and join with the payment data to get source details
-    
   } catch (error) {
     console.error('Error fetching distributions:', error)
   } finally {
@@ -347,27 +382,37 @@ const fetchDistributions = async () => {
 // Filter distributions based on search query and category
 const handleSearch = () => {
   loading.value = true
-  
+
   // Simulate API call with timeout
   setTimeout(() => {
     loading.value = false
+    // No need to manually filter here, computed property handles it
   }, 500)
 }
 
+// Watch for changes in selectedCategory to trigger search simulation
+watch(selectedCategory, () => {
+  handleSearch()
+})
+
 // Computed property for filtered distributions
 const filteredDistributions = computed(() => {
-  if (!searchQuery.value && !selectedCategory.value) {
+  // Check for undefined or empty string for category
+  const categoryFilterActive = selectedCategory.value !== undefined && selectedCategory.value !== ''
+
+  if (!searchQuery.value && !categoryFilterActive) {
     return distributions.value
   }
-  
-  return distributions.value.filter(dist => {
-    const matchesSearch = !searchQuery.value || 
+
+  return distributions.value.filter((dist) => {
+    const matchesSearch =
+      !searchQuery.value ||
       dist.recipientName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       dist.description.toLowerCase().includes(searchQuery.value.toLowerCase())
-    
-    const matchesCategory = !selectedCategory.value || 
-      dist.category === selectedCategory.value
-    
+
+    // Adjust category match to handle undefined/empty string correctly
+    const matchesCategory = !categoryFilterActive || dist.category === selectedCategory.value
+
     return matchesSearch && matchesCategory
   })
 })
@@ -377,7 +422,7 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString('en-MY', {
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
   })
 }
 
@@ -385,15 +430,34 @@ const formatDate = (date) => {
 const isUserContributor = (distribution) => {
   const currentUser = auth.currentUser
   if (!currentUser) return false
-  
-  return distribution.sourceDetails.some(source => 
-    source.userId === currentUser.uid
-  )
+
+  return distribution.sourceDetails.some((source) => source.userId === currentUser.uid)
 }
 
 const truncateAddress = (address) => {
   if (!address) return ''
   return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`
+}
+
+// Get badge variant based on category
+const getBadgeVariant = (category) => {
+  switch (category) {
+    case 'Poor':
+    case 'Needy':
+      return 'success'
+    case 'Zakat Administrator':
+      return 'info'
+    case 'New Muslim':
+      return 'warning' // Corresponds to purple style in badge index.js
+    case 'Debtor':
+      return 'destructive' // Corresponds to yellow style in badge index.js
+    case "Allah's Cause":
+      return 'outline' // Corresponds to indigo style in badge index.js
+    case 'Traveler':
+      return 'orange' // Changed from 'secondary'
+    default:
+      return 'secondary' // Corresponds to gray style in badge index.js
+  }
 }
 
 const goBack = () => {
@@ -427,4 +491,4 @@ onMounted(() => {
 .overflow-x-auto::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Edge */
 }
-</style> 
+</style>

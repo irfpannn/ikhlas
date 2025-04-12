@@ -63,9 +63,9 @@ const cryptoAmount = computed(() => {
   return convertRMToCrypto(parseFloat(paymentData.value.amount))
 })
 
-// Go back to zakat pendapatan page
+// Go back to the previous page in history
 const goBack = () => {
-  router.push('/zakat-pendapatan')
+  router.go(-1)
 }
 
 // Process payment

@@ -26,9 +26,9 @@ const formData = ref({
   zakatBulanan: '',
 })
 
-// Go back to home
+// Go back to the previous page in history
 const goBack = () => {
-  router.push('/')
+  router.go(-1)
 }
 
 // Calculate zakat

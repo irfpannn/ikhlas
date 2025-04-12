@@ -7,6 +7,9 @@ import TransactionHistoryView from '@/views/TransactionHistoryView.vue'
 import HistoryView from '@/views/HistoryView.vue'
 import AsnafReportingView from '@/views/AsnafReportingView.vue'
 import AuditZakatView from '@/views/AuditZakatView.vue'
+import ZakatSahamView from '@/views/ZakatSahamView.vue'
+import ZakatFitrahView from '@/views/ZakatFitrahView.vue'
+import ZakatStatsView from '@/views/ZakatStatsView.vue' // Import the new view
 import { getAuth } from 'firebase/auth'
 
 const router = createRouter({
@@ -31,6 +34,26 @@ const router = createRouter({
       path: '/zakat-wang-simpanan',
       name: 'zakat-wang-simpanan',
       component: () => import('@/views/ZakatWangSimpananView.vue'),
+    },
+    {
+      path: '/zakat-emas',
+      name: 'zakat-emas',
+      component: () => import('@/views/ZakatEmasView.vue'),
+    },
+    {
+      path: '/zakat-saham',
+      name: 'zakat-saham',
+      component: ZakatSahamView,
+    },
+    {
+      path: '/zakat-fitrah',
+      name: 'zakat-fitrah',
+      component: ZakatFitrahView,
+    },
+    {
+      path: '/zakat-stats', // Add path for Zakat Stats
+      name: 'zakat-stats', // Add route name
+      component: ZakatStatsView, // Point to the imported component
     },
     {
       path: '/payment',

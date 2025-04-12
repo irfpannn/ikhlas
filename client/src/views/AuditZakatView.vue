@@ -20,7 +20,7 @@ const transactions = ref([
     asnafName: 'Ahmad bin Abdullah',
     asnafCategory: 'Fakir',
     evidenceImage: 'bantuan.jpg',
-    description: 'Monthly zakat payment for education support'
+    description: 'Monthly zakat payment for education support',
   },
   {
     id: 'TX987654321',
@@ -32,7 +32,7 @@ const transactions = ref([
     asnafName: 'Fatimah binti Ismail',
     asnafCategory: 'Miskin',
     evidenceImage: 'bantuan.jpg',
-    description: 'Food and shelter assistance program'
+    description: 'Food and shelter assistance program',
   },
   {
     id: 'TX567891234',
@@ -44,8 +44,8 @@ const transactions = ref([
     asnafName: 'Muhammad bin Hassan',
     asnafCategory: 'Fi-sabilillah',
     evidenceImage: 'bantuan.jpg',
-    description: 'Community development project funding'
-  }
+    description: 'Community development project funding',
+  },
 ])
 const filteredTransactions = ref([])
 
@@ -59,18 +59,19 @@ const goBack = () => {
 
 const handleSearch = () => {
   isLoading.value = true
-  
+
   // Simulate API call with timeout
   setTimeout(() => {
     if (searchQuery.value.trim() === '') {
       filteredTransactions.value = [...transactions.value]
     } else {
       const query = searchQuery.value.toLowerCase()
-      filteredTransactions.value = transactions.value.filter(tx => 
-        tx.id.toLowerCase().includes(query) ||
-        tx.asnafName.toLowerCase().includes(query) ||
-        tx.asnafCategory.toLowerCase().includes(query) ||
-        tx.description.toLowerCase().includes(query)
+      filteredTransactions.value = transactions.value.filter(
+        (tx) =>
+          tx.id.toLowerCase().includes(query) ||
+          tx.asnafName.toLowerCase().includes(query) ||
+          tx.asnafCategory.toLowerCase().includes(query) ||
+          tx.description.toLowerCase().includes(query),
       )
     }
     isLoading.value = false
@@ -112,9 +113,9 @@ const truncateAddress = (address) => {
         </CardHeader>
         <CardContent>
           <div class="flex space-x-2">
-            <Input 
-              v-model="searchQuery" 
-              placeholder="Search by ID, name, or category..." 
+            <Input
+              v-model="searchQuery"
+              placeholder="Search by ID, name, or category..."
               class="flex-grow"
               @keyup.enter="handleSearch"
             />
@@ -129,24 +130,28 @@ const truncateAddress = (address) => {
     <!-- Transactions List -->
     <div class="px-4">
       <h2 class="text-lg font-medium mb-3">Transaction History</h2>
-      
+
       <div v-if="filteredTransactions.length === 0" class="text-center py-8">
         <p class="text-gray-500">No transactions found</p>
       </div>
-      
+
       <div v-else class="space-y-4">
         <Card v-for="tx in filteredTransactions" :key="tx.id" class="shadow-sm overflow-hidden">
-          <CardHeader class="pb-2 bg-gray-50">
+          <CardHeader class="pb-2">
             <div class="flex justify-between items-center">
               <CardTitle class="text-base">{{ tx.id }}</CardTitle>
-              <span class="text-sm font-medium" :class="{
-                'text-green-600': tx.status === 'Completed',
-                'text-yellow-600': tx.status === 'Pending'
-              }">{{ tx.status }}</span>
+              <span
+                class="text-sm font-medium"
+                :class="{
+                  'text-green-600': tx.status === 'Completed',
+                  'text-yellow-600': tx.status === 'Pending',
+                }"
+                >{{ tx.status }}</span
+              >
             </div>
             <p class="text-sm text-gray-500">{{ tx.date }} • {{ tx.amount }}</p>
           </CardHeader>
-          
+
           <CardContent class="pt-4">
             <div class="space-y-3">
               <div>
@@ -158,7 +163,7 @@ const truncateAddress = (address) => {
                   <span class="font-medium">Copy:</span> {{ truncateAddress(tx.userWallet) }}
                 </p>
               </div>
-              
+
               <div>
                 <h3 class="text-sm font-medium text-gray-700">Asnaf Wallet</h3>
                 <p class="text-xs bg-gray-100 p-2 rounded-md overflow-x-auto whitespace-nowrap">
@@ -168,13 +173,15 @@ const truncateAddress = (address) => {
                   <span class="font-medium">Copy:</span> {{ truncateAddress(tx.asnafWallet) }}
                 </p>
               </div>
-              
+
               <div>
                 <h3 class="text-sm font-medium text-gray-700">Asnaf Details</h3>
-                <p class="text-sm">{{ tx.asnafName }} <span class="text-gray-500">({{ tx.asnafCategory }})</span></p>
+                <p class="text-sm">
+                  {{ tx.asnafName }} <span class="text-gray-500">({{ tx.asnafCategory }})</span>
+                </p>
                 <p class="text-sm text-gray-600">{{ tx.description }}</p>
               </div>
-              
+
               <div>
                 <h3 class="text-sm font-medium text-gray-700">Evidence</h3>
                 <div class="mt-2 border rounded-lg overflow-hidden">
@@ -183,8 +190,8 @@ const truncateAddress = (address) => {
               </div>
             </div>
           </CardContent>
-          
-          <CardFooter class="bg-gray-50 flex justify-between">
+
+          <CardFooter class="flex gap-8 items-center justify-center">
             <Button variant="outline" size="sm">Verify</Button>
             <Button variant="outline" size="sm">Report Issue</Button>
           </CardFooter>
@@ -206,4 +213,4 @@ const truncateAddress = (address) => {
 .overflow-x-auto::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Edge */
 }
-</style> 
+</style>

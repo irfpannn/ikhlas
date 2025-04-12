@@ -4,30 +4,37 @@ import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { BottomNavigation } from '@/components/ui/bottom-navigation'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { toast } from 'vue-sonner'
 
 const router = useRouter()
 
-// All payment categories
+// All payment categories with route names
 const categories = ref([
-  { id: 1, name: 'Zakat Pendapatan', icon: '💳', type: 'bill' },
-  { id: 2, name: 'Zakat Wang Simpanan', icon: '💰', type: 'bill' },
-  { id: 3, name: 'Zakat Saham', icon: '📱', type: 'bill' },
-  { id: 4, name: 'Zakat Emas', icon: '📶', type: 'bill' },
-  { id: 5, name: 'Zakat Pertanian', icon: '📡', type: 'bill' },
-  { id: 6, name: 'Zakat Ternakan', icon: '🥛', type: 'bill' },
-  { id: 7, name: 'Zakat Fitrah', icon: '🙏', type: 'bill' },
-  { id: 13, name: 'Zakat Statistics', icon: '🛡️', type: 'bill' },
-  { id: 10, name: 'Asnaf Reporting', icon: '⚡', type: 'bill' },
-  { id: 11, name: 'Donation', icon: '🏫', type: 'bill' },
-  { id: 8, name: 'Audit Zakat', icon: '🛒', type: 'bill' },
-  { id: 14, name: 'Distribution Sources', icon: '☎️', type: 'bill' },
-  // { id: 15, name: 'Mobile', icon: '📱', type: 'bill' },
-  // { id: 16, name: 'Mutual Fund', icon: '📊', type: 'bill' },
-  // { id: 17, name: 'Rental', icon: '🏠', type: 'bill' },
-  // { id: 18, name: 'Shipping', icon: '📦', type: 'bill' },
-  // { id: 19, name: 'Travel', icon: '✈️', type: 'bill' },
-  // { id: 20, name: 'Water', icon: '💧', type: 'bill' },
-  // { id: 21, name: 'More', icon: '•••', type: 'bill' },
+  { id: 1, name: 'Zakat Pendapatan', icon: '💼', type: 'bill', routeName: 'zakat-pendapatan' }, // Match HomeView
+  {
+    id: 2,
+    name: 'Zakat Wang Simpanan',
+    icon: '🏦', // Match HomeView
+    type: 'bill',
+    routeName: 'zakat-wang-simpanan',
+  },
+  { id: 3, name: 'Zakat Saham', icon: '📊', type: 'bill', routeName: 'zakat-saham' }, // Match HomeView
+  { id: 4, name: 'Zakat Emas', icon: '💰', type: 'bill', routeName: 'zakat-emas' }, // Match HomeView
+  { id: 5, name: 'Zakat Pertanian', icon: '🌾', type: 'bill', routeName: null }, // Match HomeView
+  { id: 6, name: 'Zakat Ternakan', icon: '🐄', type: 'bill', routeName: null }, // Match HomeView
+  { id: 7, name: 'Zakat Fitrah', icon: '🍚', type: 'bill', routeName: 'zakat-fitrah' }, // Match HomeView
+  { id: 13, name: 'Zakat Statistics', icon: '📈', type: 'bill', routeName: 'zakat-stats' }, // Chart Increasing
+  { id: 10, name: 'Asnaf Reporting', icon: '📝', type: 'bill', routeName: 'asnaf-reporting' }, // Memo/Report
+  { id: 11, name: 'Donation', icon: '🤝', type: 'bill', routeName: null }, // Handshake/Giving
+  { id: 8, name: 'Audit Zakat', icon: '🔍', type: 'bill', routeName: 'audit-zakat' }, // Magnifying Glass
+  {
+    id: 14,
+    name: 'Distribution Sources',
+    icon: '🚚', // Delivery Truck/Distribution
+    type: 'bill',
+    routeName: 'DistributionSources',
+  },
+  // ... other categories ...
 ])
 
 const goBack = () => {
@@ -35,18 +42,18 @@ const goBack = () => {
 }
 
 const handleCategoryClick = (category) => {
-  // Navigate based on category name
-  if (category.name === 'Zakat Pendapatan') {
-    router.push('/zakat-pendapatan')
-  } else if (category.name === 'Asnaf Reporting') {
-    router.push('/asnaf-reporting')
-  } else if (category.name === 'Audit Zakat') {
-    router.push('/audit-zakat')
-  } else if (category.name === 'Distribution Sources') {
-    router.push('/distribution-sources')
+  if (category.routeName) {
+    // Check if the route exists before navigating
+    if (router.hasRoute(category.routeName)) {
+      router.push({ name: category.routeName })
+    } else {
+      console.error(`Route with name "${category.routeName}" not found in router configuration.`)
+      toast.error(`Halaman untuk "${category.name}" tidak ditemui atau belum tersedia.`)
+    }
   } else {
-    // For other categories, just log for now
-    console.log(`Selected category: ${category.name}`)
+    // Handle categories without a defined routeName
+    console.warn(`Route not defined for category: ${category.name}`)
+    toast.info(`Halaman untuk "${category.name}" belum tersedia.`)
   }
 }
 </script>

@@ -31,16 +31,16 @@ const userData = ref({
   ],
 })
 
-// Categories
+// Categories with route names (match names in router/index.js)
 const categories = [
-  { id: 1, name: 'Zakat Pendapatan', icon: '📱' },
-  { id: 2, name: 'Zakat Wang Simpanan', icon: '🎯' },
-  { id: 3, name: 'Zakat Saham', icon: '💸' },
-  { id: 4, name: 'Zakat Emas', icon: '💰' },
-  { id: 5, name: 'Zakat Pertanian', icon: '🎁' },
-  { id: 6, name: 'Zakat Ternakan', icon: '💳' },
-  { id: 7, name: 'Zakat Fitrah', icon: '⚡' },
-  { id: 8, name: 'View All', icon: '📋' },
+  { id: 1, name: 'Zakat Pendapatan', icon: '💼', routeName: 'zakat-pendapatan' }, // Income: Briefcase
+  { id: 2, name: 'Zakat Wang Simpanan', icon: '🏦', routeName: 'zakat-wang-simpanan' }, // Savings: Bank
+  { id: 3, name: 'Zakat Saham', icon: '📊', routeName: 'zakat-saham' }, // Stocks: Bar Chart
+  { id: 4, name: 'Zakat Emas', icon: '💰', routeName: 'zakat-emas' }, // Gold: Money Bag (kept)
+  { id: 5, name: 'Zakat Pertanian', icon: '🌾', routeName: null }, // Agriculture: Sheaf of Rice
+  { id: 6, name: 'Zakat Ternakan', icon: '🐄', routeName: null }, // Livestock: Cow
+  { id: 7, name: 'Zakat Fitrah', icon: '🍚', routeName: null }, // Fitrah: Cooked Rice
+  // 'View All' is handled separately
 ]
 
 // Format currency
@@ -54,12 +54,23 @@ const formatCurrency = (amount) => {
 
 // Function to navigate to categories page
 const viewAllCategories = () => {
-  router.push('/categories')
+  router.push('/categories') // Or use { name: 'categories' }
 }
 
-// Function to navigate to zakat pendapatan page
-const goToZakatPendapatan = () => {
-  router.push('/zakat-pendapatan')
+// Function to navigate to a specific category page
+const goToCategory = (routeName) => {
+  if (routeName) {
+    // Directly attempt to push the route since it should exist
+    router.push({ name: routeName })
+    // If the "No match" error persists after this change,
+    // try restarting the development server and clearing browser cache.
+  } else {
+    // Optional: Show a message or do nothing if route is not defined
+    console.warn('Route not defined for this category.')
+    // You could use toast here as well:
+    // import { toast } from 'vue-sonner';
+    // toast.info('Halaman untuk kategori ini belum tersedia.');
+  }
 }
 </script>
 
@@ -144,12 +155,13 @@ const goToZakatPendapatan = () => {
         </CardHeader>
         <CardContent>
           <div class="grid grid-cols-4 gap-3">
+            <!-- Loop through defined categories -->
             <div
-              v-for="category in categories.slice(0, 7)"
+              v-for="category in categories"
               :key="category.id"
               class="flex flex-col items-center"
-              :class="{ 'cursor-pointer': category.name === 'Zakat Pendapatan' }"
-              @click="category.name === 'Zakat Pendapatan' ? goToZakatPendapatan() : null"
+              :class="{ 'cursor-pointer': category.routeName }"
+              @click="goToCategory(category.routeName)"
             >
               <div
                 class="bg-gray-100 p-2 rounded-lg mb-1 w-12 h-12 flex items-center justify-center"
@@ -158,6 +170,7 @@ const goToZakatPendapatan = () => {
               </div>
               <p class="text-xs text-center">{{ category.name }}</p>
             </div>
+            <!-- View All Button -->
             <div class="flex flex-col items-center cursor-pointer" @click="viewAllCategories">
               <div
                 class="bg-gray-100 p-2 rounded-lg mb-1 w-12 h-12 flex items-center justify-center"
