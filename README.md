@@ -2,6 +2,8 @@
 
 **Ikhlas** is a comprehensive web-based application designed to facilitate transparent and Shariah-compliant zakat and donation management. The platform aims to simplify the process of calculating zakat, making donations, and managing charitable campaigns while ensuring ethical and accountable practices.
 
+🌐 **Live Preview:** [Ikhlas Web App](https://ikhlas-um.netlify.app/)
+
 ---
 
 ## 🔹 Features Overview
