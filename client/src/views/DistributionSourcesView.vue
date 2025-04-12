@@ -10,7 +10,7 @@
         >
           <span class="text-xl">←</span>
         </Button>
-        <h1 class="text-lg font-semibold">Zakat Distribution Sources</h1>
+        <h1 class="text-lg font-semibold">Sumber Agihan Zakat</h1>
         <div class="ml-auto">
           <Button variant="ghost" class="text-white hover:text-white hover:bg-[#217e0a]/50 p-2">
             <span class="text-xl">🔍</span>
@@ -23,23 +23,23 @@
     <div class="p-4">
       <Card class="shadow-sm mb-4">
         <CardHeader class="pb-2">
-          <CardTitle class="text-base">Search Distributions</CardTitle>
+          <CardTitle class="text-base">Cari Agihan</CardTitle>
         </CardHeader>
         <CardContent>
           <div class="flex flex-col space-y-2">
             <Input
               v-model="searchQuery"
-              placeholder="Search by recipient name or description..."
+              placeholder="Cari mengikut nama penerima atau keterangan..."
               class="flex-grow"
               @keyup.enter="handleSearch"
             />
             <Select v-model="selectedCategory">
               <SelectTrigger class="w-full">
-                <SelectValue placeholder="Select a category" />
+                <SelectValue placeholder="Pilih kategori" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectItem :value="undefined">All Categories</SelectItem>
+                  <SelectItem :value="undefined">Semua Kategori</SelectItem>
                   <SelectItem
                     v-for="category in categories"
                     :key="category.value"
@@ -57,19 +57,19 @@
 
     <!-- Distributions List -->
     <div class="px-4">
-      <h2 class="text-lg font-medium mb-3">Distribution History</h2>
+      <h2 class="text-lg font-medium mb-3">Sejarah Agihan</h2>
 
       <div v-if="loading" class="text-center py-8">
         <div
           class="inline-block w-12 h-12 border-4 border-gray-200 border-t-[#75a868] rounded-full animate-spin"
         ></div>
-        <p class="mt-4 text-gray-500">Loading distribution data...</p>
+        <p class="mt-4 text-gray-500">Memuatkan data agihan...</p>
       </div>
 
       <div v-else-if="filteredDistributions.length === 0" class="text-center py-8">
-        <p class="text-gray-500">No distributions found</p>
+        <p class="text-gray-500">Tiada agihan ditemui</p>
         <p v-if="searchQuery || selectedCategory" class="text-sm text-gray-400 mt-2">
-          Try adjusting your search filters
+          Cuba laraskan penapis carian anda
         </p>
       </div>
 
@@ -94,24 +94,24 @@
           <CardContent class="pt-4">
             <div class="space-y-4">
               <div>
-                <h3 class="text-sm font-medium text-gray-700">Description</h3>
+                <h3 class="text-sm font-medium text-gray-700">Keterangan</h3>
                 <p class="text-sm text-gray-600 mt-1">{{ distribution.description }}</p>
               </div>
 
               <div v-if="distribution.evidenceUrl" class="mt-2">
-                <h3 class="text-sm font-medium text-gray-700">Evidence</h3>
+                <h3 class="text-sm font-medium text-gray-700">Bukti</h3>
                 <a
                   :href="distribution.evidenceUrl"
                   target="_blank"
                   class="mt-1 inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
                 >
-                  <span class="mr-1">📄</span> View Documentation
+                  <span class="mr-1">📄</span> Lihat Dokumentasi
                 </a>
               </div>
 
               <div>
                 <h3 class="text-sm font-medium text-gray-700 mb-2">
-                  Source Contributions ({{ distribution.sourceDetails.length }})
+                  Sumbangan Sumber ({{ distribution.sourceDetails.length }})
                 </h3>
                 <div class="space-y-2">
                   <div
@@ -127,7 +127,7 @@
                     </div>
                     <div class="text-xs text-gray-500">{{ formatDate(source.date) }}</div>
                     <div class="mt-1">
-                      <span class="text-xs text-gray-600">Wallet: </span>
+                      <span class="text-xs text-gray-600">Dompet: </span>
                       <span class="text-xs font-mono bg-gray-100 px-1 py-0.5 rounded">
                         {{ truncateAddress(source.walletAddress) }}
                       </span>
@@ -142,15 +142,15 @@
               >
                 <div class="flex items-center text-green-700">
                   <span class="mr-2">❤️</span>
-                  <span class="text-sm font-medium">You contributed to this distribution</span>
+                  <span class="text-sm font-medium">Anda menyumbang kepada agihan ini</span>
                 </div>
               </div>
             </div>
           </CardContent>
 
           <CardFooter class="flex justify-between">
-            <Button variant="outline" size="sm" class="text-xs">Share</Button>
-            <Button variant="outline" size="sm" class="text-xs">View Details</Button>
+            <Button variant="outline" size="sm" class="text-xs">Kongsi</Button>
+            <Button variant="outline" size="sm" class="text-xs">Lihat Butiran</Button>
           </CardFooter>
         </Card>
       </div>
@@ -190,16 +190,16 @@ const searchQuery = ref('')
 const selectedCategory = ref(undefined) // Initialize with undefined
 const distributions = ref([])
 
-// Define categories for the Select component
+// Define categories for the Select component - Translate labels
 const categories = ref([
-  { value: 'Poor', label: 'Poor (Fakir)' },
-  { value: 'Needy', label: 'Needy (Miskin)' },
-  { value: 'Zakat Administrator', label: 'Zakat Administrator (Amil)' },
-  { value: 'New Muslim', label: 'New Muslim (Muallaf)' },
-  { value: 'Slave', label: 'To Free Slaves (Riqab)' },
-  { value: 'Debtor', label: 'Debtor (Gharimin)' },
-  { value: "Allah's Cause", label: "Allah's Cause (Fi Sabilillah)" },
-  { value: 'Traveler', label: 'Traveler (Ibnus Sabil)' },
+  { value: 'Poor', label: 'Fakir' },
+  { value: 'Needy', label: 'Miskin' },
+  { value: 'Zakat Administrator', label: 'Amil' },
+  { value: 'New Muslim', label: 'Muallaf' },
+  { value: 'Slave', label: 'Memerdekakan Hamba (Riqab)' },
+  { value: 'Debtor', label: 'Orang Berhutang (Gharimin)' },
+  { value: "Allah's Cause", label: 'Jalan Allah (Fi Sabilillah)' },
+  { value: 'Traveler', label: 'Musafir (Ibnus Sabil)' },
 ])
 
 // Fetch distributions with their source payments
@@ -208,14 +208,14 @@ const fetchDistributions = async () => {
     loading.value = true
 
     // In a real app, this would fetch from Firestore
-    // For now, we'll use dummy data similar to the admin dashboard
+    // For now, we'll use dummy data similar to the admin dashboard - Translate descriptions
     const dummyDistributions = [
       {
         id: '1',
         recipientName: 'Zamir bin Abdullah',
         category: 'Poor',
         amountRM: 3700.0,
-        description: 'Monthly assistance for basic necessities',
+        description: 'Bantuan bulanan untuk keperluan asas', // Translated
         evidenceUrl: 'https://example.com/evidence1.pdf',
         date: new Date(2023, 10, 20, 10, 0), // Nov 20, 2023, 10:00 AM
         sourcePayments: ['1', '2'], // IDs of source payments
@@ -243,7 +243,7 @@ const fetchDistributions = async () => {
         recipientName: 'Fatimah binti Hassan',
         category: 'Poor',
         amountRM: 800.0,
-        description: 'Education support for children',
+        description: 'Sokongan pendidikan untuk anak-anak', // Translated
         evidenceUrl: 'https://example.com/evidence2.pdf',
         date: new Date(2023, 11, 5, 14, 30), // Dec 5, 2023, 2:30 PM
         sourcePayments: ['3'], // IDs of source payments
@@ -263,7 +263,7 @@ const fetchDistributions = async () => {
         recipientName: 'Muhammad bin Ibrahim',
         category: 'Needy',
         amountRM: 1200.0,
-        description: 'Medical treatment assistance',
+        description: 'Bantuan rawatan perubatan', // Translated
         evidenceUrl: 'https://example.com/evidence3.pdf',
         date: new Date(2023, 11, 15, 11, 45), // Dec 15, 2023, 11:45 AM
         sourcePayments: ['4'], // IDs of source payments
@@ -280,10 +280,10 @@ const fetchDistributions = async () => {
       },
       {
         id: '4',
-        recipientName: 'Nurul Iman Foundation',
+        recipientName: 'Yayasan Nurul Iman', // Translated name
         category: 'Zakat Administrator',
         amountRM: 2000.0,
-        description: 'Operational costs for zakat distribution',
+        description: 'Kos operasi untuk agihan zakat', // Translated
         evidenceUrl: 'https://example.com/evidence4.pdf',
         date: new Date(2023, 11, 28, 9, 15), // Dec 28, 2023, 9:15 AM
         sourcePayments: ['5'], // IDs of source payments
@@ -303,7 +303,7 @@ const fetchDistributions = async () => {
         recipientName: 'Ali bin Razak',
         category: 'New Muslim',
         amountRM: 1500.0,
-        description: 'Support for Islamic education and community integration',
+        description: 'Sokongan untuk pendidikan Islam dan integrasi komuniti', // Translated
         evidenceUrl: 'https://example.com/evidence5.pdf',
         date: new Date(2024, 0, 10, 13, 0), // Jan 10, 2024, 1:00 PM
         sourcePayments: ['6'], // IDs of source payments
@@ -320,10 +320,10 @@ const fetchDistributions = async () => {
       },
       {
         id: '6',
-        recipientName: 'Refugee Support Center',
+        recipientName: 'Pusat Sokongan Pelarian', // Translated name
         category: "Allah's Cause",
         amountRM: 3000.0,
-        description: 'Funding for refugee education program',
+        description: 'Pembiayaan untuk program pendidikan pelarian', // Translated
         evidenceUrl: 'https://example.com/evidence6.pdf',
         date: new Date(2024, 0, 22, 15, 30), // Jan 22, 2024, 3:30 PM
         sourcePayments: ['7'], // IDs of source payments
@@ -351,7 +351,7 @@ const fetchDistributions = async () => {
         recipientName: 'Zainab binti Omar',
         category: 'Debtor',
         amountRM: 2500.0,
-        description: 'Assistance with medical debt',
+        description: 'Bantuan untuk hutang perubatan', // Translated
         evidenceUrl: 'https://example.com/evidence7.pdf',
         date: new Date(2024, 1, 5, 10, 45), // Feb 5, 2024, 10:45 AM
         sourcePayments: ['8'], // IDs of source payments
@@ -373,7 +373,7 @@ const fetchDistributions = async () => {
     // In a real implementation, you would fetch from Firestore
     // and join with the payment data to get source details
   } catch (error) {
-    console.error('Error fetching distributions:', error)
+    console.error('Error fetching distributions:', error) // Keep error message in English for debugging
   } finally {
     loading.value = false
   }
@@ -417,9 +417,10 @@ const filteredDistributions = computed(() => {
   })
 })
 
-// Format date for display
+// Format date for display - Use Malay locale
 const formatDate = (date) => {
-  return new Date(date).toLocaleDateString('en-MY', {
+  return new Date(date).toLocaleDateString('ms-MY', {
+    // Changed locale to ms-MY
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -439,24 +440,25 @@ const truncateAddress = (address) => {
   return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`
 }
 
-// Get badge variant based on category
+// Get badge variant based on category - Use translated category values if needed, but values are still English
 const getBadgeVariant = (category) => {
   switch (category) {
-    case 'Poor':
-    case 'Needy':
+    case 'Poor': // Fakir
+    case 'Needy': // Miskin
       return 'success'
-    case 'Zakat Administrator':
+    case 'Zakat Administrator': // Amil
       return 'info'
-    case 'New Muslim':
-      return 'warning' // Corresponds to purple style in badge index.js
-    case 'Debtor':
-      return 'destructive' // Corresponds to yellow style in badge index.js
-    case "Allah's Cause":
-      return 'outline' // Corresponds to indigo style in badge index.js
-    case 'Traveler':
-      return 'orange' // Changed from 'secondary'
+    case 'New Muslim': // Muallaf
+      return 'warning'
+    case 'Debtor': // Gharimin
+      return 'destructive'
+    case "Allah's Cause": // Fi Sabilillah
+      return 'outline'
+    case 'Traveler': // Ibnus Sabil
+      return 'orange'
+    // case 'Slave': // Riqab - No specific style defined yet
     default:
-      return 'secondary' // Corresponds to gray style in badge index.js
+      return 'secondary'
   }
 }
 

@@ -2,7 +2,7 @@
   <div class="flex flex-col min-h-screen bg-gray-100 overflow-y-auto pb-20">
     <!-- Content wrapper with padding -->
     <div class="p-4 flex-grow">
-      <h1 class="text-xl font-semibold text-center mb-5 text-gray-800">My Profile</h1>
+      <h1 class="text-xl font-semibold text-center mb-5 text-gray-800">Profil Saya</h1>
 
       <Card class="overflow-hidden shadow-sm mb-4">
         <CardHeader class="bg-gray-50 p-4 flex flex-col sm:flex-row items-center gap-4">
@@ -12,7 +12,7 @@
             <img
               v-if="user.avatar"
               :src="user.avatar"
-              alt="Profile Picture"
+              alt="Gambar Profil"
               class="w-full h-full object-cover"
             />
             <span v-else class="text-2xl font-semibold text-gray-500">{{
@@ -30,23 +30,25 @@
       <Card class="overflow-hidden shadow-sm mb-4">
         <CardContent class="p-4 space-y-5">
           <div>
-            <h3 class="text-base font-semibold mb-3 text-gray-700">Personal Information</h3>
+            <h3 class="text-base font-semibold mb-3 text-gray-700">Maklumat Peribadi</h3>
             <form @submit.prevent="updateProfile" class="space-y-3">
               <div class="grid grid-cols-1 gap-3">
                 <div>
-                  <Label for="name" class="text-xs font-medium text-gray-600">Full Name</Label>
+                  <Label for="name" class="text-xs font-medium text-gray-600">Nama Penuh</Label>
                   <Input id="name" type="text" v-model="user.name" class="mt-1 h-9 text-sm" />
                 </div>
                 <div>
-                  <Label for="email" class="text-xs font-medium text-gray-600">Email</Label>
+                  <Label for="email" class="text-xs font-medium text-gray-600">E-mel</Label>
                   <Input id="email" type="email" v-model="user.email" class="mt-1 h-9 text-sm" />
                 </div>
                 <div>
-                  <Label for="phone" class="text-xs font-medium text-gray-600">Phone Number</Label>
+                  <Label for="phone" class="text-xs font-medium text-gray-600"
+                    >Nombor Telefon</Label
+                  >
                   <Input id="phone" type="tel" v-model="user.phone" class="mt-1 h-9 text-sm" />
                 </div>
                 <div>
-                  <Label for="address" class="text-xs font-medium text-gray-600">Address</Label>
+                  <Label for="address" class="text-xs font-medium text-gray-600">Alamat</Label>
                   <Textarea id="address" v-model="user.address" class="mt-1 min-h-[70px] text-sm" />
                 </div>
               </div>
@@ -54,7 +56,7 @@
                 type="submit"
                 size="sm"
                 class="bg-[#75a868] hover:bg-[#75a868]/90 w-full sm:w-auto"
-                >Update Profile</Button
+                >Kemas Kini Profil</Button
               >
             </form>
           </div>
@@ -63,7 +65,7 @@
 
       <Card class="overflow-hidden shadow-sm mb-4">
         <CardHeader class="pb-2">
-          <CardTitle class="text-base">Donation History</CardTitle>
+          <CardTitle class="text-base">Sejarah Derma</CardTitle>
         </CardHeader>
         <CardContent class="pt-0">
           <div v-if="donations.length > 0" class="space-y-2">
@@ -80,9 +82,9 @@
               </div>
               <Badge
                 :variant="
-                  donation.status === 'Completed'
+                  donation.status === 'Selesai'
                     ? 'success'
-                    : donation.status === 'Processing'
+                    : donation.status === 'Diproses'
                       ? 'warning'
                       : 'secondary'
                 "
@@ -92,13 +94,13 @@
             </div>
           </div>
           <div v-else class="text-center py-4 px-3 bg-gray-50 rounded-md border border-gray-100">
-            <p class="text-sm text-gray-500 mb-2">You haven't made any donations yet.</p>
+            <p class="text-sm text-gray-500 mb-2">Anda belum membuat sebarang derma.</p>
             <Button
               variant="outline"
               size="sm"
               @click="$router.push('/donation')"
               class="border-[#75a868] text-[#75a868] hover:bg-[#75a868]/10 hover:text-[#75a868]"
-              >Make a Donation</Button
+              >Buat Derma</Button
             >
           </div>
         </CardContent>
@@ -106,7 +108,7 @@
 
       <Card class="overflow-hidden shadow-sm">
         <CardHeader class="pb-2">
-          <CardTitle class="text-base">My Rewards</CardTitle>
+          <CardTitle class="text-base">Ganjaran Saya</CardTitle>
         </CardHeader>
         <CardContent class="pt-0">
           <div v-if="rewards.length > 0" class="space-y-2">
@@ -119,14 +121,14 @@
                 <h4 class="font-medium text-sm text-gray-800">{{ reward.name }}</h4>
                 <p class="text-xs text-gray-500">{{ reward.description }}</p>
                 <p class="text-xs text-gray-400" v-if="reward.expiryDate">
-                  Expires: {{ formatDate(reward.expiryDate) }}
+                  Tamat Tempoh: {{ formatDate(reward.expiryDate) }}
                 </p>
               </div>
               <Badge
                 :variant="
-                  reward.status === 'Available'
+                  reward.status === 'Tersedia'
                     ? 'success'
-                    : reward.status === 'Claimed'
+                    : reward.status === 'Ditebus'
                       ? 'info'
                       : 'secondary'
                 "
@@ -136,13 +138,13 @@
             </div>
           </div>
           <div v-else class="text-center py-4 px-3 bg-gray-50 rounded-md border border-gray-100">
-            <p class="text-sm text-gray-500 mb-2">You don't have any rewards yet.</p>
+            <p class="text-sm text-gray-500 mb-2">Anda belum mempunyai sebarang ganjaran.</p>
             <Button
               variant="outline"
               size="sm"
               @click="$router.push('/rewards')"
               class="border-[#75a868] text-[#75a868] hover:bg-[#75a868]/10 hover:text-[#75a868]"
-              >View Available Rewards</Button
+              >Lihat Ganjaran Tersedia</Button
             >
           </div>
         </CardContent>
@@ -180,43 +182,43 @@ const donations = ref([
   {
     amount: 100.0,
     date: new Date('2023-10-15'),
-    category: 'Fakir (Poor)',
-    status: 'Completed',
+    category: 'Fakir',
+    status: 'Selesai',
   },
   {
     amount: 50.0,
     date: new Date('2023-09-01'),
-    category: 'Miskin (Needy)',
-    status: 'Completed',
+    category: 'Miskin',
+    status: 'Selesai',
   },
   {
     amount: 75.0,
     date: new Date('2023-11-05'),
     category: 'Fi Sabilillah',
-    status: 'Processing',
+    status: 'Diproses',
   },
 ])
 
 const rewards = ref([
   {
-    id: 101, // Added ID for consistency
-    name: 'Tax Deduction Certificate',
-    description: 'Certificate for tax deduction purposes for your donation of RM 100.00',
-    status: 'Available',
-    expiryDate: new Date('2024-12-31'), // Extended expiry
+    id: 101,
+    name: 'Sijil Potongan Cukai',
+    description: 'Sijil untuk tujuan potongan cukai bagi derma anda sebanyak RM 100.00',
+    status: 'Tersedia',
+    expiryDate: new Date('2024-12-31'),
   },
   {
-    id: 102, // Added ID
-    name: 'ZUS Coffee Voucher', // Example reward
-    description: 'RM5 off any beverage',
-    status: 'Available',
+    id: 102,
+    name: 'Baucar ZUS Coffee',
+    description: 'Diskaun RM5 untuk sebarang minuman',
+    status: 'Tersedia',
     expiryDate: new Date('2024-08-31'),
   },
   {
-    id: 103, // Added ID
-    name: 'Donation Badge',
-    description: 'Silver donor badge for your contribution',
-    status: 'Claimed',
+    id: 103,
+    name: 'Lencana Derma',
+    description: 'Lencana penderma Perak untuk sumbangan anda',
+    status: 'Ditebus',
     expiryDate: null,
   },
 ])
@@ -225,13 +227,13 @@ const updateProfile = () => {
   // Here you would implement the logic to update the user profile
   // For example, making an API call to your backend
   // Consider using a notification system instead of alert
-  console.log('Profile update submitted:', user.value)
-  alert('Profile updated successfully!') // Placeholder
+  console.log('Kemas kini profil dihantar:', user.value)
+  alert('Profil berjaya dikemas kini!') // Placeholder
 }
 
 const formatDate = (date) => {
   if (!date) return ''
-  return new Date(date).toLocaleDateString('en-MY', {
+  return new Date(date).toLocaleDateString('ms-MY', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

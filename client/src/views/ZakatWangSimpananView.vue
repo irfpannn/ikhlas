@@ -107,7 +107,7 @@ const errorMessage = ref('')
 
 // Go back function
 const goBack = () => {
-  router.push('/') // Adjust route as needed
+  router.go('-1') // Adjust route as needed
 }
 
 // Format currency function (ensure this is correctly implemented)

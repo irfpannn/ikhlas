@@ -14,37 +14,37 @@ const transactions = ref([
     id: 'TX123456789',
     date: '2023-10-15',
     amount: '0.05 BTC',
-    status: 'Completed',
+    status: 'Selesai',
     userWallet: '0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t',
     asnafWallet: '0x9s8r7q6p5o4n3m2l1k0j9i8h7g6f5e4d3c2b1a0',
     asnafName: 'Ahmad bin Abdullah',
     asnafCategory: 'Fakir',
     evidenceImage: 'bantuan.jpg',
-    description: 'Monthly zakat payment for education support',
+    description: 'Bayaran zakat bulanan untuk sokongan pendidikan',
   },
   {
     id: 'TX987654321',
     date: '2023-11-20',
     amount: '1.2 ETH',
-    status: 'Completed',
+    status: 'Selesai',
     userWallet: '0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t',
     asnafWallet: '0x5t4s3r2q1p0o9n8m7l6k5j4i3h2g1f0e9d8c7b6a',
     asnafName: 'Fatimah binti Ismail',
     asnafCategory: 'Miskin',
     evidenceImage: 'bantuan.jpg',
-    description: 'Food and shelter assistance program',
+    description: 'Program bantuan makanan dan tempat tinggal',
   },
   {
     id: 'TX567891234',
     date: '2023-12-05',
     amount: '500 USDT',
-    status: 'Pending',
+    status: 'Menunggu',
     userWallet: '0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t',
     asnafWallet: '0x3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1a2b',
     asnafName: 'Muhammad bin Hassan',
     asnafCategory: 'Fi-sabilillah',
     evidenceImage: 'bantuan.jpg',
-    description: 'Community development project funding',
+    description: 'Pembiayaan projek pembangunan komuniti',
   },
 ])
 const filteredTransactions = ref([])
@@ -109,18 +109,18 @@ const truncateAddress = (address) => {
     <div class="p-4">
       <Card class="shadow-sm mb-4">
         <CardHeader class="pb-2">
-          <CardTitle class="text-base">Search Transactions</CardTitle>
+          <CardTitle class="text-base">Cari Transaksi</CardTitle>
         </CardHeader>
         <CardContent>
           <div class="flex space-x-2">
             <Input
               v-model="searchQuery"
-              placeholder="Search by ID, name, or category..."
+              placeholder="Cari mengikut ID, nama, atau kategori..."
               class="flex-grow"
               @keyup.enter="handleSearch"
             />
             <Button @click="handleSearch" :disabled="isLoading">
-              {{ isLoading ? 'Searching...' : 'Search' }}
+              {{ isLoading ? 'Mencari...' : 'Cari' }}
             </Button>
           </div>
         </CardContent>
@@ -129,10 +129,10 @@ const truncateAddress = (address) => {
 
     <!-- Transactions List -->
     <div class="px-4">
-      <h2 class="text-lg font-medium mb-3">Transaction History</h2>
+      <h2 class="text-lg font-medium mb-3">Sejarah Transaksi</h2>
 
       <div v-if="filteredTransactions.length === 0" class="text-center py-8">
-        <p class="text-gray-500">No transactions found</p>
+        <p class="text-gray-500">Tiada transaksi ditemui</p>
       </div>
 
       <div v-else class="space-y-4">
@@ -143,8 +143,8 @@ const truncateAddress = (address) => {
               <span
                 class="text-sm font-medium"
                 :class="{
-                  'text-green-600': tx.status === 'Completed',
-                  'text-yellow-600': tx.status === 'Pending',
+                  'text-green-600': tx.status === 'Selesai',
+                  'text-yellow-600': tx.status === 'Menunggu',
                 }"
                 >{{ tx.status }}</span
               >
@@ -155,27 +155,27 @@ const truncateAddress = (address) => {
           <CardContent class="pt-4">
             <div class="space-y-3">
               <div>
-                <h3 class="text-sm font-medium text-gray-700">Your Wallet</h3>
+                <h3 class="text-sm font-medium text-gray-700">Dompet Anda</h3>
                 <p class="text-xs bg-gray-100 p-2 rounded-md overflow-x-auto whitespace-nowrap">
                   {{ tx.userWallet }}
                 </p>
                 <p class="text-xs text-gray-500 mt-1">
-                  <span class="font-medium">Copy:</span> {{ truncateAddress(tx.userWallet) }}
+                  <span class="font-medium">Salin:</span> {{ truncateAddress(tx.userWallet) }}
                 </p>
               </div>
 
               <div>
-                <h3 class="text-sm font-medium text-gray-700">Asnaf Wallet</h3>
+                <h3 class="text-sm font-medium text-gray-700">Dompet Asnaf</h3>
                 <p class="text-xs bg-gray-100 p-2 rounded-md overflow-x-auto whitespace-nowrap">
                   {{ tx.asnafWallet }}
                 </p>
                 <p class="text-xs text-gray-500 mt-1">
-                  <span class="font-medium">Copy:</span> {{ truncateAddress(tx.asnafWallet) }}
+                  <span class="font-medium">Salin:</span> {{ truncateAddress(tx.asnafWallet) }}
                 </p>
               </div>
 
               <div>
-                <h3 class="text-sm font-medium text-gray-700">Asnaf Details</h3>
+                <h3 class="text-sm font-medium text-gray-700">Butiran Asnaf</h3>
                 <p class="text-sm">
                   {{ tx.asnafName }} <span class="text-gray-500">({{ tx.asnafCategory }})</span>
                 </p>
@@ -183,17 +183,17 @@ const truncateAddress = (address) => {
               </div>
 
               <div>
-                <h3 class="text-sm font-medium text-gray-700">Evidence</h3>
+                <h3 class="text-sm font-medium text-gray-700">Bukti</h3>
                 <div class="mt-2 border rounded-lg overflow-hidden">
-                  <img :src="tx.evidenceImage" alt="Transaction evidence" class="w-full h-auto" />
+                  <img :src="tx.evidenceImage" alt="Bukti transaksi" class="w-full h-auto" />
                 </div>
               </div>
             </div>
           </CardContent>
 
           <CardFooter class="flex gap-8 items-center justify-center">
-            <Button variant="outline" size="sm">Verify</Button>
-            <Button variant="outline" size="sm">Report Issue</Button>
+            <Button variant="outline" size="sm">Sahkan</Button>
+            <Button variant="outline" size="sm">Lapor Isu</Button>
           </CardFooter>
         </Card>
       </div>
