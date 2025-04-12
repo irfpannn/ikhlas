@@ -1,0 +1,76 @@
+[
+  {
+    "id": "1",
+    "title": "Education Support for Underprivileged Children",
+    "description": "Provided educational support to 25 children from low-income families in Balik Pulau, Penang. The assistance covered school fees, books, uniforms, and transportation costs for the entire academic year.",
+    "category": "Poor",
+    "beneficiaries": 25,
+    "amount": 12500,
+    "date": "2023-12-15T00:00:00",
+    "outcomes": {
+      "education": true,
+      "housing": false,
+      "medical": false,
+      "business": false
+    },
+    "images": [
+      { "id": 1, "url": "https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1" },
+      { "id": 2, "url": "https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1" }
+    ]
+  },
+  {
+    "id": "2",
+    "title": "Medical Assistance Program",
+    "description": "Provided financial assistance for medical treatments to 15 individuals from needy families in Georgetown, Penang. The support covered hospital bills, medication costs, and follow-up treatments for chronic conditions.",
+    "category": "Needy",
+    "beneficiaries": 15,
+    "amount": 9000,
+    "date": "2024-01-10T00:00:00",
+    "outcomes": {
+      "education": false,
+      "housing": false,
+      "medical": true,
+      "business": false
+    },
+    "images": [
+      { "id": 1, "url": "https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1" }
+    ]
+  },
+  {
+    "id": "3",
+    "title": "Housing Renovation for Elderly",
+    "description": "Renovated homes of 5 elderly individuals living in unsafe conditions in Butterworth, Penang. Repairs included fixing leaking roofs, improving sanitation facilities, and ensuring proper electrical wiring for safety.",
+    "category": "Poor",
+    "beneficiaries": 5,
+    "amount": 15000,
+    "date": "2024-02-05T00:00:00",
+    "outcomes": {
+      "education": false,
+      "housing": true,
+      "medical": false,
+      "business": false
+    },
+    "images": [
+      { "id": 1, "url": "https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1" },
+      { "id": 2, "url": "https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1" }
+    ]
+  },
+  {
+    "id": "4",
+    "title": "Micro-Business Support Initiative",
+    "description": "Provided financial and mentoring support to 8 small entrepreneurs from underprivileged backgrounds in Bayan Lepas, Penang. The assistance helped them establish or expand their businesses, creating sustainable income sources.",
+    "category": "Debtor",
+    "beneficiaries": 8,
+    "amount": 16000,
+    "date": "2024-02-20T00:00:00",
+    "outcomes": {
+      "education": false,
+      "housing": false,
+      "medical": false,
+      "business": true
+    },
+    "images": [
+      { "id": 1, "url": "https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1" }
+    ]
+  }
+] 

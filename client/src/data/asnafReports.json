@@ -1,0 +1,110 @@
+[
+  {
+    "id": "1",
+    "name": "Rohani binti Ismail",
+    "address": "Kampung Melayu, Ayer Itam, Pulau Pinang",
+    "phoneNumber": "012-3456789",
+    "description": "Single mother with 4 children, living in poor conditions. The house is in disrepair and they need assistance with basic necessities and school supplies for the children.",
+    "location": {
+      "latitude": 5.4164,
+      "longitude": 100.2971,
+      "address": "Kampung Melayu, Ayer Itam, Pulau Pinang"
+    },
+    "images": [
+      { "id": 1, "url": "https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1" },
+      { "id": 2, "url": "https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1" }
+    ],
+    "reportDate": "2024-01-15T00:00:00",
+    "status": "Pending",
+    "reportedBy": "Ahmad bin Abdullah (User ID: user1)",
+    "notes": ""
+  },
+  {
+    "id": "2",
+    "name": "Hassan bin Omar",
+    "address": "Flat Seri Pinang, Blok C-15-3, Jalan Perak, Georgetown, Pulau Pinang",
+    "phoneNumber": "019-8765432",
+    "description": "Elderly man living alone, unable to work due to health issues. Needs assistance with medical expenses and daily necessities.",
+    "location": {
+      "latitude": 5.4065,
+      "longitude": 100.3290,
+      "address": "Jalan Perak, Georgetown, Pulau Pinang"
+    },
+    "images": [
+      { "id": 1, "url": "https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1" }
+    ],
+    "reportDate": "2024-01-20T00:00:00",
+    "status": "Verified",
+    "reportedBy": "Nurul binti Aziz (User ID: user4)",
+    "verifiedBy": "Admin (Fatimah)",
+    "verifiedDate": "2024-01-22T00:00:00",
+    "notes": "Verified through phone call and community leader confirmation"
+  },
+  {
+    "id": "3",
+    "name": "Keluarga Zulkifli",
+    "address": "Taman Tun Sardon, Jalan 3/4, Gelugor, Pulau Pinang",
+    "phoneNumber": "013-9876543",
+    "description": "Family of 6 living in a small house. Father recently lost job due to company closure. Need assistance with rent and children's education expenses.",
+    "location": {
+      "latitude": 5.3790,
+      "longitude": 100.3099,
+      "address": "Taman Tun Sardon, Gelugor, Pulau Pinang"
+    },
+    "images": [
+      { "id": 1, "url": "https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1" },
+      { "id": 2, "url": "https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1" },
+      { "id": 3, "url": "https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1" }
+    ],
+    "reportDate": "2024-02-05T00:00:00",
+    "status": "Converted",
+    "reportedBy": "Ismail bin Yusof (User ID: user5)",
+    "verifiedBy": "Admin (Muhammad)",
+    "verifiedDate": "2024-02-07T00:00:00",
+    "convertedBy": "Admin (Muhammad)",
+    "convertedDate": "2024-02-10T00:00:00",
+    "asnafId": "9",
+    "notes": "Converted to asnaf record. Family will receive monthly assistance."
+  },
+  {
+    "id": "4",
+    "name": "Aminah binti Kadir",
+    "address": "PPR Jalan Sungai, Blok D-10-5, Sungai Pinang, Pulau Pinang",
+    "phoneNumber": "014-5556666",
+    "description": "Widow with 2 young children. Working part-time but income insufficient for family needs. Children need school supplies and tuition assistance.",
+    "location": {
+      "latitude": 5.4090,
+      "longitude": 100.3269,
+      "address": "PPR Jalan Sungai, Sungai Pinang, Pulau Pinang"
+    },
+    "images": [
+      { "id": 1, "url": "https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1" },
+      { "id": 2, "url": "https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1" }
+    ],
+    "reportDate": "2024-02-12T00:00:00",
+    "status": "Pending",
+    "reportedBy": "Siti binti Rahman (User ID: user9)",
+    "notes": ""
+  },
+  {
+    "id": "5",
+    "name": "Abdul Rahman bin Hamid",
+    "address": "Kampung Seronok, Jalan 3/27A, Bayan Lepas, Pulau Pinang",
+    "phoneNumber": "",
+    "description": "Reported as a potential asnaf, but upon investigation, found to be receiving adequate support from family members and other sources.",
+    "location": {
+      "latitude": 5.3290,
+      "longitude": 100.2869,
+      "address": "Kampung Seronok, Bayan Lepas, Pulau Pinang"
+    },
+    "images": [
+      { "id": 1, "url": "https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1" }
+    ],
+    "reportDate": "2024-01-10T00:00:00",
+    "status": "Rejected",
+    "reportedBy": "Hakim bin Razak (User ID: user7)",
+    "rejectedBy": "Admin (Fatimah)",
+    "rejectedDate": "2024-01-15T00:00:00",
+    "notes": "Rejected due to sufficient support from family. Already receiving monthly allowance from children."
+  }
+] 

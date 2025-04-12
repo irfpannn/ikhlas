@@ -1,0 +1,72 @@
+[
+  {
+    "id": "1",
+    "recipientName": "Zamir bin Abdullah",
+    "category": "Poor",
+    "amountRM": 3700.00,
+    "description": "Monthly assistance for basic necessities",
+    "evidenceUrl": "https://example.com/evidence1.pdf",
+    "date": "2023-11-20T10:00:00",
+    "sourcePayments": ["1", "2"]
+  },
+  {
+    "id": "2",
+    "recipientName": "Fatimah binti Hassan",
+    "category": "Poor",
+    "amountRM": 800.00,
+    "description": "Education support for children",
+    "evidenceUrl": "https://example.com/evidence2.pdf",
+    "date": "2023-12-05T14:30:00",
+    "sourcePayments": ["3"]
+  },
+  {
+    "id": "3",
+    "recipientName": "Muhammad bin Ibrahim",
+    "category": "Needy",
+    "amountRM": 1200.00,
+    "description": "Medical treatment assistance",
+    "evidenceUrl": "https://example.com/evidence3.pdf",
+    "date": "2023-12-15T11:45:00",
+    "sourcePayments": ["4"]
+  },
+  {
+    "id": "4",
+    "recipientName": "Nurul Iman Foundation",
+    "category": "Zakat Administrator",
+    "amountRM": 2000.00,
+    "description": "Operational costs for zakat distribution",
+    "evidenceUrl": "https://example.com/evidence4.pdf",
+    "date": "2023-12-28T09:15:00",
+    "sourcePayments": ["5"]
+  },
+  {
+    "id": "5",
+    "recipientName": "Ali bin Razak",
+    "category": "New Muslim",
+    "amountRM": 1500.00,
+    "description": "Support for Islamic education and community integration",
+    "evidenceUrl": "https://example.com/evidence5.pdf",
+    "date": "2024-01-10T13:00:00",
+    "sourcePayments": ["6"]
+  },
+  {
+    "id": "6",
+    "recipientName": "Refugee Support Center",
+    "category": "Allah's Cause",
+    "amountRM": 3000.00,
+    "description": "Funding for refugee education program",
+    "evidenceUrl": "https://example.com/evidence6.pdf",
+    "date": "2024-01-22T15:30:00",
+    "sourcePayments": ["7"]
+  },
+  {
+    "id": "7",
+    "recipientName": "Zainab binti Omar",
+    "category": "Debtor",
+    "amountRM": 2500.00,
+    "description": "Assistance with medical debt",
+    "evidenceUrl": "https://example.com/evidence7.pdf",
+    "date": "2024-02-05T10:45:00",
+    "sourcePayments": ["8"]
+  }
+] 

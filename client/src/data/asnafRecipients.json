@@ -1,0 +1,82 @@
+[
+  {
+    "id": "1",
+    "name": "Ahmad bin Abdullah",
+    "category": "Poor (Fakir)",
+    "contact": "012-3456789",
+    "location": "Balik Pulau, Pulau Pinang",
+    "needs": "Basic necessities, medical support",
+    "status": "Active",
+    "notes": "Single father with 3 children"
+  },
+  {
+    "id": "2",
+    "name": "Fatimah binti Hassan",
+    "category": "Poor (Fakir)",
+    "contact": "019-8765432",
+    "location": "Jelutong, Pulau Pinang",
+    "needs": "Food, education for children",
+    "status": "Active",
+    "notes": "Widow with 2 school-age children"
+  },
+  {
+    "id": "3",
+    "name": "Muhammad bin Ibrahim",
+    "category": "Needy (Miskin)",
+    "contact": "013-5557777",
+    "location": "Bayan Lepas, Pulau Pinang",
+    "needs": "Rent assistance, job training",
+    "status": "Active",
+    "notes": "Recently lost job due to disability"
+  },
+  {
+    "id": "4",
+    "name": "Nurul Iman Foundation",
+    "category": "Zakat Administrator (Amil)",
+    "contact": "04-2123456",
+    "location": "Georgetown, Pulau Pinang",
+    "needs": "Operational costs",
+    "status": "Active",
+    "notes": "Local zakat distribution organization"
+  },
+  {
+    "id": "5",
+    "name": "Ali bin Razak",
+    "category": "New Muslim (Muallaf)",
+    "contact": "014-9998888",
+    "location": "Tanjung Bungah, Pulau Pinang",
+    "needs": "Islamic education, community support",
+    "status": "Active",
+    "notes": "Converted 6 months ago"
+  },
+  {
+    "id": "6",
+    "name": "Refugee Support Center",
+    "category": "Allah's Cause (Fi Sabilillah)",
+    "contact": "04-8765432",
+    "location": "Butterworth, Pulau Pinang",
+    "needs": "Funding for refugee education program",
+    "status": "Active",
+    "notes": "Supporting 50 refugee children"
+  },
+  {
+    "id": "7",
+    "name": "Zainab binti Omar",
+    "category": "Debtor (Gharimin)",
+    "contact": "017-1112222",
+    "location": "Bukit Mertajam, Pulau Pinang",
+    "needs": "Medical debt assistance",
+    "status": "Pending",
+    "notes": "Needs help with hospital bills"
+  },
+  {
+    "id": "8",
+    "name": "Ismail bin Yusof",
+    "category": "Traveler (Ibnus Sabil)",
+    "contact": "018-3334444",
+    "location": "Currently stranded in Georgetown, Pulau Pinang",
+    "needs": "Temporary accommodation, travel funds",
+    "status": "Active",
+    "notes": "Student who lost wallet and documents"
+  }
+] 

@@ -114,10 +114,8 @@ const goToRewards = () => {
       <!-- Header with logo and profile -->
       <div class="flex justify-between items-center mb-4">
         <div class="flex items-center">
-          <div class="bg-[#75a868] text-white rounded-full p-1 mr-2">
-            <span class="text-xs">O</span>
-          </div>
-          <span class="font-semibold">Ikhlas</span>
+          <img src="/logo.png" alt="Ikhlas Logo" class="w-20 h-10" />
+
         </div>
         <div class="text-gray-500">
           <i class="fas fa-bell"></i>

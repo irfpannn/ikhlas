@@ -1130,6 +1130,17 @@ import { useRouter } from 'vue-router';
 import 'leaflet/dist/leaflet.css';
 import AsnafHeatmap from '@/components/AsnafHeatmap.vue';
 
+// Import JSON data
+import zakatPaymentsData from '@/data/zakatPayments.json';
+import zakatDistributionsData from '@/data/zakatDistributions.json';
+import asnafRecipientsData from '@/data/asnafRecipients.json';
+import asnafReportsData from '@/data/asnafReports.json';
+import asnafLocationsData from '@/data/asnafLocations.json';
+import impactStoriesData from '@/data/impactStories.json';
+import impactDataJson from '@/data/impactData.json';
+
+console.log('Zakat payments data:', zakatPaymentsData);
+
 export default {
   name: 'AdminDashboardView',
   components: {
@@ -1235,131 +1246,17 @@ export default {
       try {
         loading.value = true;
         
-        // In a real app, this would fetch from Firestore
-        // For now, we'll use dummy data
-        const dummyPayments = [
-          {
-            id: '1',
-            userId: 'user1',
-            userName: 'Ahmad bin Abdullah',
-            userEmail: 'ahmad@example.com',
-            date: new Date(2023, 10, 15, 9, 30), // Nov 15, 2023, 9:30 AM
-            amountRM: 2500.00,
-            amountCrypto: 0.03245,
-            cryptoType: 'BTC',
-            transactionId: 'tx_btc_123456789',
-            walletAddress: '0x1A2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0',
-            status: 'Approved'
-          },
-          {
-            id: '2',
-            userId: 'user2',
-            userName: 'Fatimah binti Hassan',
-            userEmail: 'fatimah@example.com',
-            date: new Date(2023, 10, 18, 14, 45), // Nov 18, 2023, 2:45 PM
-            amountRM: 1200.00,
-            amountCrypto: 0.01560,
-            cryptoType: 'BTC',
-            transactionId: 'tx_btc_987654321',
-            walletAddress: '0x2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1',
-            status: 'Approved'
-          },
-          {
-            id: '3',
-            userId: 'user3',
-            userName: 'Muhammad bin Ibrahim',
-            userEmail: 'muhammad@example.com',
-            date: new Date(2023, 11, 5, 11, 20), // Dec 5, 2023, 11:20 AM
-            amountRM: 3000.00,
-            amountCrypto: 0.03896,
-            cryptoType: 'BTC',
-            transactionId: 'tx_btc_456789123',
-            walletAddress: '0x3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2',
-            status: 'Approved'
-          },
-          {
-            id: '4',
-            userId: 'user4',
-            userName: 'Nurul binti Aziz',
-            userEmail: 'nurul@example.com',
-            date: new Date(2023, 11, 12, 16, 10), // Dec 12, 2023, 4:10 PM
-            amountRM: 1800.00,
-            amountCrypto: 0.02338,
-            cryptoType: 'BTC',
-            transactionId: 'tx_btc_789123456',
-            walletAddress: '0x4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3',
-            status: 'Approved'
-          },
-          {
-            id: '5',
-            userId: 'user5',
-            userName: 'Ismail bin Yusof',
-            userEmail: 'ismail@example.com',
-            date: new Date(2023, 11, 20, 10, 5), // Dec 20, 2023, 10:05 AM
-            amountRM: 5000.00,
-            amountCrypto: 0.06494,
-            cryptoType: 'BTC',
-            transactionId: 'tx_btc_321654987',
-            walletAddress: '0x5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4',
-            status: 'Approved'
-          },
-          {
-            id: '7',
-            userId: 'user7',
-            userName: 'Hakim bin Razak',
-            userEmail: 'hakim@example.com',
-            date: new Date(2024, 0, 15, 9, 50), // Jan 15, 2024, 9:50 AM
-            amountRM: 1500.00,
-            amountCrypto: 0.01948,
-            cryptoType: 'BTC',
-            transactionId: 'tx_btc_987321654',
-            walletAddress: '0x7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4X5Y6',
-            status: 'Pending'
-          },
-          {
-            id: '8',
-            userId: 'user8',
-            userName: 'Aishah binti Kamal',
-            userEmail: 'aishah@example.com',
-            date: new Date(2024, 0, 22, 15, 40), // Jan 22, 2024, 3:40 PM
-            amountRM: 3500.00,
-            amountCrypto: 0.04545,
-            cryptoType: 'BTC',
-            transactionId: 'tx_btc_123789456',
-            walletAddress: '0x8H9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4X5Y6Z7',
-            status: 'Pending'
-          },
-          {
-            id: '9',
-            userId: 'user1',
-            userName: 'Ahmad bin Abdullah',
-            userEmail: 'ahmad@example.com',
-            date: new Date(2024, 1, 5, 11, 15), // Feb 5, 2024, 11:15 AM
-            amountRM: 2000.00,
-            amountCrypto: 0.02597,
-            cryptoType: 'BTC',
-            transactionId: 'tx_btc_456123789',
-            walletAddress: '0x1A2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0',
-            status: 'Pending'
-          },
-          {
-            id: '10',
-            userId: 'user9',
-            userName: 'Siti binti Rahman',
-            userEmail: 'siti@example.com',
-            date: new Date(2024, 1, 10, 14, 30), // Feb 10, 2024, 2:30 PM
-            amountRM: 1000.00,
-            amountCrypto: 0.01299,
-            cryptoType: 'BTC',
-            transactionId: 'tx_btc_789456123',
-            walletAddress: '0x9I0J1K2L3M4N5O6P7Q8R9S0T1U2V3W4X5Y6Z7A8',
-            status: 'Rejected'
-          }
-        ];
+        // Load data from JSON file
+        const payments = zakatPaymentsData.map(payment => ({
+          ...payment,
+          date: new Date(payment.date),
+          amountRM: Number(payment.amountRM),
+          amountCrypto: Number(payment.amountCrypto)
+        }));
         
-        zakatPayments.value = dummyPayments;
+        zakatPayments.value = payments;
         
-        // Comment out the Firestore code for now
+        // In a production environment, you would fetch from Firestore instead:
         /*
         const querySnapshot = await getDocs(collection(db, 'zakatPayments'));
         const payments = [];
@@ -1386,84 +1283,16 @@ export default {
       try {
         loadingDistributions.value = true;
         
-        // In a real app, this would fetch from Firestore
-        // For now, we'll use dummy data with source payments
-        const dummyDistributions = [
-          {
-            id: '1',
-            recipientName: 'Zamir bin Abdullah',
-            category: 'Poor',
-            amountRM: 3700.00,
-            description: 'Monthly assistance for basic necessities',
-            evidenceUrl: 'https://example.com/evidence1.pdf',
-            date: new Date(2023, 10, 20, 10, 0), // Nov 20, 2023, 10:00 AM
-            sourcePayments: ['1', '2'] // IDs of source payments
-          },
-          {
-            id: '2',
-            recipientName: 'Fatimah binti Hassan',
-            category: 'Poor',
-            amountRM: 800.00,
-            description: 'Education support for children',
-            evidenceUrl: 'https://example.com/evidence2.pdf',
-            date: new Date(2023, 11, 5, 14, 30), // Dec 5, 2023, 2:30 PM
-            sourcePayments: ['3'] // IDs of source payments
-          },
-          {
-            id: '3',
-            recipientName: 'Muhammad bin Ibrahim',
-            category: 'Needy',
-            amountRM: 1200.00,
-            description: 'Medical treatment assistance',
-            evidenceUrl: 'https://example.com/evidence3.pdf',
-            date: new Date(2023, 11, 15, 11, 45), // Dec 15, 2023, 11:45 AM
-            sourcePayments: ['4'] // IDs of source payments
-          },
-          {
-            id: '4',
-            recipientName: 'Nurul Iman Foundation',
-            category: 'Zakat Administrator',
-            amountRM: 2000.00,
-            description: 'Operational costs for zakat distribution',
-            evidenceUrl: 'https://example.com/evidence4.pdf',
-            date: new Date(2023, 11, 28, 9, 15), // Dec 28, 2023, 9:15 AM
-            sourcePayments: ['5'] // IDs of source payments
-          },
-          {
-            id: '5',
-            recipientName: 'Ali bin Razak',
-            category: 'New Muslim',
-            amountRM: 1500.00,
-            description: 'Support for Islamic education and community integration',
-            evidenceUrl: 'https://example.com/evidence5.pdf',
-            date: new Date(2024, 0, 10, 13, 0), // Jan 10, 2024, 1:00 PM
-            sourcePayments: ['6'] // IDs of source payments
-          },
-          {
-            id: '6',
-            recipientName: 'Refugee Support Center',
-            category: 'Allah\'s Cause',
-            amountRM: 3000.00,
-            description: 'Funding for refugee education program',
-            evidenceUrl: 'https://example.com/evidence6.pdf',
-            date: new Date(2024, 0, 22, 15, 30), // Jan 22, 2024, 3:30 PM
-            sourcePayments: ['7'] // IDs of source payments
-          },
-          {
-            id: '7',
-            recipientName: 'Zainab binti Omar',
-            category: 'Debtor',
-            amountRM: 2500.00,
-            description: 'Assistance with medical debt',
-            evidenceUrl: 'https://example.com/evidence7.pdf',
-            date: new Date(2024, 1, 5, 10, 45), // Feb 5, 2024, 10:45 AM
-            sourcePayments: ['8'] // IDs of source payments
-          }
-        ];
+        // Load data from JSON file
+        const distributions = zakatDistributionsData.map(distribution => ({
+          ...distribution,
+          date: new Date(distribution.date),
+          amountRM: Number(distribution.amountRM)
+        }));
         
-        zakatDistributions.value = dummyDistributions;
+        zakatDistributions.value = distributions;
         
-        // Comment out the Firestore code for now
+        // In a production environment, you would fetch from Firestore instead:
         /*
         const querySnapshot = await getDocs(collection(db, 'zakatDistributions'));
         const distributions = [];
@@ -1491,94 +1320,10 @@ export default {
       try {
         loadingAsnaf.value = true;
         
-        // In a real app, this would fetch from Firestore
-        // For now, we'll use dummy data
-        const dummyAsnaf = [
-          {
-            id: '1',
-            name: 'Ahmad bin Abdullah',
-            category: 'Poor (Fakir)',
-            contact: '012-3456789',
-            location: 'Balik Pulau, Pulau Pinang',
-            needs: 'Basic necessities, medical support',
-            status: 'Active',
-            notes: 'Single father with 3 children'
-          },
-          {
-            id: '2',
-            name: 'Fatimah binti Hassan',
-            category: 'Poor (Fakir)',
-            contact: '019-8765432',
-            location: 'Jelutong, Pulau Pinang',
-            needs: 'Food, education for children',
-            status: 'Active',
-            notes: 'Widow with 2 school-age children'
-          },
-          {
-            id: '3',
-            name: 'Muhammad bin Ibrahim',
-            category: 'Needy (Miskin)',
-            contact: '013-5557777',
-            location: 'Bayan Lepas, Pulau Pinang',
-            needs: 'Rent assistance, job training',
-            status: 'Active',
-            notes: 'Recently lost job due to disability'
-          },
-          {
-            id: '4',
-            name: 'Nurul Iman Foundation',
-            category: 'Zakat Administrator (Amil)',
-            contact: '04-2123456',
-            location: 'Georgetown, Pulau Pinang',
-            needs: 'Operational costs',
-            status: 'Active',
-            notes: 'Local zakat distribution organization'
-          },
-          {
-            id: '5',
-            name: 'Ali bin Razak',
-            category: 'New Muslim (Muallaf)',
-            contact: '014-9998888',
-            location: 'Tanjung Bungah, Pulau Pinang',
-            needs: 'Islamic education, community support',
-            status: 'Active',
-            notes: 'Converted 6 months ago'
-          },
-          {
-            id: '6',
-            name: 'Refugee Support Center',
-            category: 'Allah\'s Cause (Fi Sabilillah)',
-            contact: '04-8765432',
-            location: 'Butterworth, Pulau Pinang',
-            needs: 'Funding for refugee education program',
-            status: 'Active',
-            notes: 'Supporting 50 refugee children'
-          },
-          {
-            id: '7',
-            name: 'Zainab binti Omar',
-            category: 'Debtor (Gharimin)',
-            contact: '017-1112222',
-            location: 'Bukit Mertajam, Pulau Pinang',
-            needs: 'Medical debt assistance',
-            status: 'Pending',
-            notes: 'Needs help with hospital bills'
-          },
-          {
-            id: '8',
-            name: 'Ismail bin Yusof',
-            category: 'Traveler (Ibnus Sabil)',
-            contact: '018-3334444',
-            location: 'Currently stranded in Georgetown, Pulau Pinang',
-            needs: 'Temporary accommodation, travel funds',
-            status: 'Active',
-            notes: 'Student who lost wallet and documents'
-          }
-        ];
+        // Load data from JSON file
+        asnafRecipients.value = asnafRecipientsData;
         
-        asnafRecipients.value = dummyAsnaf;
-        
-        // In a real implementation, you would fetch from Firestore like this:
+        // In a production environment, you would fetch from Firestore instead:
         /*
         const querySnapshot = await getDocs(collection(db, 'asnafRecipients'));
         const recipients = [];
@@ -1616,10 +1361,13 @@ export default {
     
     const updatePaymentStatus = async (paymentId, status) => {
       try {
+        // In a production environment, you would update Firestore:
+        /*
         const paymentRef = doc(db, 'zakatPayments', paymentId);
         await updateDoc(paymentRef, {
           status: status
         });
+        */
         
         // Update local state
         const index = zakatPayments.value.findIndex(p => p.id === paymentId);
@@ -1647,8 +1395,7 @@ export default {
     });
     
     const fetchAvailablePayments = () => {
-      // In a real app, this would fetch payments that still have available funds
-      // For now, we'll filter the approved payments that haven't been fully used
+      // Filter the approved payments that haven't been fully used
       availablePayments.value = zakatPayments.value.filter(payment => 
         payment.status === 'Approved' && 
         (!payment.usedAmount || payment.usedAmount < payment.amountRM)
@@ -1722,8 +1469,8 @@ export default {
         const distributionData = {
           ...distributionForm.value,
           amountRM: Number(distributionForm.value.amountRM),
-          date: serverTimestamp(),
-          updatedAt: serverTimestamp(),
+          date: new Date(),
+          updatedAt: new Date(),
           // Store reference to the asnaf if selected from list
           asnafId: selectedAsnafId.value || null,
           // Store the source payment IDs
@@ -1732,32 +1479,36 @@ export default {
         
         if (editingDistribution.value) {
           // Update existing distribution
+          // In a production environment, you would update Firestore:
+          /*
           const distributionRef = doc(db, 'zakatDistributions', editingDistribution.value.id);
           await updateDoc(distributionRef, distributionData);
+          */
           
           // Update local state
           const index = zakatDistributions.value.findIndex(d => d.id === editingDistribution.value.id);
           if (index !== -1) {
             zakatDistributions.value[index] = {
               ...zakatDistributions.value[index],
-              ...distributionData,
-              date: new Date()
+              ...distributionData
             };
           }
         } else {
           // Add new distribution
+          // In a production environment, you would add to Firestore:
+          /*
           const docRef = await addDoc(collection(db, 'zakatDistributions'), distributionData);
+          */
           
           // Add to local state
+          const newId = Date.now().toString();
           zakatDistributions.value.push({
-            id: docRef.id,
-            ...distributionData,
-            date: new Date()
+            id: newId,
+            ...distributionData
           });
         }
         
         // Update the used amount for each source payment
-        // In a real implementation, you would update this in Firestore
         selectedPaymentIds.value.forEach(paymentId => {
           const paymentIndex = zakatPayments.value.findIndex(p => p.id === paymentId);
           if (paymentIndex !== -1) {
@@ -1770,7 +1521,6 @@ export default {
         
         // Update asnaf record with distribution reference
         if (selectedAsnafId.value) {
-          // In a real implementation, you would update the asnaf record in Firestore
           console.log(`Updated asnaf ${selectedAsnafId.value} with new distribution reference`);
         }
         
@@ -1820,7 +1570,6 @@ export default {
     
     const saveAsnaf = async () => {
       try {
-        // In a real app, this would save to Firestore
         if (editingAsnaf.value) {
           // Update existing asnaf
           const index = asnafRecipients.value.findIndex(a => a.id === editingAsnaf.value.id);
@@ -1831,7 +1580,7 @@ export default {
             };
           }
           
-          // In a real implementation:
+          // In a production environment, you would update Firestore:
           /*
           const asnafRef = doc(db, 'asnafRecipients', editingAsnaf.value.id);
           await updateDoc(asnafRef, asnafForm.value);
@@ -1844,7 +1593,7 @@ export default {
           };
           asnafRecipients.value.push(newAsnaf);
           
-          // In a real implementation:
+          // In a production environment, you would add to Firestore:
           /*
           const docRef = await addDoc(collection(db, 'asnafRecipients'), asnafForm.value);
           asnafRecipients.value.push({
@@ -1945,32 +1694,6 @@ export default {
       }
     };
     
-    onMounted(() => {
-      fetchZakatPayments();
-      fetchZakatDistributions();
-      fetchAsnafRecipients();
-      fetchAsnafReports();
-      fetchImpactData();
-      fetchAsnafLocations();
-    });
-    
-    // Watch for changes in activeTab to load available payments when needed
-    watch(activeTab, (newTab) => {
-      if (newTab === 'distributions') {
-        fetchAvailablePayments();
-      }
-      if (newTab === 'impact') {
-        // No need to do anything special here since the component handles initialization
-      }
-    });
-    
-    // Watch for showAddDistributionModal to load available payments when opened
-    watch(showAddDistributionModal, (isOpen) => {
-      if (isOpen) {
-        fetchAvailablePayments();
-      }
-    });
-    
     // Add these new refs for the asnaf reports feature
     const asnafReports = ref([]);
     const loadingReports = ref(true);
@@ -1997,122 +1720,18 @@ export default {
       try {
         loadingReports.value = true;
         
-        // In a real app, this would fetch from Firestore
-        // For now, we'll use dummy data
-        const dummyReports = [
-          {
-            id: '1',
-            name: 'Rohani binti Ismail',
-            address: 'Kampung Melayu, Ayer Itam, Pulau Pinang',
-            phoneNumber: '012-3456789',
-            description: 'Single mother with 4 children, living in poor conditions. The house is in disrepair and they need assistance with basic necessities and school supplies for the children.',
-            location: {
-              latitude: 5.4164,
-              longitude: 100.2971,
-              address: 'Kampung Melayu, Ayer Itam, Pulau Pinang'
-            },
-            images: [
-              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' },
-              { id: 2, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
-            ],
-            reportDate: new Date(2024, 0, 15), // Jan 15, 2024
-            status: 'Pending',
-            reportedBy: 'Ahmad bin Abdullah (User ID: user1)',
-            notes: ''
-          },
-          {
-            id: '2',
-            name: 'Hassan bin Omar',
-            address: 'Flat Seri Pinang, Blok C-15-3, Jalan Perak, Georgetown, Pulau Pinang',
-            phoneNumber: '019-8765432',
-            description: 'Elderly man living alone, unable to work due to health issues. Needs assistance with medical expenses and daily necessities.',
-            location: {
-              latitude: 5.4065,
-              longitude: 100.3290,
-              address: 'Jalan Perak, Georgetown, Pulau Pinang'
-            },
-            images: [
-              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
-            ],
-            reportDate: new Date(2024, 0, 20), // Jan 20, 2024
-            status: 'Verified',
-            reportedBy: 'Nurul binti Aziz (User ID: user4)',
-            verifiedBy: 'Admin (Fatimah)',
-            verifiedDate: new Date(2024, 0, 22), // Jan 22, 2024
-            notes: 'Verified through phone call and community leader confirmation'
-          },
-          {
-            id: '3',
-            name: 'Keluarga Zulkifli',
-            address: 'Taman Tun Sardon, Jalan 3/4, Gelugor, Pulau Pinang',
-            phoneNumber: '013-9876543',
-            description: 'Family of 6 living in a small house. Father recently lost job due to company closure. Need assistance with rent and children\'s education expenses.',
-            location: {
-              latitude: 5.3790,
-              longitude: 100.3099,
-              address: 'Taman Tun Sardon, Gelugor, Pulau Pinang'
-            },
-            images: [
-              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' },
-              { id: 2, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' },
-              { id: 3, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
-            ],
-            reportDate: new Date(2024, 1, 5), // Feb 5, 2024
-            status: 'Converted',
-            reportedBy: 'Ismail bin Yusof (User ID: user5)',
-            verifiedBy: 'Admin (Muhammad)',
-            verifiedDate: new Date(2024, 1, 7), // Feb 7, 2024
-            convertedBy: 'Admin (Muhammad)',
-            convertedDate: new Date(2024, 1, 10), // Feb 10, 2024
-            asnafId: '9', // Reference to the created asnaf record
-            notes: 'Converted to asnaf record. Family will receive monthly assistance.'
-          },
-          {
-            id: '4',
-            name: 'Aminah binti Kadir',
-            address: 'PPR Jalan Sungai, Blok D-10-5, Sungai Pinang, Pulau Pinang',
-            phoneNumber: '014-5556666',
-            description: 'Widow with 2 young children. Working part-time but income insufficient for family needs. Children need school supplies and tuition assistance.',
-            location: {
-              latitude: 5.4090,
-              longitude: 100.3269,
-              address: 'PPR Jalan Sungai, Sungai Pinang, Pulau Pinang'
-            },
-            images: [
-              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' },
-              { id: 2, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
-            ],
-            reportDate: new Date(2024, 1, 12), // Feb 12, 2024
-            status: 'Pending',
-            reportedBy: 'Siti binti Rahman (User ID: user9)',
-            notes: ''
-          },
-          {
-            id: '5',
-            name: 'Abdul Rahman bin Hamid',
-            address: 'Kampung Seronok, Jalan 3/27A, Bayan Lepas, Pulau Pinang',
-            phoneNumber: '',
-            description: 'Reported as a potential asnaf, but upon investigation, found to be receiving adequate support from family members and other sources.',
-            location: {
-              latitude: 5.3290,
-              longitude: 100.2869,
-              address: 'Kampung Seronok, Bayan Lepas, Pulau Pinang'
-            },
-            images: [
-              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
-            ],
-            reportDate: new Date(2024, 0, 10), // Jan 10, 2024
-            status: 'Rejected',
-            reportedBy: 'Hakim bin Razak (User ID: user7)',
-            rejectedBy: 'Admin (Fatimah)',
-            rejectedDate: new Date(2024, 0, 15), // Jan 15, 2024
-            notes: 'Rejected due to sufficient support from family. Already receiving monthly allowance from children.'
-          }
-        ];
+        // Load data from JSON file
+        const reports = asnafReportsData.map(report => ({
+          ...report,
+          reportDate: new Date(report.reportDate),
+          verifiedDate: report.verifiedDate ? new Date(report.verifiedDate) : undefined,
+          rejectedDate: report.rejectedDate ? new Date(report.rejectedDate) : undefined,
+          convertedDate: report.convertedDate ? new Date(report.convertedDate) : undefined
+        }));
         
-        asnafReports.value = dummyReports;
+        asnafReports.value = reports;
         
-        // In a real implementation, you would fetch from Firestore like this:
+        // In a production environment, you would fetch from Firestore instead:
         /*
         const querySnapshot = await getDocs(collection(db, 'asnafReports'));
         const reports = [];
@@ -2158,7 +1777,17 @@ export default {
     // Function to verify a report
     const verifyReport = async (report) => {
       try {
-        // In a real app, this would update the report in Firestore
+        // In a production environment, you would update Firestore:
+        /*
+        const reportRef = doc(db, 'asnafReports', report.id);
+        await updateDoc(reportRef, {
+          status: 'Verified',
+          verifiedBy: 'Admin (Current User)', // Use actual admin name
+          verifiedDate: serverTimestamp(),
+          notes: reportActionNotes.value
+        });
+        */
+        
         const reportIndex = asnafReports.value.findIndex(r => r.id === report.id);
         if (reportIndex !== -1) {
           // Update the report status
@@ -2177,18 +1806,6 @@ export default {
           
           alert('Report has been verified successfully');
         }
-        
-        // In a real implementation, you would update in Firestore:
-        /*
-        const reportRef = doc(db, 'asnafReports', report.id);
-        await updateDoc(reportRef, {
-          status: 'Verified',
-          verifiedBy: 'Admin (Current User)', // Use actual admin name
-          verifiedDate: serverTimestamp(),
-          notes: reportActionNotes.value
-        });
-        */
-        
       } catch (error) {
         console.error('Error verifying report:', error);
         alert('Error verifying report. Please try again.');
@@ -2198,7 +1815,17 @@ export default {
     // Function to reject a report
     const rejectReport = async (report) => {
       try {
-        // In a real app, this would update the report in Firestore
+        // In a production environment, you would update Firestore:
+        /*
+        const reportRef = doc(db, 'asnafReports', report.id);
+        await updateDoc(reportRef, {
+          status: 'Rejected',
+          rejectedBy: 'Admin (Current User)', // Use actual admin name
+          rejectedDate: serverTimestamp(),
+          notes: reportActionNotes.value
+        });
+        */
+        
         const reportIndex = asnafReports.value.findIndex(r => r.id === report.id);
         if (reportIndex !== -1) {
           // Update the report status
@@ -2217,117 +1844,11 @@ export default {
           
           alert('Report has been rejected');
         }
-        
-        // In a real implementation, you would update in Firestore:
-        /*
-        const reportRef = doc(db, 'asnafReports', report.id);
-        await updateDoc(reportRef, {
-          status: 'Rejected',
-          rejectedBy: 'Admin (Current User)', // Use actual admin name
-          rejectedDate: serverTimestamp(),
-          notes: reportActionNotes.value
-        });
-        */
-        
       } catch (error) {
         console.error('Error rejecting report:', error);
         alert('Error rejecting report. Please try again.');
       }
     };
-    
-    // Function to convert a verified report to an asnaf record
-    const convertToAsnaf = async (report) => {
-      try {
-        if (!conversionCategory && report.status === 'Verified') {
-          alert('Please select an asnaf category');
-          return;
-        }
-        
-        // In a real app, this would create a new asnaf record and update the report
-        
-        // 1. Create new asnaf record
-        const newAsnaf = {
-          id: Date.now().toString(), // Generate a dummy ID
-          name: report.name,
-          category: conversionCategory || 'Needy (Miskin)', // Default if not in modal
-          contact: report.phoneNumber || 'Not provided',
-          location: report.location?.address || report.address,
-          needs: conversionNeeds || report.description,
-          status: 'Active',
-          notes: `Created from report ID: ${report.id}. ${reportActionNotes.value}`.trim(),
-          createdFrom: report.id,
-          createdAt: new Date()
-        };
-        
-        // Add to asnaf recipients
-        asnafRecipients.value.push(newAsnaf);
-        
-        // 2. Update the report status
-        const reportIndex = asnafReports.value.findIndex(r => r.id === report.id);
-        if (reportIndex !== -1) {
-          asnafReports.value[reportIndex] = {
-            ...asnafReports.value[reportIndex],
-            status: 'Converted',
-            convertedBy: 'Admin (Current User)', // In a real app, use the current admin's name
-            convertedDate: new Date(),
-            asnafId: newAsnaf.id,
-            notes: `${asnafReports.value[reportIndex].notes} Converted to asnaf record ID: ${newAsnaf.id}`.trim()
-          };
-        }
-        
-        // If we're in the modal, close it
-        if (selectedReport.value && selectedReport.value.id === report.id) {
-          selectedReport.value = null;
-        }
-        
-        // Reset conversion form
-        conversionCategory.value = '';
-        conversionNeeds.value = '';
-        
-        alert('Report has been successfully converted to an asnaf record');
-        
-        // In a real implementation with Firestore:
-        /*
-        // 1. Create new asnaf record
-        const asnafData = {
-          name: report.name,
-          category: conversionCategory || 'Needy (Miskin)',
-          contact: report.phoneNumber || 'Not provided',
-          location: report.location?.address || report.address,
-          needs: conversionNeeds || report.description,
-          status: 'Active',
-          notes: `Created from report ID: ${report.id}. ${reportActionNotes.value}`.trim(),
-          createdFrom: report.id,
-          createdAt: serverTimestamp()
-        };
-        
-        const asnafRef = await addDoc(collection(db, 'asnafRecipients'), asnafData);
-        
-        // 2. Update the report status
-        const reportRef = doc(db, 'asnafReports', report.id);
-        await updateDoc(reportRef, {
-          status: 'Converted',
-          convertedBy: 'Admin (Current User)', // Use actual admin name
-          convertedDate: serverTimestamp(),
-          asnafId: asnafRef.id,
-          notes: `${report.notes || ''} Converted to asnaf record ID: ${asnafRef.id}`.trim()
-        });
-        */
-        
-      } catch (error) {
-        console.error('Error converting report to asnaf:', error);
-        alert('Error converting report to asnaf. Please try again.');
-      }
-    };
-    
-    onMounted(() => {
-      fetchZakatPayments();
-      fetchZakatDistributions();
-      fetchAsnafRecipients();
-      fetchAsnafReports();
-      fetchImpactData();
-      fetchAsnafLocations();
-    });
     
     // Add these new refs to your setup function
     const showConvertModal = ref(false);
@@ -2351,7 +1872,33 @@ export default {
         
         const report = reportToConvert.value;
         
-        // In a real app, this would create a new asnaf record and update the report
+        // In a production environment, you would create a new asnaf record in Firestore:
+        /*
+        // 1. Create new asnaf record
+        const asnafData = {
+          name: report.name,
+          category: conversionCategory.value,
+          contact: report.phoneNumber || 'Not provided',
+          location: report.location?.address || report.address,
+          needs: conversionNeeds.value,
+          status: 'Active',
+          notes: `Created from report ID: ${report.id}. ${reportActionNotes.value}`.trim(),
+          createdFrom: report.id,
+          createdAt: serverTimestamp()
+        };
+        
+        const asnafRef = await addDoc(collection(db, 'asnafRecipients'), asnafData);
+        
+        // 2. Update the report status
+        const reportRef = doc(db, 'asnafReports', report.id);
+        await updateDoc(reportRef, {
+          status: 'Converted',
+          convertedBy: 'Admin (Current User)', // Use actual admin name
+          convertedDate: serverTimestamp(),
+          asnafId: asnafRef.id,
+          notes: `${report.notes || ''} Converted to asnaf record ID: ${asnafRef.id}`.trim()
+        });
+        */
         
         // 1. Create new asnaf record
         const newAsnaf = {
@@ -2468,130 +2015,28 @@ export default {
     // Function to fetch impact data
     const fetchImpactData = async () => {
       try {
-        // In a real app, this would fetch from Firestore
-        // For now, we'll use dummy data
-        
-        // Generate monthly trend data for the last 6 months
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-        const monthlyTrend = months.map((month, index) => ({
-          label: month,
-          amount: 5000 + Math.random() * 5000 // Random amount between 5000 and 10000
-        }));
-        
-        // Generate category distribution data
-        const categoryDistribution = {
-          'Poor (Fakir)': 12500,
-          'Needy (Miskin)': 9800,
-          'Zakat Administrator (Amil)': 3500,
-          'New Muslim (Muallaf)': 2200,
-          'Debtor (Gharimin)': 4300,
-          'Allah\'s Cause (Fi Sabilillah)': 7600
-        };
-        
-        // Generate impact stories
-        const impactStories = [
-          {
-            id: '1',
-            title: 'Education Support for Underprivileged Children',
-            description: 'Provided educational support to 25 children from low-income families in Balik Pulau, Penang. The assistance covered school fees, books, uniforms, and transportation costs for the entire academic year.',
-            category: 'Poor',
-            beneficiaries: 25,
-            amount: 12500,
-            date: new Date(2023, 11, 15), // Dec 15, 2023
-            outcomes: {
-              education: true,
-              housing: false,
-              medical: false,
-              business: false
-            },
-            images: [
-              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' },
-              { id: 2, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
-            ]
-          },
-          {
-            id: '2',
-            title: 'Medical Assistance Program',
-            description: 'Provided financial assistance for medical treatments to 15 individuals from needy families in Georgetown, Penang. The support covered hospital bills, medication costs, and follow-up treatments for chronic conditions.',
-            category: 'Needy',
-            beneficiaries: 15,
-            amount: 9000,
-            date: new Date(2024, 0, 10), // Jan 10, 2024
-            outcomes: {
-              education: false,
-              housing: false,
-              medical: true,
-              business: false
-            },
-            images: [
-              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
-            ]
-          },
-          {
-            id: '3',
-            title: 'Housing Renovation for Elderly',
-            description: 'Renovated homes of 5 elderly individuals living in unsafe conditions in Butterworth, Penang. Repairs included fixing leaking roofs, improving sanitation facilities, and ensuring proper electrical wiring for safety.',
-            category: 'Poor',
-            beneficiaries: 5,
-            amount: 15000,
-            date: new Date(2024, 1, 5), // Feb 5, 2024
-            outcomes: {
-              education: false,
-              housing: true,
-              medical: false,
-              business: false
-            },
-            images: [
-              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' },
-              { id: 2, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
-            ]
-          },
-          {
-            id: '4',
-            title: 'Micro-Business Support Initiative',
-            description: 'Provided financial and mentoring support to 8 small entrepreneurs from underprivileged backgrounds in Bayan Lepas, Penang. The assistance helped them establish or expand their businesses, creating sustainable income sources.',
-            category: 'Debtor',
-            beneficiaries: 8,
-            amount: 16000,
-            date: new Date(2024, 1, 20), // Feb 20, 2024
-            outcomes: {
-              education: false,
-              housing: false,
-              medical: false,
-              business: true
-            },
-            images: [
-              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
-            ]
-          }
-        ];
-        
-        // Calculate outcome metrics
-        const outcomes = {
-          education: { count: 25 },
-          housing: { count: 5 },
-          medical: { count: 15 },
-          business: { count: 8 }
-        };
-        
-        // Calculate total metrics
-        const totalBeneficiaries = 53; // Sum of all beneficiaries
-        const totalDistributed = 52500; // Sum of all distributed amounts
-        const averagePerBeneficiary = totalDistributed / totalBeneficiaries;
-        const uniqueDonors = 35; // Dummy value
-        
+        // Load data from JSON files
         impactData.value = {
-          totalBeneficiaries,
-          totalDistributed,
-          averagePerBeneficiary,
-          uniqueDonors,
-          categoryDistribution,
-          monthlyTrend,
-          impactStories,
-          outcomes
+          ...impactDataJson,
+          impactStories: impactStoriesData.map(story => ({
+            ...story,
+            date: new Date(story.date),
+            amount: Number(story.amount),
+            beneficiaries: Number(story.beneficiaries)
+          }))
         };
       } catch (error) {
         console.error('Error fetching impact data:', error);
+      }
+    };
+    
+    // Function to fetch asnaf locations
+    const fetchAsnafLocations = async () => {
+      try {
+        // Load data from JSON file
+        asnafLocations.value = asnafLocationsData;
+      } catch (error) {
+        console.error('Error fetching asnaf locations:', error);
       }
     };
     
@@ -2771,63 +2216,8 @@ export default {
       };
     };
     
-    // Add fetchImpactData to onMounted
-    onMounted(() => {
-      fetchZakatPayments();
-      fetchZakatDistributions();
-      fetchAsnafRecipients();
-      fetchAsnafReports();
-      fetchImpactData();
-      fetchAsnafLocations();
-    });
-    
-    // Add this after your other ref declarations
+    // Initialize asnaf locations
     const asnafLocations = ref([]);
-    
-    // Add this function to fetch asnaf locations
-    const fetchAsnafLocations = async () => {
-      try {
-        // In a real app, this would fetch from Firestore
-        // For now, we'll use dummy data
-        const dummyLocations = [
-          { id: '1', lat: 5.4164, lng: 100.2971, category: 'Poor (Fakir)', weight: 10 }, // Ayer Itam
-          { id: '2', lat: 5.4065, lng: 100.3290, category: 'Poor (Fakir)', weight: 8 }, // Georgetown
-          { id: '3', lat: 5.3790, lng: 100.3099, category: 'Needy (Miskin)', weight: 12 }, // Gelugor
-          { id: '4', lat: 5.4090, lng: 100.3269, category: 'Needy (Miskin)', weight: 7 }, // Sungai Pinang
-          { id: '5', lat: 5.3290, lng: 100.2869, category: 'Debtor (Gharimin)', weight: 5 }, // Bayan Lepas
-          { id: '6', lat: 5.4690, lng: 100.2369, category: 'New Muslim (Muallaf)', weight: 6 }, // Balik Pulau
-          { id: '7', lat: 5.3990, lng: 100.3069, category: 'Allah\'s Cause (Fi Sabilillah)', weight: 9 }, // Jelutong
-          { id: '8', lat: 5.4390, lng: 100.3169, category: 'Traveler (Ibnus Sabil)', weight: 4 }, // Pulau Tikus
-          { id: '9', lat: 5.4590, lng: 100.2869, category: 'Poor (Fakir)', weight: 11 }, // Tanjung Bungah
-          { id: '10', lat: 5.3990, lng: 100.3869, category: 'Needy (Miskin)', weight: 8 }, // Batu Ferringhi
-          { id: '11', lat: 5.4190, lng: 100.3969, category: 'Poor (Fakir)', weight: 9 }, // Teluk Bahang
-          { id: '12', lat: 5.3890, lng: 100.4069, category: 'Zakat Administrator (Amil)', weight: 3 }, // Batu Maung
-          { id: '13', lat: 5.4290, lng: 100.4169, category: 'Debtor (Gharimin)', weight: 6 }, // Teluk Kumbar
-          { id: '14', lat: 5.3990, lng: 100.3669, category: 'Poor (Fakir)', weight: 10 }, // Sungai Ara
-          { id: '15', lat: 5.4490, lng: 100.4269, category: 'Needy (Miskin)', weight: 7 } // Relau
-        ];
-        
-        asnafLocations.value = dummyLocations;
-        
-        // In a real implementation, you would fetch from Firestore:
-        /*
-        const querySnapshot = await getDocs(collection(db, 'asnafLocations'));
-        const locations = [];
-        
-        querySnapshot.forEach((doc) => {
-          locations.push({
-            id: doc.id,
-            ...doc.data()
-          });
-        });
-        
-        asnafLocations.value = locations;
-        */
-        
-      } catch (error) {
-        console.error('Error fetching asnaf locations:', error);
-      }
-    };
     
     // Add these computed properties
     const totalAsnafRecipients = computed(() => {
@@ -2837,6 +2227,29 @@ export default {
     const averageZakatPerRecipient = computed(() => {
       if (totalAsnafRecipients.value === 0) return 0;
       return totalDistributedRM.value / totalAsnafRecipients.value;
+    });
+    
+    onMounted(() => {
+      fetchZakatPayments();
+      fetchZakatDistributions();
+      fetchAsnafRecipients();
+      fetchAsnafReports();
+      fetchImpactData();
+      fetchAsnafLocations();
+    });
+    
+    // Watch for changes in activeTab to load available payments when needed
+    watch(activeTab, (newTab) => {
+      if (newTab === 'distributions') {
+        fetchAvailablePayments();
+      }
+    });
+        
+    // Watch for showAddDistributionModal to load available payments when opened
+    watch(showAddDistributionModal, (isOpen) => {
+      if (isOpen) {
+        fetchAvailablePayments();
+      }
     });
     
     return {
@@ -2894,7 +2307,6 @@ export default {
       viewImage,
       verifyReport,
       rejectReport,
-      convertToAsnaf,
       showConvertModal,
       reportToConvert,
       openConvertModal,
@@ -2918,13 +2330,13 @@ export default {
       removeStoryImage,
       saveImpactStory,
       asnafLocations,
-      fetchAsnafLocations,
       totalAsnafRecipients,
       averageZakatPerRecipient,
     };
   }
 }
 </script>
+
 
 <style scoped>
 .admin-dashboard {

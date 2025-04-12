@@ -1,0 +1,28 @@
+{
+  "monthlyTrend": [
+    { "label": "Jan", "amount": 7500 },
+    { "label": "Feb", "amount": 8200 },
+    { "label": "Mar", "amount": 6800 },
+    { "label": "Apr", "amount": 9100 },
+    { "label": "May", "amount": 7300 },
+    { "label": "Jun", "amount": 8900 }
+  ],
+  "categoryDistribution": {
+    "Poor (Fakir)": 12500,
+    "Needy (Miskin)": 9800,
+    "Zakat Administrator (Amil)": 3500,
+    "New Muslim (Muallaf)": 2200,
+    "Debtor (Gharimin)": 4300,
+    "Allah's Cause (Fi Sabilillah)": 7600
+  },
+  "outcomes": {
+    "education": { "count": 25 },
+    "housing": { "count": 5 },
+    "medical": { "count": 15 },
+    "business": { "count": 8 }
+  },
+  "totalBeneficiaries": 53,
+  "totalDistributed": 52500,
+  "averagePerBeneficiary": 990.57,
+  "uniqueDonors": 35
+} 
