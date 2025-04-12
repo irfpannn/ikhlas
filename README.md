@@ -4,6 +4,8 @@
 
 🌐 **Live Preview:** [Ikhlas Web App](https://ikhlas-um.netlify.app/)
 
+📁 **Presentation Slide:** [Google Drive Link](https://drive.google.com/file/d/1E3ixrgAF4yPUkKMKcmjGaBJPf_jXIjUF/view?usp=sharing)
+
 ---
 
 ## 🔹 Features Overview
