@@ -77,6 +77,12 @@ const router = createRouter({
       component: () => import('../views/admin/DashboardView.vue'),
       meta: { requiresAuth: true, requiresAdmin: true },
     },
+    {
+      path: '/admin/impact-monitoring',
+      name: 'ImpactMonitoring',
+      component: () => import('../views/admin/ImpactMonitoringView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
   ],
 })
 

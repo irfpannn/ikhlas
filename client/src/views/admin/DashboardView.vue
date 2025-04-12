@@ -53,6 +53,13 @@
       >
         Asnaf Reports
       </button>
+      <button 
+        @click="activeTab = 'impact'" 
+        :class="{ 'active-tab': activeTab === 'impact' }"
+        class="tab-btn"
+      >
+        Impact Monitoring
+      </button>
     </div>
     
     <!-- Zakat Payments Tab -->
@@ -773,18 +780,361 @@
         </div>
       </div>
     </div>
+    
+    <!-- Impact Monitoring Tab -->
+    <div v-if="activeTab === 'impact'" class="users-table-container">
+      <h2>Impact Monitoring</h2>
+      <div class="impact-dashboard">
+        <div class="impact-filters">
+          <div class="filter-group">
+            <label for="timeRange">Time Range:</label>
+            <select id="timeRange" v-model="impactTimeRange" class="filter-select">
+              <option value="month">Last Month</option>
+              <option value="quarter">Last Quarter</option>
+              <option value="year">Last Year</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="categoryFilter">Category:</label>
+            <select id="categoryFilter" v-model="impactCategoryFilter" class="filter-select">
+              <option value="all">All Categories</option>
+              <option value="Poor">Poor (Fakir)</option>
+              <option value="Needy">Needy (Miskin)</option>
+              <option value="Zakat Administrator">Zakat Administrator (Amil)</option>
+              <option value="New Muslim">New Muslim (Muallaf)</option>
+              <option value="Slave">To Free Slaves (Riqab)</option>
+              <option value="Debtor">Debtor (Gharimin)</option>
+              <option value="Allah's Cause">Allah's Cause (Fi Sabilillah)</option>
+              <option value="Traveler">Traveler (Ibnus Sabil)</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="impact-metrics">
+          <div class="impact-metric-card">
+            <h3>Total Beneficiaries</h3>
+            <p class="metric-value">{{ filteredImpactData.totalBeneficiaries }}</p>
+            <p class="metric-change" :class="{'positive': beneficiaryChange > 0, 'negative': beneficiaryChange < 0}">
+              {{ beneficiaryChange > 0 ? '+' : '' }}{{ beneficiaryChange }}% from previous period
+            </p>
+          </div>
+          <div class="impact-metric-card">
+            <h3>Total Distributed</h3>
+            <p class="metric-value">RM {{ filteredImpactData.totalDistributed.toFixed(2) }}</p>
+            <p class="metric-change" :class="{'positive': distributionChange > 0, 'negative': distributionChange < 0}">
+              {{ distributionChange > 0 ? '+' : '' }}{{ distributionChange }}% from previous period
+            </p>
+          </div>
+          <div class="impact-metric-card">
+            <h3>Average Per Beneficiary</h3>
+            <p class="metric-value">RM {{ filteredImpactData.averagePerBeneficiary.toFixed(2) }}</p>
+          </div>
+          <div class="impact-metric-card">
+            <h3>Unique Donors</h3>
+            <p class="metric-value">{{ filteredImpactData.uniqueDonors }}</p>
+          </div>
+        </div>
+        
+        <div class="impact-charts">
+          <div class="impact-chart-container">
+            <h3>Distribution by Category</h3>
+            <div class="chart-placeholder">
+              <div class="category-distribution">
+                <div v-for="(value, category) in filteredImpactData.categoryDistribution" :key="category" class="category-bar">
+                  <div class="category-label">{{ category }}</div>
+                  <div class="bar-container">
+                    <div class="bar" :style="{ width: (value / filteredImpactData.totalDistributed * 100) + '%' }"></div>
+                    <span class="bar-value">RM {{ value.toFixed(2) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="impact-chart-container">
+            <h3>Monthly Distribution Trend</h3>
+            <div class="chart-placeholder">
+              <div class="monthly-trend">
+                <div v-for="(month, index) in filteredImpactData.monthlyTrend" :key="index" class="month-column">
+                  <div class="month-bar" :style="{ height: (month.amount / maxMonthlyAmount * 100) + '%' }"></div>
+                  <div class="month-label">{{ month.label }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Replace the existing AsnafHeatmap component in the Impact Monitoring tab -->
+        <div class="impact-map">
+          <h3>Asnaf Recipients Heatmap</h3>
+          <div class="heatmap-container">
+            <AsnafHeatmap 
+              v-if="activeTab === 'impact' && asnafLocations.length > 0" 
+              :locations="asnafLocations"
+              :key="'heatmap-' + asnafLocations.length"
+            />
+          </div>
+        </div>
+        
+        <div class="impact-stories">
+          <h3>Impact Stories</h3>
+          <div class="impact-story-grid">
+            <div v-for="(story, index) in filteredImpactData.impactStories" :key="index" class="impact-story-card">
+              <div class="story-header">
+                <h4>{{ story.title }}</h4>
+                <span class="story-date">{{ formatDate(story.date) }}</span>
+              </div>
+              <p class="story-description">{{ story.description }}</p>
+              <div class="story-metrics">
+                <div class="story-metric">
+                  <span class="metric-label">Beneficiaries:</span>
+                  <span class="metric-value">{{ story.beneficiaries }}</span>
+                </div>
+                <div class="story-metric">
+                  <span class="metric-label">Amount:</span>
+                  <span class="metric-value">RM {{ story.amount.toFixed(2) }}</span>
+                </div>
+              </div>
+              <div class="story-actions">
+                <button @click="editImpactStory(story)" class="action-btn edit-btn">Edit</button>
+                <button @click="viewImpactStoryDetails(story)" class="action-btn view-btn">View Details</button>
+              </div>
+            </div>
+            <div class="add-story-card" @click="showAddStoryModal = true">
+              <div class="add-story-content">
+                <span class="add-icon">+</span>
+                <p>Add New Impact Story</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="impact-outcomes">
+          <h3>Outcome Metrics</h3>
+          <div class="outcome-metrics-grid">
+            <div class="outcome-metric-card">
+              <h4>Education Support</h4>
+              <div class="outcome-value">{{ filteredImpactData.outcomes.education.count }}</div>
+              <p class="outcome-description">Students supported with education expenses</p>
+            </div>
+            <div class="outcome-metric-card">
+              <h4>Housing Improvement</h4>
+              <div class="outcome-value">{{ filteredImpactData.outcomes.housing.count }}</div>
+              <p class="outcome-description">Families with improved housing conditions</p>
+            </div>
+            <div class="outcome-metric-card">
+              <h4>Medical Assistance</h4>
+              <div class="outcome-value">{{ filteredImpactData.outcomes.medical.count }}</div>
+              <p class="outcome-description">Individuals received medical treatment support</p>
+            </div>
+            <div class="outcome-metric-card">
+              <h4>Business Support</h4>
+              <div class="outcome-value">{{ filteredImpactData.outcomes.business.count }}</div>
+              <p class="outcome-description">Small businesses or entrepreneurs supported</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Add Impact Story Modal -->
+    <div v-if="showAddStoryModal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn" @click="showAddStoryModal = false">&times;</span>
+        <h2>{{ editingStory ? 'Edit Impact Story' : 'Add New Impact Story' }}</h2>
+        <form @submit.prevent="saveImpactStory" class="impact-story-form">
+          <div class="form-group">
+            <label for="storyTitle">Title</label>
+            <input 
+              type="text" 
+              id="storyTitle" 
+              v-model="storyForm.title" 
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="storyDescription">Description</label>
+            <textarea 
+              id="storyDescription" 
+              v-model="storyForm.description" 
+              rows="4"
+              required
+            ></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="storyCategory">Category</label>
+            <select id="storyCategory" v-model="storyForm.category" required>
+              <option value="">Select a category</option>
+              <option value="Poor">Poor (Fakir)</option>
+              <option value="Needy">Needy (Miskin)</option>
+              <option value="Zakat Administrator">Zakat Administrator (Amil)</option>
+              <option value="New Muslim">New Muslim (Muallaf)</option>
+              <option value="Slave">To Free Slaves (Riqab)</option>
+              <option value="Debtor">Debtor (Gharimin)</option>
+              <option value="Allah's Cause">Allah's Cause (Fi Sabilillah)</option>
+              <option value="Traveler">Traveler (Ibnus Sabil)</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="storyBeneficiaries">Number of Beneficiaries</label>
+            <input 
+              type="number" 
+              id="storyBeneficiaries" 
+              v-model="storyForm.beneficiaries" 
+              min="1"
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="storyAmount">Amount Distributed (RM)</label>
+            <input 
+              type="number" 
+              id="storyAmount" 
+              v-model="storyForm.amount" 
+              step="0.01" 
+              min="0" 
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="storyOutcomes">Outcomes</label>
+            <div class="outcome-checkboxes">
+              <label class="outcome-checkbox">
+                <input type="checkbox" v-model="storyForm.outcomes.education">
+                Education Support
+              </label>
+              <label class="outcome-checkbox">
+                <input type="checkbox" v-model="storyForm.outcomes.housing">
+                Housing Improvement
+              </label>
+              <label class="outcome-checkbox">
+                <input type="checkbox" v-model="storyForm.outcomes.medical">
+                Medical Assistance
+              </label>
+              <label class="outcome-checkbox">
+                <input type="checkbox" v-model="storyForm.outcomes.business">
+                Business Support
+              </label>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="storyImages">Images</label>
+            <input 
+              type="file" 
+              id="storyImages" 
+              @change="handleStoryImageUpload" 
+              accept="image/*"
+              multiple
+            />
+            <div v-if="storyUploadProgress > 0 && storyUploadProgress < 100" class="progress-bar">
+              <div class="progress" :style="{ width: storyUploadProgress + '%' }"></div>
+              <span>{{ storyUploadProgress }}%</span>
+            </div>
+            <div v-if="storyForm.images && storyForm.images.length > 0" class="story-images-preview">
+              <div v-for="(image, index) in storyForm.images" :key="index" class="story-image-preview">
+                <img :src="image.url" alt="Story image" />
+                <button type="button" @click="removeStoryImage(index)" class="remove-image-btn">&times;</button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" @click="showAddStoryModal = false" class="cancel-btn">Cancel</button>
+            <button type="submit" class="save-btn" :disabled="storyUploading">
+              {{ editingStory ? 'Update' : 'Save' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Impact Story Details Modal -->
+    <div v-if="selectedStory" class="modal story-details-modal">
+      <div class="modal-content story-details-content">
+        <span class="close-btn" @click="selectedStory = null">&times;</span>
+        <div class="story-details-header">
+          <h2>{{ selectedStory.title }}</h2>
+          <span class="story-date">{{ formatDate(selectedStory.date) }}</span>
+        </div>
+        
+        <div class="story-details-body">
+          <div class="story-details-section">
+            <h3>Description</h3>
+            <p>{{ selectedStory.description }}</p>
+          </div>
+          
+          <div class="story-details-metrics">
+            <div class="story-detail-metric">
+              <span class="detail-metric-label">Category</span>
+              <span class="detail-metric-value">{{ selectedStory.category }}</span>
+            </div>
+            <div class="story-detail-metric">
+              <span class="detail-metric-label">Beneficiaries</span>
+              <span class="detail-metric-value">{{ selectedStory.beneficiaries }}</span>
+            </div>
+            <div class="story-detail-metric">
+              <span class="detail-metric-label">Amount</span>
+              <span class="detail-metric-value">RM {{ selectedStory.amount.toFixed(2) }}</span>
+            </div>
+          </div>
+          
+          <div class="story-details-section">
+            <h3>Outcomes</h3>
+            <div class="story-outcomes">
+              <div v-if="selectedStory.outcomes.education" class="story-outcome">
+                <span class="outcome-icon">📚</span>
+                <span class="outcome-text">Education Support</span>
+              </div>
+              <div v-if="selectedStory.outcomes.housing" class="story-outcome">
+                <span class="outcome-icon">🏠</span>
+                <span class="outcome-text">Housing Improvement</span>
+              </div>
+              <div v-if="selectedStory.outcomes.medical" class="story-outcome">
+                <span class="outcome-icon">🏥</span>
+                <span class="outcome-text">Medical Assistance</span>
+              </div>
+              <div v-if="selectedStory.outcomes.business" class="story-outcome">
+                <span class="outcome-icon">💼</span>
+                <span class="outcome-text">Business Support</span>
+              </div>
+            </div>
+          </div>
+          
+          <div v-if="selectedStory.images && selectedStory.images.length > 0" class="story-details-section">
+            <h3>Images</h3>
+            <div class="story-details-images">
+              <div v-for="(image, index) in selectedStory.images" :key="index" class="story-detail-image" @click="viewImage(image.url)">
+                <img :src="image.url" alt="Impact story image" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, onBeforeUnmount } from 'vue';
 import { getAuth, signOut } from 'firebase/auth';
 import { getFirestore, collection, getDocs, doc, updateDoc, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useRouter } from 'vue-router';
+import 'leaflet/dist/leaflet.css';
+import AsnafHeatmap from '@/components/AsnafHeatmap.vue';
 
 export default {
   name: 'AdminDashboardView',
+  components: {
+    AsnafHeatmap
+  },
   setup() {
     const router = useRouter();
     const db = getFirestore();
@@ -1599,12 +1949,18 @@ export default {
       fetchZakatPayments();
       fetchZakatDistributions();
       fetchAsnafRecipients();
+      fetchAsnafReports();
+      fetchImpactData();
+      fetchAsnafLocations();
     });
     
     // Watch for changes in activeTab to load available payments when needed
     watch(activeTab, (newTab) => {
       if (newTab === 'distributions') {
         fetchAvailablePayments();
+      }
+      if (newTab === 'impact') {
+        // No need to do anything special here since the component handles initialization
       }
     });
     
@@ -1968,7 +2324,9 @@ export default {
       fetchZakatPayments();
       fetchZakatDistributions();
       fetchAsnafRecipients();
-      fetchAsnafReports(); // Add this new function call
+      fetchAsnafReports();
+      fetchImpactData();
+      fetchAsnafLocations();
     });
     
     // Add these new refs to your setup function
@@ -2041,6 +2399,446 @@ export default {
       }
     };
     
+    // Impact Monitoring Tab
+    const impactTimeRange = ref('month');
+    const impactCategoryFilter = ref('all');
+    const showAddStoryModal = ref(false);
+    const editingStory = ref(null);
+    const selectedStory = ref(null);
+    const storyUploadProgress = ref(0);
+    const storyUploading = ref(false);
+    
+    const storyForm = ref({
+      title: '',
+      description: '',
+      category: '',
+      beneficiaries: 1,
+      amount: 0,
+      outcomes: {
+        education: false,
+        housing: false,
+        medical: false,
+        business: false
+      },
+      images: []
+    });
+    
+    const impactData = ref({
+      totalBeneficiaries: 0,
+      totalDistributed: 0,
+      averagePerBeneficiary: 0,
+      uniqueDonors: 0,
+      categoryDistribution: {},
+      monthlyTrend: [],
+      impactStories: [],
+      outcomes: {
+        education: { count: 0 },
+        housing: { count: 0 },
+        medical: { count: 0 },
+        business: { count: 0 }
+      }
+    });
+    
+    // Computed property for filtered impact data
+    const filteredImpactData = computed(() => {
+      // In a real implementation, you would filter the data based on timeRange and categoryFilter
+      // For now, we'll return the full data
+      return impactData.value;
+    });
+    
+    // Computed property for maximum monthly amount (for chart scaling)
+    const maxMonthlyAmount = computed(() => {
+      if (!filteredImpactData.value.monthlyTrend || filteredImpactData.value.monthlyTrend.length === 0) {
+        return 0;
+      }
+      return Math.max(...filteredImpactData.value.monthlyTrend.map(month => month.amount));
+    });
+    
+    // Computed properties for change percentages
+    const beneficiaryChange = computed(() => {
+      // In a real implementation, you would calculate this based on previous period data
+      return 12; // Dummy value: 12% increase
+    });
+    
+    const distributionChange = computed(() => {
+      // In a real implementation, you would calculate this based on previous period data
+      return 8; // Dummy value: 8% increase
+    });
+    
+    // Function to fetch impact data
+    const fetchImpactData = async () => {
+      try {
+        // In a real app, this would fetch from Firestore
+        // For now, we'll use dummy data
+        
+        // Generate monthly trend data for the last 6 months
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+        const monthlyTrend = months.map((month, index) => ({
+          label: month,
+          amount: 5000 + Math.random() * 5000 // Random amount between 5000 and 10000
+        }));
+        
+        // Generate category distribution data
+        const categoryDistribution = {
+          'Poor (Fakir)': 12500,
+          'Needy (Miskin)': 9800,
+          'Zakat Administrator (Amil)': 3500,
+          'New Muslim (Muallaf)': 2200,
+          'Debtor (Gharimin)': 4300,
+          'Allah\'s Cause (Fi Sabilillah)': 7600
+        };
+        
+        // Generate impact stories
+        const impactStories = [
+          {
+            id: '1',
+            title: 'Education Support for Underprivileged Children',
+            description: 'Provided educational support to 25 children from low-income families in Kampung Baru. The assistance covered school fees, books, uniforms, and transportation costs for the entire academic year.',
+            category: 'Poor',
+            beneficiaries: 25,
+            amount: 12500,
+            date: new Date(2023, 11, 15), // Dec 15, 2023
+            outcomes: {
+              education: true,
+              housing: false,
+              medical: false,
+              business: false
+            },
+            images: [
+              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' },
+              { id: 2, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
+            ]
+          },
+          {
+            id: '2',
+            title: 'Medical Assistance Program',
+            description: 'Provided financial assistance for medical treatments to 15 individuals from needy families. The support covered hospital bills, medication costs, and follow-up treatments for chronic conditions.',
+            category: 'Needy',
+            beneficiaries: 15,
+            amount: 9000,
+            date: new Date(2024, 0, 10), // Jan 10, 2024
+            outcomes: {
+              education: false,
+              housing: false,
+              medical: true,
+              business: false
+            },
+            images: [
+              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
+            ]
+          },
+          {
+            id: '3',
+            title: 'Housing Renovation for Elderly',
+            description: 'Renovated homes of 5 elderly individuals living in unsafe conditions. Repairs included fixing leaking roofs, improving sanitation facilities, and ensuring proper electrical wiring for safety.',
+            category: 'Poor',
+            beneficiaries: 5,
+            amount: 15000,
+            date: new Date(2024, 1, 5), // Feb 5, 2024
+            outcomes: {
+              education: false,
+              housing: true,
+              medical: false,
+              business: false
+            },
+            images: [
+              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' },
+              { id: 2, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
+            ]
+          },
+          {
+            id: '4',
+            title: 'Micro-Business Support Initiative',
+            description: 'Provided financial and mentoring support to 8 small entrepreneurs from underprivileged backgrounds. The assistance helped them establish or expand their businesses, creating sustainable income sources.',
+            category: 'Debtor',
+            beneficiaries: 8,
+            amount: 16000,
+            date: new Date(2024, 1, 20), // Feb 20, 2024
+            outcomes: {
+              education: false,
+              housing: false,
+              medical: false,
+              business: true
+            },
+            images: [
+              { id: 1, url: 'https://i0.wp.com/www.eduitno.com/wp-content/uploads/2024/11/Apa-Itu-Bantuan-Asnaf.webp?resize=770%2C403&ssl=1' }
+            ]
+          }
+        ];
+        
+        // Calculate outcome metrics
+        const outcomes = {
+          education: { count: 25 },
+          housing: { count: 5 },
+          medical: { count: 15 },
+          business: { count: 8 }
+        };
+        
+        // Calculate total metrics
+        const totalBeneficiaries = 53; // Sum of all beneficiaries
+        const totalDistributed = 52500; // Sum of all distributed amounts
+        const averagePerBeneficiary = totalDistributed / totalBeneficiaries;
+        const uniqueDonors = 35; // Dummy value
+        
+        impactData.value = {
+          totalBeneficiaries,
+          totalDistributed,
+          averagePerBeneficiary,
+          uniqueDonors,
+          categoryDistribution,
+          monthlyTrend,
+          impactStories,
+          outcomes
+        };
+      } catch (error) {
+        console.error('Error fetching impact data:', error);
+      }
+    };
+    
+    // Function to edit an impact story
+    const editImpactStory = (story) => {
+      editingStory.value = story;
+      storyForm.value = {
+        title: story.title,
+        description: story.description,
+        category: story.category,
+        beneficiaries: story.beneficiaries,
+        amount: story.amount,
+        outcomes: { ...story.outcomes },
+        images: story.images || []
+      };
+      showAddStoryModal.value = true;
+    };
+    
+    // Function to view impact story details
+    const viewImpactStoryDetails = (story) => {
+      selectedStory.value = story;
+    };
+    
+    // Function to handle story image upload
+    const handleStoryImageUpload = async (event) => {
+      const files = event.target.files;
+      if (!files || files.length === 0) return;
+      
+      try {
+        storyUploading.value = true;
+        storyUploadProgress.value = 0;
+        
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          
+          // Create a storage reference
+          const fileRef = storageRef(storage, `impact-stories/${Date.now()}_${file.name}`);
+          
+          // Upload the file with progress tracking
+          const uploadTask = uploadBytesResumable(fileRef, file);
+          
+          // Wait for upload to complete
+          await new Promise((resolve, reject) => {
+            uploadTask.on('state_changed', 
+              (snapshot) => {
+                // Track progress
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                storyUploadProgress.value = Math.round(progress);
+              },
+              (error) => {
+                // Handle errors
+                console.error('Upload error:', error);
+                reject(error);
+              },
+              async () => {
+                // Upload completed successfully
+                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                storyForm.value.images.push({
+                  id: Date.now() + i,
+                  url: downloadURL
+                });
+                resolve();
+              }
+            );
+          });
+        }
+      } catch (error) {
+        console.error('File upload error:', error);
+        alert('Error uploading file. Please try again.');
+      } finally {
+        storyUploading.value = false;
+      }
+    };
+    
+    // Function to remove a story image
+    const removeStoryImage = (index) => {
+      storyForm.value.images.splice(index, 1);
+    };
+    
+    // Function to save an impact story
+    const saveImpactStory = async () => {
+      try {
+        if (storyUploading.value) {
+          alert('Please wait for the file to finish uploading');
+          return;
+        }
+        
+        const storyData = {
+          ...storyForm.value,
+          beneficiaries: Number(storyForm.value.beneficiaries),
+          amount: Number(storyForm.value.amount),
+          date: new Date()
+        };
+        
+        if (editingStory.value) {
+          // Update existing story
+          const storyIndex = impactData.value.impactStories.findIndex(s => s.id === editingStory.value.id);
+          if (storyIndex !== -1) {
+            impactData.value.impactStories[storyIndex] = {
+              ...impactData.value.impactStories[storyIndex],
+              ...storyData
+            };
+          }
+          
+          // In a real implementation, you would update in Firestore:
+          /*
+          const storyRef = doc(db, 'impactStories', editingStory.value.id);
+          await updateDoc(storyRef, storyData);
+          */
+          
+          alert('Impact story updated successfully');
+        } else {
+          // Add new story
+          const newStory = {
+            id: Date.now().toString(),
+            ...storyData
+          };
+          
+          impactData.value.impactStories.unshift(newStory);
+          
+          // In a real implementation, you would add to Firestore:
+          /*
+          await addDoc(collection(db, 'impactStories'), storyData);
+          */
+          
+          alert('Impact story added successfully');
+        }
+        
+        // Update outcome counts
+        updateOutcomeCounts();
+        
+        // Reset form and close modal
+        resetStoryForm();
+        showAddStoryModal.value = false;
+        editingStory.value = null;
+        
+      } catch (error) {
+        console.error('Error saving impact story:', error);
+        alert('Error saving impact story. Please try again.');
+      }
+    };
+    
+    // Function to update outcome counts
+    const updateOutcomeCounts = () => {
+      const outcomes = {
+        education: { count: 0 },
+        housing: { count: 0 },
+        medical: { count: 0 },
+        business: { count: 0 }
+      };
+      
+      impactData.value.impactStories.forEach(story => {
+        if (story.outcomes.education) outcomes.education.count += story.beneficiaries;
+        if (story.outcomes.housing) outcomes.housing.count += story.beneficiaries;
+        if (story.outcomes.medical) outcomes.medical.count += story.beneficiaries;
+        if (story.outcomes.business) outcomes.business.count += story.beneficiaries;
+      });
+      
+      impactData.value.outcomes = outcomes;
+    };
+    
+    // Function to reset story form
+    const resetStoryForm = () => {
+      storyForm.value = {
+        title: '',
+        description: '',
+        category: '',
+        beneficiaries: 1,
+        amount: 0,
+        outcomes: {
+          education: false,
+          housing: false,
+          medical: false,
+          business: false
+        },
+        images: []
+      };
+    };
+    
+    // Add fetchImpactData to onMounted
+    onMounted(() => {
+      fetchZakatPayments();
+      fetchZakatDistributions();
+      fetchAsnafRecipients();
+      fetchAsnafReports();
+      fetchImpactData();
+      fetchAsnafLocations();
+    });
+    
+    // Add this after your other ref declarations
+    const asnafLocations = ref([]);
+    
+    // Add this function to fetch asnaf locations
+    const fetchAsnafLocations = async () => {
+      try {
+        // In a real app, this would fetch from Firestore
+        // For now, we'll use dummy data
+        const dummyLocations = [
+          { id: '1', lat: 3.1590, lng: 101.6969, category: 'Poor (Fakir)', weight: 10 },
+          { id: '2', lat: 3.1390, lng: 101.7169, category: 'Poor (Fakir)', weight: 8 },
+          { id: '3', lat: 3.2290, lng: 101.7369, category: 'Needy (Miskin)', weight: 12 },
+          { id: '4', lat: 3.1090, lng: 101.6669, category: 'Needy (Miskin)', weight: 7 },
+          { id: '5', lat: 3.1690, lng: 101.7269, category: 'Debtor (Gharimin)', weight: 5 },
+          { id: '6', lat: 3.1490, lng: 101.7069, category: 'New Muslim (Muallaf)', weight: 6 },
+          { id: '7', lat: 3.1790, lng: 101.6869, category: 'Allah\'s Cause (Fi Sabilillah)', weight: 9 },
+          { id: '8', lat: 3.1290, lng: 101.7469, category: 'Traveler (Ibnus Sabil)', weight: 4 },
+          { id: '9', lat: 3.1190, lng: 101.6769, category: 'Poor (Fakir)', weight: 11 },
+          { id: '10', lat: 3.2090, lng: 101.7169, category: 'Needy (Miskin)', weight: 8 },
+          { id: '11', lat: 3.1490, lng: 101.6969, category: 'Poor (Fakir)', weight: 9 },
+          { id: '12', lat: 3.1590, lng: 101.7269, category: 'Zakat Administrator (Amil)', weight: 3 },
+          { id: '13', lat: 3.1890, lng: 101.6769, category: 'Debtor (Gharimin)', weight: 6 },
+          { id: '14', lat: 3.1390, lng: 101.7369, category: 'Poor (Fakir)', weight: 10 },
+          { id: '15', lat: 3.1690, lng: 101.6869, category: 'Needy (Miskin)', weight: 7 }
+        ];
+        
+        asnafLocations.value = dummyLocations;
+        
+        // In a real implementation, you would fetch from Firestore:
+        /*
+        const querySnapshot = await getDocs(collection(db, 'asnafLocations'));
+        const locations = [];
+        
+        querySnapshot.forEach((doc) => {
+          locations.push({
+            id: doc.id,
+            ...doc.data()
+          });
+        });
+        
+        asnafLocations.value = locations;
+        */
+        
+      } catch (error) {
+        console.error('Error fetching asnaf locations:', error);
+      }
+    };
+    
+    // Add these computed properties
+    const totalAsnafRecipients = computed(() => {
+      return asnafRecipients.value.length;
+    });
+    
+    const averageZakatPerRecipient = computed(() => {
+      if (totalAsnafRecipients.value === 0) return 0;
+      return totalDistributedRM.value / totalAsnafRecipients.value;
+    });
+    
     return {
       zakatPayments,
       zakatDistributions,
@@ -2100,7 +2898,29 @@ export default {
       showConvertModal,
       reportToConvert,
       openConvertModal,
-      confirmConvertToAsnaf
+      confirmConvertToAsnaf,
+      impactTimeRange,
+      impactCategoryFilter,
+      impactData,
+      filteredImpactData,
+      maxMonthlyAmount,
+      beneficiaryChange,
+      distributionChange,
+      showAddStoryModal,
+      editingStory,
+      selectedStory,
+      storyForm,
+      storyUploadProgress,
+      storyUploading,
+      editImpactStory,
+      viewImpactStoryDetails,
+      handleStoryImageUpload,
+      removeStoryImage,
+      saveImpactStory,
+      asnafLocations,
+      fetchAsnafLocations,
+      totalAsnafRecipients,
+      averageZakatPerRecipient,
     };
   }
 }
@@ -3132,5 +3952,641 @@ export default {
 .convert-modal .convert-btn:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
+}
+
+/* Add these styles for the Impact Monitoring tab */
+.impact-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.impact-filters {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.impact-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.impact-metric-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.impact-metric-card h3 {
+  margin-top: 0;
+  color: #555;
+  font-size: 1rem;
+}
+
+.metric-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin: 0.5rem 0;
+  color: #4CAF50;
+}
+
+.metric-change {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.metric-change.positive {
+  color: #4CAF50;
+}
+
+.metric-change.negative {
+  color: #f44336;
+}
+
+.impact-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 1.5rem;
+}
+
+.impact-chart-container {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.impact-chart-container h3 {
+  margin-top: 0;
+  color: #555;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.chart-placeholder {
+  height: 300px;
+  width: 100%;
+}
+
+.category-distribution {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+}
+
+.category-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.category-label {
+  width: 150px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bar-container {
+  flex: 1;
+  height: 20px;
+  background-color: #f5f5f5;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.bar {
+  height: 100%;
+  background-color: #4CAF50;
+  border-radius: 10px;
+}
+
+.bar-value {
+  position: absolute;
+  right: 8px;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.monthly-trend {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 100%;
+  padding-top: 20px;
+}
+
+.month-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.month-bar {
+  width: 30px;
+  background-color: #4CAF50;
+  border-radius: 4px 4px 0 0;
+  margin-bottom: 8px;
+}
+
+.month-label {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.impact-stories {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.impact-stories h3 {
+  margin-top: 0;
+  color: #555;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.impact-story-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.impact-story-card {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.story-header {
+  padding: 1rem;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #eee;
+}
+
+.story-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.story-date {
+  font-size: 0.8rem;
+  color: #666;
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.story-description {
+  padding: 1rem;
+  flex-grow: 1;
+  font-size: 0.9rem;
+  color: #333;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.story-metrics {
+  padding: 0 1rem 1rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.story-metric {
+  font-size: 0.85rem;
+}
+
+.metric-label {
+  color: #666;
+}
+
+.story-actions {
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  border-top: 1px solid #eee;
+}
+
+.add-story-card {
+  background-color: #f5f5f5;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  min-height: 200px;
+  transition: all 0.2s ease;
+}
+
+.add-story-card:hover {
+  background-color: #e9e9e9;
+  border-color: #ccc;
+}
+
+.add-story-content {
+  text-align: center;
+  color: #666;
+}
+
+.add-icon {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.impact-outcomes {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.impact-outcomes h3 {
+  margin-top: 0;
+  color: #555;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.outcome-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.outcome-metric-card {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.outcome-metric-card h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #555;
+  font-size: 1rem;
+}
+
+.outcome-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #4CAF50;
+  margin-bottom: 0.5rem;
+}
+
+.outcome-description {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+}
+
+.outcome-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+}
+
+.outcome-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.story-images-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.story-image-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.story-image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 0 0 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.story-details-modal .modal-content {
+  max-width: 800px;
+}
+
+.story-details-header {
+  margin-bottom: 1.5rem;
+}
+
+.story-details-header h2 {
+  margin-bottom: 0.25rem;
+}
+
+.story-details-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.story-details-section {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.story-details-section h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  color: #555;
+}
+
+.story-details-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.story-detail-metric {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-metric-label {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.detail-metric-value {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.story-outcomes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.story-outcome {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #e8f5e9;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+}
+
+.outcome-icon {
+  font-size: 1.2rem;
+}
+
+.outcome-text {
+  font-size: 0.9rem;
+}
+
+.story-details-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.story-detail-image {
+  height: 150px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.story-detail-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+
+.story-detail-image:hover img {
+  transform: scale(1.05);
+}
+
+/* Add the new Asnaf Heatmap section */
+.asnaf-heatmap-container {
+  margin-top: 2rem;
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.heatmap-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.heatmap-filters {
+  display: flex;
+  gap: 1rem;
+}
+
+.legend-label {
+  font-weight: 500;
+}
+
+.legend-gradient {
+  width: 100px;
+  height: 10px;
+  border-radius: 5px;
+  background: linear-gradient(to right, blue, lime, red);
+}
+
+.legend-low, .legend-high {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.heatmap-container {
+  height: 500px;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #eee;
+  position: relative;
+  z-index: 1;
+}
+
+.heatmap-container canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Add these styles to ensure Leaflet displays correctly */
+.leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 1;
+}
+
+/* Add these styles to fix Leaflet rendering issues */
+.leaflet-pane {
+  z-index: 1;
+}
+
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-pane > svg,
+.leaflet-pane > canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+/* Add these styles for the Impact Monitoring tab */
+.impact-monitoring {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.impact-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.impact-stat {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.impact-stat h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  color: #555;
+}
+
+.impact-stat p {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin: 0;
+  color: #4CAF50;
+}
+
+.impact-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.chart-container {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  color: #555;
+}
+
+.chart-wrapper {
+  height: 300px;
+  width: 100%;
+}
+
+.impact-map {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.impact-map h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  color: #555;
 }
 </style> 
