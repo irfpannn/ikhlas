@@ -20,16 +20,16 @@ const categories = ref([
   },
   { id: 3, name: 'Zakat Saham', icon: '📊', type: 'bill', routeName: 'zakat-saham' }, // Match HomeView
   { id: 4, name: 'Zakat Emas', icon: '💰', type: 'bill', routeName: 'zakat-emas' }, // Match HomeView
-  { id: 5, name: 'Zakat Pertanian', icon: '🌾', type: 'bill', routeName: null }, // Match HomeView
-  { id: 6, name: 'Zakat Ternakan', icon: '🐄', type: 'bill', routeName: null }, // Match HomeView
+  { id: 5, name: 'Zakat Pertanian', icon: '🌾', type: 'bill', routeName: 'payment' }, // Match HomeView
+  { id: 6, name: 'Zakat Ternakan', icon: '🐄', type: 'bill', routeName: 'payment' }, // Match HomeView
   { id: 7, name: 'Zakat Fitrah', icon: '🍚', type: 'bill', routeName: 'zakat-fitrah' }, // Match HomeView
-  { id: 13, name: 'Zakat Statistics', icon: '📈', type: 'bill', routeName: 'zakat-stats' }, // Chart Increasing
-  { id: 10, name: 'Asnaf Reporting', icon: '📝', type: 'bill', routeName: 'asnaf-reporting' }, // Memo/Report
-  { id: 11, name: 'Donation', icon: '🤝', type: 'bill', routeName: null }, // Handshake/Giving
+  { id: 13, name: 'Statistik Zakat', icon: '📈', type: 'bill', routeName: 'zakat-stats' }, // Chart Increasing
+  { id: 10, name: 'Lapor Asnaf', icon: '📝', type: 'bill', routeName: 'asnaf-reporting' }, // Memo/Report
+  { id: 11, name: 'Derma', icon: '🤝', type: 'bill', routeName: 'donation' }, // Handshake/Giving
   { id: 8, name: 'Audit Zakat', icon: '🔍', type: 'bill', routeName: 'audit-zakat' }, // Magnifying Glass
   {
     id: 14,
-    name: 'Distribution Sources',
+    name: 'Pengagihan',
     icon: '🚚', // Delivery Truck/Distribution
     type: 'bill',
     routeName: 'DistributionSources',
@@ -70,7 +70,7 @@ const handleCategoryClick = (category) => {
         >
           <span class="text-xl">←</span>
         </Button>
-        <h1 class="text-lg font-semibold">More Categories</h1>
+        <h1 class="text-lg font-semibold">Lebih Kategori</h1>
         <div class="ml-auto">
           <Button variant="ghost" class="text-white hover:text-white hover:bg-[#217e0a]/50 p-2">
             <span class="text-xl">🔔</span>
@@ -87,7 +87,7 @@ const handleCategoryClick = (category) => {
           >
             <span class="text-xl">💳</span>
           </Button>
-          <span class="text-xs text-white">Send Money</span>
+          <span class="text-xs text-white">Kirim Wang</span>
         </div>
         <div class="flex flex-col items-center">
           <Button
@@ -96,7 +96,7 @@ const handleCategoryClick = (category) => {
           >
             <span class="text-white text-xl">💰</span>
           </Button>
-          <span class="text-xs text-white">Request Money</span>
+          <span class="text-xs text-white">Terima Wang</span>
         </div>
         <div class="flex flex-col items-center">
           <Button
@@ -105,7 +105,7 @@ const handleCategoryClick = (category) => {
           >
             <span class="text-white text-xl">📱</span>
           </Button>
-          <span class="text-xs text-white">Scan & Pay</span>
+          <span class="text-xs text-white">Imbas & Bayar</span>
         </div>
       </div>
     </div>

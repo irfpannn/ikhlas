@@ -38,7 +38,7 @@ const userData = ref({
     },
     {
       id: 3,
-      name: 'Top Up',
+      name: 'Tambah Nilai',
       date: '10 Apr 2023',
       time: '16:42',
       amount: 500,
@@ -57,13 +57,13 @@ const userData = ref({
 
 // Categories with route names (match names in router/index.js)
 const categories = [
-  { id: 1, name: 'Zakat Pendapatan', icon: '💼', routeName: 'zakat-pendapatan' }, // Income: Briefcase
-  { id: 2, name: 'Zakat Wang Simpanan', icon: '🏦', routeName: 'zakat-wang-simpanan' }, // Savings: Bank
-  { id: 3, name: 'Zakat Saham', icon: '📊', routeName: 'zakat-saham' }, // Stocks: Bar Chart
-  { id: 4, name: 'Zakat Emas', icon: '💰', routeName: 'zakat-emas' }, // Gold: Money Bag (kept)
-  { id: 5, name: 'Zakat Pertanian', icon: '🌾', routeName: 'payment' }, // Agriculture: Sheaf of Rice
-  { id: 6, name: 'Zakat Ternakan', icon: '🐄', routeName: 'payment' }, // Livestock: Cow
-  { id: 7, name: 'Zakat Fitrah', icon: '🍚', routeName: 'zakat-fitrah' }, // Fitrah: Cooked Rice
+  { id: 1, name: 'Zakat Pendapatan', icon: '💼', routeName: 'zakat-pendapatan' },
+  { id: 2, name: 'Zakat Wang Simpanan', icon: '🏦', routeName: 'zakat-wang-simpanan' },
+  { id: 3, name: 'Zakat Saham', icon: '📊', routeName: 'zakat-saham' },
+  { id: 4, name: 'Zakat Emas', icon: '💰', routeName: 'zakat-emas' },
+  { id: 5, name: 'Zakat Pertanian', icon: '🌾', routeName: 'payment' },
+  { id: 6, name: 'Zakat Ternakan', icon: '🐄', routeName: 'payment' },
+  { id: 7, name: 'Zakat Fitrah', icon: '🍚', routeName: 'zakat-fitrah' },
   // 'View All' is handled separately
 ]
 
@@ -129,7 +129,7 @@ const goToRewards = () => {
         <CardHeader class="pb-0">
           <div class="flex justify-between items-center">
             <div class="flex flex-col">
-              <CardDescription class="text-white/80">Your Balance</CardDescription>
+              <CardDescription class="text-white/80">Baki Anda</CardDescription>
               <CardTitle class="text-xl font-bold text-white"
                 >RM {{ formatCurrency(userData.balance) }}</CardTitle
               >
@@ -139,7 +139,7 @@ const goToRewards = () => {
               size="sm"
               class="bg-white text-[#75a868] hover:text-[#75a868] hover:bg-white/90 border-none"
             >
-              Top Up
+              Tambah Nilai
             </Button>
           </div>
         </CardHeader>
@@ -151,13 +151,13 @@ const goToRewards = () => {
               variant="secondary"
               class="bg-[#217e0a] hover:bg-[#217e0a]/90 text-white flex-1"
             >
-              Send
+              Hantar
             </Button>
             <Button
               variant="secondary"
               class="bg-[#217e0a] hover:bg-[#217e0a]/90 text-white flex-1"
             >
-              Request
+              Minta
             </Button>
           </div>
         </CardContent>
@@ -171,8 +171,8 @@ const goToRewards = () => {
               <span class="text-[#75a868] text-xl">🎁</span>
             </div>
             <div>
-              <p class="font-semibold">Mydin Rewards</p>
-              <p class="text-xs text-gray-500">Recommend: 2</p>
+              <p class="font-semibold">Ganjaran Mydin</p>
+              <p class="text-xs text-gray-500">Disyorkan: 2</p>
             </div>
           </div>
           <Button
@@ -181,7 +181,7 @@ const goToRewards = () => {
             class="bg-[#75a868] hover:bg-[#75a868]/90 text-white"
             @click="goToRewards"
           >
-            Claim Now
+            Tuntut Sekarang
           </Button>
         </CardContent>
       </Card>
@@ -189,7 +189,7 @@ const goToRewards = () => {
       <!-- Categories Grid -->
       <Card class="mb-4 shadow-sm">
         <CardHeader class="pb-2">
-          <CardTitle class="text-base">Categories</CardTitle>
+          <CardTitle class="text-base">Kategori</CardTitle>
         </CardHeader>
         <CardContent>
           <div class="grid grid-cols-4 gap-3">
@@ -215,7 +215,7 @@ const goToRewards = () => {
               >
                 <span class="text-xl">📋</span>
               </div>
-              <p class="text-xs text-center">View All</p>
+              <p class="text-xs text-center">Lihat Semua</p>
             </div>
           </div>
         </CardContent>
@@ -224,9 +224,9 @@ const goToRewards = () => {
       <!-- Transaction History -->
       <Card class="shadow-sm">
         <CardHeader class="pb-2 flex flex-row items-center justify-between">
-          <CardTitle class="text-base">History</CardTitle>
+          <CardTitle class="text-base">Sejarah</CardTitle>
           <Button variant="link" size="sm" class="text-[#75a868] -mr-3" @click="goToHistory"
-            >View All</Button
+            >Lihat Semua</Button
           >
         </CardHeader>
         <CardContent class="pt-0">
@@ -254,7 +254,7 @@ const goToRewards = () => {
           v-if="userData.transactions.length === 0"
           class="text-sm text-gray-500 flex justify-center"
         >
-          No transactions to display
+          Tiada transaksi untuk dipaparkan
         </CardFooter>
       </Card>
 

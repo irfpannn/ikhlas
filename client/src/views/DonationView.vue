@@ -15,44 +15,44 @@ const goBack = () => {
 const campaigns = ref([
   {
     id: 1,
-    title: 'Urgent! Help the construction mosque',
-    organization: 'Adaa Bissaa',
+    title: 'Ayuh Bantu Pembinaan Masjid',
+    organization: 'Masjid Busyra',
     image: '/images/mosque-construction.jpg',
     amount: 23423,
-    daysLeft: 31
+    daysLeft: 31,
   },
   {
     id: 2,
-    title: 'Water Waqf for poor Orphans',
-    organization: 'Yaghu yayasan',
+    title: 'Wakaf Air untuk Anak Yatim',
+    organization: 'Yayasan Ilmuan',
     image: '/images/water-orphans.jpg',
     amount: 12000,
-    daysLeft: 2
+    daysLeft: 2,
   },
   {
     id: 3,
-    title: 'Elderly strokes work roughly paid 20 thousand',
-    organization: 'Prikitiw',
+    title: 'Warga Emas Penghidap Strok',
+    organization: 'Yayasan Kebajikan',
     image: '/images/elderly-care.jpg',
     amount: 40200,
-    daysLeft: 20
+    daysLeft: 20,
   },
   {
     id: 4,
-    title: "Help people who can't continue their education",
-    organization: 'Bissaaa kuy',
+    title: 'Bantu Pelajar Lanjut Pelajaran',
+    organization: 'Tangga Ilmu',
     image: '/images/education.jpg',
     amount: 0,
-    daysLeft: null
-  }
+    daysLeft: null,
+  },
 ])
 
 // Active category filter
-const activeCategory = ref('Scholarship')
+const activeCategory = ref('Biasiswa')
 const categories = ref([
-  { name: 'Scholarship', count: 20 },
-  { name: 'Disaster', count: 8 },
-  { name: 'Health', count: 4 }
+  { name: 'Biasiswa', count: 20 },
+  { name: 'Bencana', count: 8 },
+  { name: 'Kesihatan', count: 4 },
 ])
 
 const setActiveCategory = (category) => {
@@ -67,7 +67,7 @@ const formatAmount = (amount) => {
 const viewDonationDetails = (campaign) => {
   router.push({
     name: 'DonationDetails',
-    params: { id: campaign.id }
+    params: { id: campaign.id },
   })
 }
 </script>
@@ -77,17 +77,13 @@ const viewDonationDetails = (campaign) => {
     <!-- Header with search bar -->
     <div class="bg-white p-4 sticky top-0 z-10">
       <div class="flex items-center mb-4">
-        <Button
-          variant="ghost"
-          class="text-gray-700 hover:bg-gray-100 mr-2 p-2"
-          @click="goBack"
-        >
+        <Button variant="ghost" class="text-gray-700 hover:bg-gray-100 mr-2 p-2" @click="goBack">
           <span class="text-xl">←</span>
         </Button>
         <div class="relative flex-1">
-          <Input 
-            type="text" 
-            placeholder="Search campaign" 
+          <Input
+            type="text"
+            placeholder="Cari kempen"
             class="w-full bg-gray-100 pl-10 py-2 rounded-xl"
           />
           <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -98,8 +94,8 @@ const viewDonationDetails = (campaign) => {
 
       <!-- Category filters -->
       <div class="flex space-x-4 overflow-x-auto py-2">
-        <div 
-          v-for="category in categories" 
+        <div
+          v-for="category in categories"
           :key="category.name"
           @click="setActiveCategory(category.name)"
           class="flex items-center space-x-1 cursor-pointer"
@@ -113,15 +109,15 @@ const viewDonationDetails = (campaign) => {
 
     <!-- Campaign listings -->
     <div class="p-4 space-y-4">
-      <div 
-        v-for="campaign in campaigns" 
-        :key="campaign.id" 
+      <div
+        v-for="campaign in campaigns"
+        :key="campaign.id"
         class="bg-white rounded-xl overflow-hidden shadow-sm cursor-pointer"
         @click="viewDonationDetails(campaign)"
       >
         <div class="relative h-32 bg-gray-200">
-          <img 
-            :src="campaign.image" 
+          <img
+            :src="campaign.image"
             :alt="campaign.title"
             class="w-full h-full object-cover"
             onerror="this.src='/images/placeholder.jpg'"
@@ -130,10 +126,12 @@ const viewDonationDetails = (campaign) => {
         <div class="p-3">
           <h3 class="font-medium text-sm">{{ campaign.title }}</h3>
           <p class="text-xs text-gray-500 mb-2">{{ campaign.organization }}</p>
-          
+
           <div v-if="campaign.amount > 0" class="flex justify-between items-center">
             <span class="text-green-500 font-medium">{{ formatAmount(campaign.amount) }}</span>
-            <span v-if="campaign.daysLeft" class="text-xs text-gray-500">{{ campaign.daysLeft }} days left</span>
+            <span v-if="campaign.daysLeft" class="text-xs text-gray-500"
+              >{{ campaign.daysLeft }} hari lagi</span
+            >
           </div>
         </div>
       </div>
@@ -146,4 +144,4 @@ const viewDonationDetails = (campaign) => {
 
 <style scoped>
 /* Custom styles for donation page */
-</style> 
+</style>
