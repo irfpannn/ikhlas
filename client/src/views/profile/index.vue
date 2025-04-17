@@ -1,68 +1,58 @@
 <template>
   <div class="flex flex-col min-h-screen bg-gray-100 overflow-y-auto pb-20">
-    <!-- Content wrapper with padding -->
     <div class="p-4 flex-grow">
       <h1 class="text-xl font-semibold text-center mb-5 text-gray-800">Profil Saya</h1>
-
-      <Card class="overflow-hidden shadow-sm mb-4">
-        <CardHeader class="bg-gray-50 p-4 flex flex-col sm:flex-row items-center gap-4">
+      <Card class="overflow-hidden shadow-sm mb-4 bg-green-50">
+        <CardHeader class="p-4 flex flex-col sm:flex-row items-center gap-4">
           <div
             class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0"
           >
-            <img
-              v-if="user.avatar"
-              :src="user.avatar"
-              alt="Gambar Profil"
-              class="w-full h-full object-cover"
-            />
-            <span v-else class="text-2xl font-semibold text-gray-500">{{
-              getInitials(user.name)
-            }}</span>
+            <span class="text-2xl font-semibold text-gray-500">{{ getInitials(form?.name) }}</span>
           </div>
           <div class="text-center sm:text-left">
-            <h2 class="text-lg font-semibold text-gray-900">{{ user.name }}</h2>
-            <p class="text-sm text-gray-600">{{ user.email }}</p>
-            <p v-if="user.phone" class="text-sm text-gray-600">{{ user.phone }}</p>
+            <h2 class="text-lg font-semibold text-gray-900">{{ form?.name }}</h2>
+            <p class="text-sm text-gray-600">{{ form?.email }}</p>
+            <p v-if="form?.phone" class="text-sm text-gray-600">{{ form?.phone }}</p>
           </div>
         </CardHeader>
       </Card>
-
       <Card class="overflow-hidden shadow-sm mb-4">
         <CardContent class="p-4 space-y-5">
           <div>
             <h3 class="text-base font-semibold mb-3 text-gray-700">Maklumat Peribadi</h3>
-            <form @submit.prevent="updateProfile" class="space-y-3">
+            <form @submit.prevent="handleUpdate" class="space-y-3">
               <div class="grid grid-cols-1 gap-3">
                 <div>
                   <Label for="name" class="text-xs font-medium text-gray-600">Nama Penuh</Label>
-                  <Input id="name" type="text" v-model="user.name" class="mt-1 h-9 text-sm" />
+                  <Input id="name" type="text" v-model="form.name" class="mt-1 h-9 text-sm" />
                 </div>
                 <div>
                   <Label for="email" class="text-xs font-medium text-gray-600">E-mel</Label>
-                  <Input id="email" type="email" v-model="user.email" class="mt-1 h-9 text-sm" />
+                  <Input id="email" type="email" v-model="form.email" class="mt-1 h-9 text-sm" />
                 </div>
                 <div>
                   <Label for="phone" class="text-xs font-medium text-gray-600"
                     >Nombor Telefon</Label
                   >
-                  <Input id="phone" type="tel" v-model="user.phone" class="mt-1 h-9 text-sm" />
+                  <Input id="phone" type="tel" v-model="form.phone" class="mt-1 h-9 text-sm" />
                 </div>
                 <div>
                   <Label for="address" class="text-xs font-medium text-gray-600">Alamat</Label>
-                  <Textarea id="address" v-model="user.address" class="mt-1 min-h-[70px] text-sm" />
+                  <Textarea id="address" v-model="form.address" class="mt-1 min-h-[70px] text-sm" />
                 </div>
               </div>
               <Button
                 type="submit"
                 size="sm"
                 class="bg-[#75a868] hover:bg-[#75a868]/90 w-full sm:w-auto"
+                :disabled="loading"
                 >Kemas Kini Profil</Button
               >
+              <p v-if="error" class="text-red-500 text-sm">{{ error }}</p>
             </form>
           </div>
         </CardContent>
       </Card>
-
       <Card class="overflow-hidden shadow-sm mb-4">
         <CardHeader class="pb-2">
           <CardTitle class="text-base">Sejarah Derma</CardTitle>
@@ -105,7 +95,6 @@
           </div>
         </CardContent>
       </Card>
-
       <Card class="overflow-hidden shadow-sm">
         <CardHeader class="pb-2">
           <CardTitle class="text-base">Ganjaran Saya</CardTitle>
@@ -150,33 +139,97 @@
         </CardContent>
       </Card>
     </div>
-
-    <!-- Bottom Navigation -->
     <BottomNavigation />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia' // Import storeToRefs
 import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card' // Added CardTitle
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { BottomNavigation } from '@/components/ui/bottom-navigation' // Import BottomNavigation
+import { BottomNavigation } from '@/components/ui/bottom-navigation'
+import { useProfileStore } from '@/stores/profileStore'
 
 const router = useRouter()
+const profileStore = useProfileStore()
+// Use storeToRefs to keep reactivity
+const { profile, loading, error } = storeToRefs(profileStore)
+const { fetchProfile, updateProfile } = profileStore // Actions can be destructured directly
 
-const user = ref({
-  name: 'Bima Sakti', // Updated to match HomeView example
-  email: 'bima.sakti@example.com',
-  phone: '081987378782', // Updated to match HomeView example
-  address: '123 Jalan Merdeka, Kuala Lumpur, 50480',
-  avatar: null, // Example: '/path/to/avatar.jpg' or null
+onMounted(() => {
+  fetchProfile()
 })
+
+const form = ref({
+  name: '',
+  email: '',
+  phone: '',
+  address: '',
+})
+
+// Watch the reactive 'profile' ref from the store
+watch(
+  profile,
+  (newProfile) => {
+    console.log('Profile Store Changed:', newProfile) // Log when profile store changes
+    if (newProfile) {
+      form.value = {
+        name: newProfile.user_fullname || '',
+        email: newProfile.user_email || '',
+        phone: newProfile.user_phone || '',
+        address: newProfile.user_address || '',
+      }
+      console.log('Form updated:', form.value) // Log the updated form value
+    } else {
+      // Reset form if profile becomes null (e.g., on logout)
+      form.value = { name: '', email: '', phone: '', address: '' }
+      console.log('Form reset due to null profile') // Log form reset
+    }
+  },
+  { immediate: true }, // immediate: true ensures the form is populated initially if profile is already loaded
+)
+
+const handleUpdate = async () => {
+  const updateData = {
+    user_fullname: form.value.name,
+    user_email: form.value.email,
+    user_phone: form.value.phone,
+    user_address: form.value.address,
+  }
+  console.log('Attempting to update profile with:', updateData) // Log data before sending update
+  await updateProfile(updateData)
+  if (!profileStore.error) {
+    console.log('Profile update successful (according to store)') // Log success
+    alert('Profil berjaya dikemas kini!')
+  } else {
+    console.error('Profile update failed:', profileStore.error) // Log error
+  }
+}
+
+const getInitials = (name) => {
+  if (!name) return ''
+  return name
+    .split(' ')
+    .map((part) => part.charAt(0))
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+}
+
+const formatDate = (date) => {
+  if (!date) return ''
+  return new Date(date).toLocaleDateString('ms-MY', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
 
 const donations = ref([
   {
@@ -222,36 +275,4 @@ const rewards = ref([
     expiryDate: null,
   },
 ])
-
-const updateProfile = () => {
-  // Here you would implement the logic to update the user profile
-  // For example, making an API call to your backend
-  // Consider using a notification system instead of alert
-  console.log('Kemas kini profil dihantar:', user.value)
-  alert('Profil berjaya dikemas kini!') // Placeholder
-}
-
-const formatDate = (date) => {
-  if (!date) return ''
-  return new Date(date).toLocaleDateString('ms-MY', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-}
-
-const getInitials = (name) => {
-  if (!name) return ''
-  return name
-    .split(' ')
-    .map((part) => part.charAt(0))
-    .slice(0, 2) // Limit to 2 initials
-    .join('')
-    .toUpperCase()
-}
-
-// Define badge variants if not already globally defined or part of the Badge component logic
-// This is conceptual - actual implementation depends on how Badge variants are handled
-// You might need to adjust the :variant binding based on your Badge component setup
-// e.g., using computed properties or a mapping function.
 </script>

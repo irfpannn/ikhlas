@@ -105,6 +105,21 @@ const goToCategory = (routeName) => {
 const goToRewards = () => {
   router.push('/rewards')
 }
+
+// Function to navigate to Top Up page
+const goToTopUp = () => {
+  router.push({ name: 'topup' })
+}
+
+// Function to navigate to Donation page (Hantar)
+const goToDonation = () => {
+  router.push({ name: 'donation' })
+}
+
+// Function to navigate to Request Donation page (Minta)
+const goToRequest = () => {
+  router.push({ name: 'request-donation' })
+}
 </script>
 
 <template>
@@ -115,7 +130,6 @@ const goToRewards = () => {
       <div class="flex justify-between items-center mb-4">
         <div class="flex items-center">
           <img src="/logo.png" alt="Ikhlas Logo" class="w-20 h-10" />
-
         </div>
         <div class="text-gray-500">
           <i class="fas fa-bell"></i>
@@ -136,6 +150,7 @@ const goToRewards = () => {
               variant="outline"
               size="sm"
               class="bg-white text-[#75a868] hover:text-[#75a868] hover:bg-white/90 border-none"
+              @click="goToTopUp"
             >
               Tambah Nilai
             </Button>
@@ -148,12 +163,14 @@ const goToRewards = () => {
             <Button
               variant="secondary"
               class="bg-[#217e0a] hover:bg-[#217e0a]/90 text-white flex-1"
+              @click="goToDonation"
             >
               Hantar
             </Button>
             <Button
               variant="secondary"
               class="bg-[#217e0a] hover:bg-[#217e0a]/90 text-white flex-1"
+              @click="goToRequest"
             >
               Minta
             </Button>
