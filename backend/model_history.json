@@ -1,0 +1,102 @@
+[
+    {
+        "training_date": "2025-04-18 02:35:08",
+        "accuracy": 0.9920424403183024,
+        "samples_count": 3016,
+        "feature_importance": {
+            "monthly_income": 0.5841608765627694,
+            "family_members": 0.05817958287940094,
+            "has_stable_housing": 0.04278363346983868,
+            "access_to_clean_water": 0.10569242221576208,
+            "access_to_electricity": 0.1412424219390403,
+            "has_significant_health_issues": 0.0679410629331886
+        },
+        "data_sources": {
+            "synthetic_samples": 3000,
+            "saved_data_samples": 2,
+            "asnaf_data_samples": 12,
+            "generation_seed": 4908,
+            "generation_date": "2025-04-18 02:35:08"
+        }
+    },
+    {
+        "training_date": "2025-04-18 02:36:58",
+        "accuracy": 0.993368700265252,
+        "samples_count": 3016,
+        "feature_importance": {
+            "monthly_income": 0.5753617081198955,
+            "family_members": 0.06447012569131878,
+            "has_stable_housing": 0.03917291379874708,
+            "access_to_clean_water": 0.10049961082119992,
+            "access_to_electricity": 0.15996073259653096,
+            "has_significant_health_issues": 0.06053490897230788
+        },
+        "data_sources": {
+            "synthetic_samples": 3000,
+            "saved_data_samples": 2,
+            "asnaf_data_samples": 12,
+            "generation_seed": 5017,
+            "generation_date": "2025-04-18 02:36:57"
+        }
+    },
+    {
+        "training_date": "2025-04-18 02:38:41",
+        "accuracy": 0.9946949602122016,
+        "samples_count": 3016,
+        "feature_importance": {
+            "monthly_income": 0.5748585677925803,
+            "family_members": 0.05371342884837709,
+            "has_stable_housing": 0.03704707865773961,
+            "access_to_clean_water": 0.12052573802640627,
+            "access_to_electricity": 0.14744121496564594,
+            "has_significant_health_issues": 0.06641397170925092
+        },
+        "data_sources": {
+            "synthetic_samples": 3000,
+            "saved_data_samples": 2,
+            "asnaf_data_samples": 12,
+            "generation_seed": 5121,
+            "generation_date": "2025-04-18 02:38:41"
+        }
+    },
+    {
+        "training_date": "2025-04-18 02:43:31",
+        "accuracy": 0.9968102073365231,
+        "samples_count": 5016,
+        "feature_importance": {
+            "monthly_income": 0.5807939615786347,
+            "family_members": 0.05955351751739666,
+            "has_stable_housing": 0.046720773424333666,
+            "access_to_clean_water": 0.12111765128999873,
+            "access_to_electricity": 0.12566411369520328,
+            "has_significant_health_issues": 0.06614998249443291
+        },
+        "data_sources": {
+            "synthetic_samples": 5000,
+            "saved_data_samples": 2,
+            "asnaf_data_samples": 12,
+            "generation_seed": 5411,
+            "generation_date": "2025-04-18 02:43:31"
+        }
+    },
+    {
+        "training_date": "2025-04-18 02:43:42",
+        "accuracy": 0.9968102073365231,
+        "samples_count": 5016,
+        "feature_importance": {
+            "monthly_income": 0.5863161213817231,
+            "family_members": 0.0581416876033713,
+            "has_stable_housing": 0.039737414779897645,
+            "access_to_clean_water": 0.11594166948784658,
+            "access_to_electricity": 0.13693550992230738,
+            "has_significant_health_issues": 0.06292759682485398
+        },
+        "data_sources": {
+            "synthetic_samples": 5000,
+            "saved_data_samples": 2,
+            "asnaf_data_samples": 12,
+            "generation_seed": 5422,
+            "generation_date": "2025-04-18 02:43:42"
+        }
+    }
+]

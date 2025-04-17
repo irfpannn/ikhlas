@@ -1,0 +1,20 @@
+{
+    "training_date": "2025-04-18 02:43:42",
+    "accuracy": 0.9968102073365231,
+    "samples_count": 5016,
+    "feature_importance": {
+        "monthly_income": 0.5863161213817231,
+        "family_members": 0.0581416876033713,
+        "has_stable_housing": 0.039737414779897645,
+        "access_to_clean_water": 0.11594166948784658,
+        "access_to_electricity": 0.13693550992230738,
+        "has_significant_health_issues": 0.06292759682485398
+    },
+    "data_sources": {
+        "synthetic_samples": 5000,
+        "saved_data_samples": 2,
+        "asnaf_data_samples": 12,
+        "generation_seed": 5422,
+        "generation_date": "2025-04-18 02:43:42"
+    }
+}

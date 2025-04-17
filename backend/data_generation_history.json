@@ -1,0 +1,37 @@
+[
+    {
+        "synthetic_samples": 3000,
+        "saved_data_samples": 2,
+        "asnaf_data_samples": 12,
+        "generation_seed": 4908,
+        "generation_date": "2025-04-18 02:35:08"
+    },
+    {
+        "synthetic_samples": 3000,
+        "saved_data_samples": 2,
+        "asnaf_data_samples": 12,
+        "generation_seed": 5017,
+        "generation_date": "2025-04-18 02:36:57"
+    },
+    {
+        "synthetic_samples": 3000,
+        "saved_data_samples": 2,
+        "asnaf_data_samples": 12,
+        "generation_seed": 5121,
+        "generation_date": "2025-04-18 02:38:41"
+    },
+    {
+        "synthetic_samples": 5000,
+        "saved_data_samples": 2,
+        "asnaf_data_samples": 12,
+        "generation_seed": 5411,
+        "generation_date": "2025-04-18 02:43:31"
+    },
+    {
+        "synthetic_samples": 5000,
+        "saved_data_samples": 2,
+        "asnaf_data_samples": 12,
+        "generation_seed": 5422,
+        "generation_date": "2025-04-18 02:43:42"
+    }
+]

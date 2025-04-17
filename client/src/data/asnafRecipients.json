@@ -2,81 +2,548 @@
   {
     "id": "1",
     "name": "Ahmad bin Abdullah",
-    "category": "Poor (Fakir)",
+    "ic_number": "780215-07-5431",
     "contact": "012-3456789",
-    "location": "Balik Pulau, Pulau Pinang",
-    "needs": "Basic necessities, medical support",
+    "email": "ahmad.abdullah@gmail.com",
+    "date_of_birth": "1978-02-15",
+    "gender": "Male",
+    "race": "Malay",
+    "citizenship": "Malaysian",
+    "marital_status": "Divorced",
+    "family_members": 4,
+    "category": "Poor (Fakir)",
+    
+    "address": "123 Jalan Balik Pulau, Kampung Sungai Pinang",
+    "postcode": "11000",
+    "district": "Balik Pulau",
+    "state": "Pulau Pinang",
+    "housing_status": "Rented",
+    "has_stable_housing": 1,
+    
+    "employment_status": "Unemployed",
+    "occupation": "Former Construction Worker",
+    "employer": "",
+    "monthly_income": 450,
+    "other_income": 200,
+    "household_income": 650,
+    "monthly_expenses": 800,
+    "debts": 2500,
+    
+    "access_to_clean_water": 1,
+    "access_to_electricity": 1,
+    "has_significant_health_issues": 1,
+    "needs": "Basic necessities, medical support for chronic back pain",
     "status": "Active",
-    "notes": "Single father with 3 children"
+    "notes": "Single father with 3 children. Lost job due to back injury.",
+    
+    "documents": {
+      "ic": "https://example.com/documents/ahmad_ic.jpg",
+      "medical": "https://example.com/documents/ahmad_medical.pdf"
+    },
+    
+    "mlEligibility": {
+      "eligible": true,
+      "confidence": "92%",
+      "timestamp": "2023-05-15T08:30:00Z"
+    }
   },
   {
     "id": "2",
     "name": "Fatimah binti Hassan",
-    "category": "Poor (Fakir)",
+    "ic_number": "830722-08-6542",
     "contact": "019-8765432",
-    "location": "Jelutong, Pulau Pinang",
-    "needs": "Food, education for children",
+    "email": "fatimah.hassan@yahoo.com",
+    "date_of_birth": "1983-07-22",
+    "gender": "Female",
+    "race": "Malay",
+    "citizenship": "Malaysian",
+    "marital_status": "Widowed",
+    "family_members": 3,
+    "category": "Poor (Fakir)",
+    
+    "address": "45 Lorong Jelutong 5, Taman Sri Jelutong",
+    "postcode": "11600",
+    "district": "Jelutong",
+    "state": "Pulau Pinang",
+    "housing_status": "Family",
+    "has_stable_housing": 1,
+    
+    "employment_status": "Self-Employed",
+    "occupation": "Small Food Vendor",
+    "employer": "",
+    "monthly_income": 650,
+    "other_income": 0,
+    "household_income": 650,
+    "monthly_expenses": 850,
+    "debts": 1200,
+    
+    "access_to_clean_water": 1,
+    "access_to_electricity": 1,
+    "has_significant_health_issues": 0,
+    "needs": "Food, education support for children",
     "status": "Active",
-    "notes": "Widow with 2 school-age children"
+    "notes": "Widow with 2 school-age children. Husband passed away 2 years ago.",
+    
+    "documents": {
+      "ic": "https://example.com/documents/fatimah_ic.jpg",
+      "income": "https://example.com/documents/fatimah_income.pdf"
+    },
+    
+    "mlEligibility": {
+      "eligible": true,
+      "confidence": "88%",
+      "timestamp": "2023-05-16T10:15:00Z"
+    }
   },
   {
     "id": "3",
     "name": "Muhammad bin Ibrahim",
-    "category": "Needy (Miskin)",
+    "ic_number": "900430-07-8765",
     "contact": "013-5557777",
-    "location": "Bayan Lepas, Pulau Pinang",
-    "needs": "Rent assistance, job training",
+    "email": "muhammad.ibrahim@gmail.com",
+    "date_of_birth": "1990-04-30",
+    "gender": "Male",
+    "race": "Malay",
+    "citizenship": "Malaysian",
+    "marital_status": "Married",
+    "family_members": 5,
+    "category": "Needy (Miskin)",
+    
+    "address": "78 Jalan Mayang 3, Taman Bayan Indah",
+    "postcode": "11900",
+    "district": "Bayan Lepas",
+    "state": "Pulau Pinang",
+    "housing_status": "Rented",
+    "has_stable_housing": 1,
+    
+    "employment_status": "Unemployed",
+    "occupation": "Former Factory Worker",
+    "employer": "",
+    "monthly_income": 0,
+    "other_income": 800,
+    "household_income": 800,
+    "monthly_expenses": 1200,
+    "debts": 5000,
+    
+    "access_to_clean_water": 1,
+    "access_to_electricity": 1,
+    "has_significant_health_issues": 1,
+    "needs": "Rent assistance, job training, medical support",
     "status": "Active",
-    "notes": "Recently lost job due to disability"
+    "notes": "Recently lost job due to factory accident resulting in partial disability. Has 3 young children.",
+    
+    "documents": {
+      "ic": "https://example.com/documents/muhammad_ic.jpg",
+      "medical": "https://example.com/documents/muhammad_medical.pdf",
+      "utility": "https://example.com/documents/muhammad_utility.jpg"
+    },
+    
+    "mlEligibility": {
+      "eligible": true,
+      "confidence": "95%",
+      "timestamp": "2023-05-14T14:20:00Z"
+    }
   },
   {
     "id": "4",
     "name": "Nurul Iman Foundation",
-    "category": "Zakat Administrator (Amil)",
+    "ic_number": "Organization",
     "contact": "04-2123456",
-    "location": "Georgetown, Pulau Pinang",
-    "needs": "Operational costs",
+    "email": "info@nuruliman.org",
+    "date_of_birth": "",
+    "gender": "",
+    "race": "",
+    "citizenship": "Malaysian",
+    "marital_status": "",
+    "family_members": 0,
+    "category": "Zakat Administrator (Amil)",
+    
+    "address": "15 Lebuh Campbell, Georgetown",
+    "postcode": "10200",
+    "district": "Georgetown",
+    "state": "Pulau Pinang",
+    "housing_status": "Owned",
+    "has_stable_housing": 1,
+    
+    "employment_status": "",
+    "occupation": "Zakat Administration",
+    "employer": "",
+    "monthly_income": 0,
+    "other_income": 0,
+    "household_income": 0,
+    "monthly_expenses": 5000,
+    "debts": 0,
+    
+    "access_to_clean_water": 1,
+    "access_to_electricity": 1,
+    "has_significant_health_issues": 0,
+    "needs": "Operational costs for zakat distribution",
     "status": "Active",
-    "notes": "Local zakat distribution organization"
+    "notes": "Local zakat distribution organization serving underprivileged communities in Georgetown area.",
+    
+    "documents": {
+      "other": "https://example.com/documents/nurul_registration.pdf"
+    }
   },
   {
     "id": "5",
     "name": "Ali bin Razak",
-    "category": "New Muslim (Muallaf)",
+    "ic_number": "850612-14-5678",
     "contact": "014-9998888",
-    "location": "Tanjung Bungah, Pulau Pinang",
-    "needs": "Islamic education, community support",
+    "email": "ali.razak@gmail.com",
+    "date_of_birth": "1985-06-12",
+    "gender": "Male",
+    "race": "Chinese",
+    "citizenship": "Malaysian",
+    "marital_status": "Single",
+    "family_members": 1,
+    "category": "New Muslim (Muallaf)",
+    
+    "address": "23 Persiaran Tanjung Bungah, Vista Condominium",
+    "postcode": "11200",
+    "district": "Tanjung Bungah",
+    "state": "Pulau Pinang",
+    "housing_status": "Rented",
+    "has_stable_housing": 1,
+    
+    "employment_status": "Employed",
+    "occupation": "Software Developer",
+    "employer": "TechSolutions Sdn Bhd",
+    "monthly_income": 3500,
+    "other_income": 0,
+    "household_income": 3500,
+    "monthly_expenses": 2800,
+    "debts": 15000,
+    
+    "access_to_clean_water": 1,
+    "access_to_electricity": 1,
+    "has_significant_health_issues": 0,
+    "needs": "Islamic education, community support, guidance",
     "status": "Active",
-    "notes": "Converted 6 months ago"
+    "notes": "Converted to Islam 6 months ago. Seeking support for religious education and community integration.",
+    
+    "documents": {
+      "ic": "https://example.com/documents/ali_ic.jpg",
+      "income": "https://example.com/documents/ali_income.pdf",
+      "other": "https://example.com/documents/ali_conversion_cert.pdf"
+    }
   },
   {
     "id": "6",
     "name": "Refugee Support Center",
-    "category": "Allah's Cause (Fi Sabilillah)",
+    "ic_number": "Organization",
     "contact": "04-8765432",
-    "location": "Butterworth, Pulau Pinang",
-    "needs": "Funding for refugee education program",
+    "email": "contact@refugeesupport.org",
+    "date_of_birth": "",
+    "gender": "",
+    "race": "",
+    "citizenship": "Malaysian",
+    "marital_status": "",
+    "family_members": 0,
+    "category": "Allah's Cause (Fi Sabilillah)",
+    
+    "address": "88 Jalan Chain Ferry, Seberang Jaya",
+    "postcode": "13700",
+    "district": "Butterworth",
+    "state": "Pulau Pinang",
+    "housing_status": "Rented",
+    "has_stable_housing": 1,
+    
+    "employment_status": "",
+    "occupation": "Refugee Support",
+    "employer": "",
+    "monthly_income": 0,
+    "other_income": 0,
+    "household_income": 0,
+    "monthly_expenses": 12000,
+    "debts": 0,
+    
+    "access_to_clean_water": 1,
+    "access_to_electricity": 1,
+    "has_significant_health_issues": 0,
+    "needs": "Funding for refugee education program, basic necessities",
     "status": "Active",
-    "notes": "Supporting 50 refugee children"
+    "notes": "Supporting 50 refugee children with education, food, and shelter. Requires ongoing support for operations.",
+    
+    "documents": {
+      "other": "https://example.com/documents/refugee_center_docs.pdf"
+    }
   },
   {
     "id": "7",
     "name": "Zainab binti Omar",
-    "category": "Debtor (Gharimin)",
+    "ic_number": "760908-07-5432",
     "contact": "017-1112222",
-    "location": "Bukit Mertajam, Pulau Pinang",
+    "email": "zainab.omar@yahoo.com",
+    "date_of_birth": "1976-09-08",
+    "gender": "Female",
+    "race": "Malay",
+    "citizenship": "Malaysian",
+    "marital_status": "Married",
+    "family_members": 6,
+    "category": "Debtor (Gharimin)",
+    
+    "address": "45 Lorong Impian 7, Taman Impian",
+    "postcode": "14000",
+    "district": "Bukit Mertajam",
+    "state": "Pulau Pinang",
+    "housing_status": "Owned",
+    "has_stable_housing": 1,
+    
+    "employment_status": "Employed",
+    "occupation": "Teacher",
+    "employer": "SK Bukit Mertajam",
+    "monthly_income": 2800,
+    "other_income": 0,
+    "household_income": 4500,
+    "monthly_expenses": 4000,
+    "debts": 75000,
+    
+    "access_to_clean_water": 1,
+    "access_to_electricity": 1,
+    "has_significant_health_issues": 1,
     "needs": "Medical debt assistance",
     "status": "Pending",
-    "notes": "Needs help with hospital bills"
+    "notes": "Accumulated significant medical debt due to husband's cancer treatment. Has 4 school-age children.",
+    
+    "documents": {
+      "ic": "https://example.com/documents/zainab_ic.jpg",
+      "income": "https://example.com/documents/zainab_income.pdf",
+      "medical": "https://example.com/documents/zainab_medical_bills.pdf"
+    }
   },
   {
     "id": "8",
     "name": "Ismail bin Yusof",
-    "category": "Traveler (Ibnus Sabil)",
+    "ic_number": "980712-07-8877",
     "contact": "018-3334444",
-    "location": "Currently stranded in Georgetown, Pulau Pinang",
-    "needs": "Temporary accommodation, travel funds",
+    "email": "ismail.yusof@gmail.com",
+    "date_of_birth": "1998-07-12",
+    "gender": "Male",
+    "race": "Malay",
+    "citizenship": "Malaysian",
+    "marital_status": "Single",
+    "family_members": 1,
+    "category": "Traveler (Ibnus Sabil)",
+    
+    "address": "Temporarily at Masjid Kapitan Keling, Georgetown",
+    "postcode": "10200",
+    "district": "Georgetown",
+    "state": "Pulau Pinang",
+    "housing_status": "Other",
+    "has_stable_housing": 0,
+    
+    "employment_status": "Student",
+    "occupation": "University Student",
+    "employer": "",
+    "monthly_income": 0,
+    "other_income": 500,
+    "household_income": 500,
+    "monthly_expenses": 800,
+    "debts": 0,
+    
+    "access_to_clean_water": 1,
+    "access_to_electricity": 1,
+    "has_significant_health_issues": 0,
+    "needs": "Temporary accommodation, travel funds, replacement documents",
     "status": "Active",
-    "notes": "Student who lost wallet and documents"
+    "notes": "Student from Kedah who lost wallet and documents while traveling to attend university interview. Needs temporary assistance to return home.",
+    
+    "documents": {
+      "other": "https://example.com/documents/ismail_police_report.pdf"
+    }
+  },
+  {
+    "id": "9",
+    "name": "Siti Aminah binti Kamal",
+    "ic_number": "650423-07-1234",
+    "contact": "016-7778888",
+    "email": "",
+    "date_of_birth": "1965-04-23",
+    "gender": "Female",
+    "race": "Malay",
+    "citizenship": "Malaysian",
+    "marital_status": "Widowed",
+    "family_members": 3,
+    "category": "Poor (Fakir)",
+    
+    "address": "12 Lorong Selamat 3, Kampung Selamat",
+    "postcode": "13300",
+    "district": "Tasek Gelugor",
+    "state": "Pulau Pinang",
+    "housing_status": "Owned",
+    "has_stable_housing": 1,
+    
+    "employment_status": "Self-Employed",
+    "occupation": "Small-scale Farmer",
+    "employer": "",
+    "monthly_income": 400,
+    "other_income": 100,
+    "household_income": 500,
+    "monthly_expenses": 700,
+    "debts": 0,
+    
+    "access_to_clean_water": 0,
+    "access_to_electricity": 1,
+    "has_significant_health_issues": 1,
+    "needs": "Clean water access, medical support for diabetes, home repairs",
+    "status": "Active",
+    "notes": "Elderly widow living with 2 grandchildren. House in poor condition with leaking roof. Has diabetes and mobility issues.",
+    
+    "documents": {
+      "ic": "https://example.com/documents/siti_ic.jpg",
+      "medical": "https://example.com/documents/siti_medical.pdf"
+    },
+    
+    "mlEligibility": {
+      "eligible": true,
+      "confidence": "97%",
+      "timestamp": "2023-05-10T09:45:00Z"
+    }
+  },
+  {
+    "id": "10",
+    "name": "Hafiz bin Razali",
+    "ic_number": "920330-07-5511",
+    "contact": "011-10203040",
+    "email": "hafiz.razali@gmail.com",
+    "date_of_birth": "1992-03-30",
+    "gender": "Male",
+    "race": "Malay",
+    "citizenship": "Malaysian",
+    "marital_status": "Married",
+    "family_members": 4,
+    "category": "Needy (Miskin)",
+    
+    "address": "67 Jalan Permatang Pauh 5, Taman Pauh Jaya",
+    "postcode": "13500",
+    "district": "Permatang Pauh",
+    "state": "Pulau Pinang",
+    "housing_status": "Rented",
+    "has_stable_housing": 1,
+    
+    "employment_status": "Employed",
+    "occupation": "Security Guard",
+    "employer": "SecureForce Sdn Bhd",
+    "monthly_income": 1500,
+    "other_income": 0,
+    "household_income": 1500,
+    "monthly_expenses": 1800,
+    "debts": 8000,
+    
+    "access_to_clean_water": 1,
+    "access_to_electricity": 1,
+    "has_significant_health_issues": 0,
+    "needs": "Education support for children, financial assistance",
+    "status": "Active",
+    "notes": "Sole breadwinner for family of 4. Wife is unable to work due to caring for young children. Struggling with rising living costs.",
+    
+    "documents": {
+      "ic": "https://example.com/documents/hafiz_ic.jpg",
+      "income": "https://example.com/documents/hafiz_income.pdf",
+      "utility": "https://example.com/documents/hafiz_utility.jpg"
+    },
+    
+    "mlEligibility": {
+      "eligible": true,
+      "confidence": "82%",
+      "timestamp": "2023-05-18T11:30:00Z"
+    }
+  },
+  {
+    "id": "11",
+    "name": "Aishah binti Mahmud",
+    "ic_number": "880517-07-6644",
+    "contact": "019-5556666",
+    "email": "aishah.mahmud@yahoo.com",
+    "date_of_birth": "1988-05-17",
+    "gender": "Female",
+    "race": "Malay",
+    "citizenship": "Malaysian",
+    "marital_status": "Divorced",
+    "family_members": 3,
+    "category": "Needy (Miskin)",
+    
+    "address": "23 Jalan Sungai Dua, Taman Seri Dua",
+    "postcode": "11700",
+    "district": "Gelugor",
+    "state": "Pulau Pinang",
+    "housing_status": "Rented",
+    "has_stable_housing": 1,
+    
+    "employment_status": "Employed",
+    "occupation": "Cashier",
+    "employer": "SuperMart Sdn Bhd",
+    "monthly_income": 1200,
+    "other_income": 300,
+    "household_income": 1500,
+    "monthly_expenses": 1700,
+    "debts": 3000,
+    
+    "access_to_clean_water": 1,
+    "access_to_electricity": 1,
+    "has_significant_health_issues": 0,
+    "needs": "Childcare support, education assistance",
+    "status": "Active",
+    "notes": "Single mother with 2 children. Working part-time due to childcare constraints.",
+    
+    "documents": {
+      "ic": "https://example.com/documents/aishah_ic.jpg",
+      "income": "https://example.com/documents/aishah_income.pdf"
+    },
+    
+    "mlEligibility": {
+      "eligible": true,
+      "confidence": "85%",
+      "timestamp": "2023-05-12T13:20:00Z"
+    }
+  },
+  {
+    "id": "12",
+    "name": "Ibrahim bin Hassan",
+    "ic_number": "550210-07-1122",
+    "contact": "012-9876543",
+    "email": "",
+    "date_of_birth": "1955-02-10",
+    "gender": "Male",
+    "race": "Malay",
+    "citizenship": "Malaysian",
+    "marital_status": "Married",
+    "family_members": 2,
+    "category": "Poor (Fakir)",
+    
+    "address": "45 Kampung Seronok, Batu Maung",
+    "postcode": "11960",
+    "district": "Batu Maung",
+    "state": "Pulau Pinang",
+    "housing_status": "Owned",
+    "has_stable_housing": 1,
+    
+    "employment_status": "Retired",
+    "occupation": "Former Fisherman",
+    "employer": "",
+    "monthly_income": 300,
+    "other_income": 0,
+    "household_income": 300,
+    "monthly_expenses": 600,
+    "debts": 0,
+    
+    "access_to_clean_water": 1,
+    "access_to_electricity": 1,
+    "has_significant_health_issues": 1,
+    "needs": "Medical support, food assistance",
+    "status": "Active",
+    "notes": "Elderly couple with chronic health issues. Former fisherman unable to work due to arthritis.",
+    
+    "documents": {
+      "ic": "https://example.com/documents/ibrahim_ic.jpg",
+      "medical": "https://example.com/documents/ibrahim_medical.pdf"
+    },
+    
+    "mlEligibility": {
+      "eligible": true,
+      "confidence": "96%",
+      "timestamp": "2023-05-11T10:15:00Z"
+    }
   }
 ] 
