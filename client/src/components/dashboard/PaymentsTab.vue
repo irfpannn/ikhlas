@@ -1,138 +1,241 @@
 <template>
-  <div class="users-table-container">
-    <h2>Zakat Payments</h2>
-    <div v-if="loading" class="loading">Loading data...</div>
-    <table v-else class="users-table">
-      <thead>
-        <tr>
-          <th>User</th>
-          <th>Date</th>
-          <th>Amount (RM)</th>
-          <th>Amount (Crypto)</th>
-          <th>Wallet Address</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="payment in zakatPayments" :key="payment.id">
-          <td>{{ payment.userName }}</td>
-          <td>{{ formatDate(payment.date) }}</td>
-          <td>RM {{ payment.amountRM.toFixed(2) }}</td>
-          <td>{{ payment.amountCrypto.toFixed(8) }} {{ payment.cryptoType }}</td>
-          <td class="wallet-address">{{ payment.walletAddress.substring(0, 10) }}...{{ payment.walletAddress.substring(payment.walletAddress.length - 6) }}</td>
-          <td>
-            <span :class="'status-badge ' + payment.status.toLowerCase()">
-              {{ payment.status }}
-            </span>
-          </td>
-          <td>
-            <button @click="viewDetails(payment)" class="action-btn view-btn">View</button>
-          </td>
-        </tr>
-        <tr v-if="zakatPayments.length === 0">
-          <td colspan="7" class="no-data">No zakat payments found</td>
-        </tr>
-      </tbody>
-    </table>
-    
-    <!-- Payment Details Modal -->
-    <div v-if="selectedPayment" class="modal">
-      <div class="modal-content">
-        <span class="close-btn" @click="selectedPayment = null">&times;</span>
-        <h2>Payment Details</h2>
-        <div class="payment-details">
-          <div class="detail-row">
-            <span class="detail-label">User:</span>
-            <span class="detail-value">{{ selectedPayment.userName }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Email:</span>
-            <span class="detail-value">{{ selectedPayment.userEmail }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Date:</span>
-            <span class="detail-value">{{ formatDate(selectedPayment.date) }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Amount (RM):</span>
-            <span class="detail-value">RM {{ selectedPayment.amountRM.toFixed(2) }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Amount (Crypto):</span>
-            <span class="detail-value">{{ selectedPayment.amountCrypto.toFixed(8) }} {{ selectedPayment.cryptoType }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Wallet Address:</span>
-            <span class="detail-value wallet-address">{{ selectedPayment.walletAddress }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Transaction ID:</span>
-            <span class="detail-value">{{ selectedPayment.transactionId }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Status:</span>
-            <span class="detail-value status-badge" :class="selectedPayment.status.toLowerCase()">
-              {{ selectedPayment.status }}
-            </span>
-          </div>
-        </div>
-        <div class="modal-actions">
-          <button 
-            v-if="selectedPayment.status === 'Pending'" 
-            @click="updatePaymentStatus(selectedPayment.id, 'Approved')" 
-            class="approve-btn"
-          >
-            Approve
-          </button>
-          <button 
-            v-if="selectedPayment.status === 'Pending'" 
-            @click="updatePaymentStatus(selectedPayment.id, 'Rejected')" 
-            class="reject-btn"
-          >
-            Reject
-          </button>
-        </div>
+  <!-- Wrap the entire relevant section in the Dialog component -->
+  <Dialog v-model:open="isDialogOpen">
+    <div class="p-4 sm:p-6 space-y-4">
+      <div v-if="loading" class="text-center py-10 text-muted-foreground">Loading data...</div>
+      <div v-else class="border rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>User</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead class="text-right">Amount (RM)</TableHead>
+              <TableHead class="text-right">Amount (Crypto)</TableHead>
+              <TableHead>Wallet Address</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead class="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <template v-if="zakatPayments.length > 0">
+              <TableRow v-for="payment in zakatPayments" :key="payment.id">
+                <TableCell class="font-medium">{{ payment.userName || 'N/A' }}</TableCell>
+                <TableCell>{{ formatDate(payment.date) }}</TableCell>
+                <TableCell class="text-right"
+                  >RM {{ payment.amountRM?.toFixed(2) || '0.00' }}</TableCell
+                >
+                <TableCell class="text-right"
+                  >{{ payment.amountCrypto?.toFixed(8) || '0.00000000' }}
+                  {{ payment.cryptoType || '' }}</TableCell
+                >
+                <TableCell class="font-mono text-xs">
+                  <span v-if="payment.walletAddress">
+                    {{ payment.walletAddress.substring(0, 10) }}...{{
+                      payment.walletAddress.substring(payment.walletAddress.length - 6)
+                    }}
+                  </span>
+                  <span v-else>N/A</span>
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    :variant="getStatusVariant(payment.status)"
+                    :class="
+                      cn(
+                        'capitalize',
+                        getStatusVariant(payment.status) === 'success' &&
+                          'bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
+                        getStatusVariant(payment.status) === 'warning' &&
+                          'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700',
+                      )
+                    "
+                  >
+                    {{ payment.status || 'Unknown' }}
+                  </Badge>
+                </TableCell>
+                <TableCell class="text-right">
+                  <!-- DialogTrigger remains here, now within Dialog context -->
+                  <DialogTrigger as-child>
+                    <Button variant="outline" size="sm" @click="viewDetails(payment)">View</Button>
+                  </DialogTrigger>
+                </TableCell>
+              </TableRow>
+            </template>
+            <TableRow v-else>
+              <TableCell colspan="7" class="h-24 text-center text-muted-foreground">
+                No zakat payments found.
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       </div>
+
+      <!-- Payment Details Modal Content - Still outside the loop, but now inside Dialog context -->
+      <DialogContent v-if="selectedPayment" class="sm:max-w-[525px]">
+        <DialogHeader>
+          <DialogTitle>Payment Details</DialogTitle>
+          <DialogDescription> Review the details of the zakat payment. </DialogDescription>
+        </DialogHeader>
+        <div class="grid gap-4 py-4">
+          <div class="grid grid-cols-4 items-center gap-4">
+            <Label class="text-right col-span-1">User:</Label>
+            <span class="col-span-3 font-medium">{{ selectedPayment.userName || 'N/A' }}</span>
+          </div>
+          <div class="grid grid-cols-4 items-center gap-4">
+            <Label class="text-right col-span-1">Email:</Label>
+            <span class="col-span-3">{{ selectedPayment.userEmail || 'N/A' }}</span>
+          </div>
+          <div class="grid grid-cols-4 items-center gap-4">
+            <Label class="text-right col-span-1">Date:</Label>
+            <span class="col-span-3">{{ formatDate(selectedPayment.date) }}</span>
+          </div>
+          <div class="grid grid-cols-4 items-center gap-4">
+            <Label class="text-right col-span-1">Amount (RM):</Label>
+            <span class="col-span-3">RM {{ selectedPayment.amountRM?.toFixed(2) || '0.00' }}</span>
+          </div>
+          <div class="grid grid-cols-4 items-center gap-4">
+            <Label class="text-right col-span-1">Amount (Crypto):</Label>
+            <span class="col-span-3"
+              >{{ selectedPayment.amountCrypto?.toFixed(8) || '0.00000000' }}
+              {{ selectedPayment.cryptoType || '' }}</span
+            >
+          </div>
+          <div class="grid grid-cols-4 items-center gap-4">
+            <Label class="text-right col-span-1">Wallet Address:</Label>
+            <span class="col-span-3 font-mono text-xs break-all">{{
+              selectedPayment.walletAddress || 'N/A'
+            }}</span>
+          </div>
+          <div class="grid grid-cols-4 items-center gap-4">
+            <Label class="text-right col-span-1">Transaction ID:</Label>
+            <span class="col-span-3 font-mono text-xs break-all">{{
+              selectedPayment.transactionId || 'N/A'
+            }}</span>
+          </div>
+          <div class="grid grid-cols-4 items-center gap-4">
+            <Label class="text-right col-span-1">Status:</Label>
+            <div class="col-span-3">
+              <Badge
+                :variant="getStatusVariant(selectedPayment.status)"
+                :class="
+                  cn(
+                    'capitalize',
+                    getStatusVariant(selectedPayment.status) === 'success' &&
+                      'bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
+                    getStatusVariant(selectedPayment.status) === 'warning' &&
+                      'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700',
+                  )
+                "
+              >
+                {{ selectedPayment.status || 'Unknown' }}
+              </Badge>
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <div class="flex justify-end gap-2">
+            <Button variant="outline" @click="isDialogOpen = false">Close</Button>
+            <template v-if="selectedPayment.status === 'Pending'">
+              <Button
+                variant="destructive"
+                @click="updatePaymentStatus(selectedPayment.id, 'Rejected')"
+              >
+                Reject
+              </Button>
+              <Button
+                @click="updatePaymentStatus(selectedPayment.id, 'Approved')"
+                class="bg-green-600 hover:bg-green-700 text-white"
+              >
+                Approve
+              </Button>
+            </template>
+          </div>
+        </DialogFooter>
+      </DialogContent>
     </div>
-  </div>
+  </Dialog>
 </template>
 
-<script>
-export default {
-  name: 'PaymentsTab',
-  props: {
-    zakatPayments: {
-      type: Array,
-      required: true
-    },
-    loading: {
-      type: Boolean,
-      default: false
-    }
+<script setup>
+import { ref, watch } from 'vue' // Added watch
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label' // Added Label import
+
+const props = defineProps({
+  zakatPayments: {
+    type: Array,
+    required: true,
   },
-  data() {
-    return {
-      selectedPayment: null
-    };
+  loading: {
+    type: Boolean,
+    default: false,
   },
-  methods: {
-    formatDate(date) {
-      return new Date(date).toLocaleDateString('en-MY', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    },
-    viewDetails(payment) {
-      this.selectedPayment = payment;
-    },
-    updatePaymentStatus(paymentId, status) {
-      this.$emit('update-payment-status', paymentId, status);
-      this.selectedPayment = null;
-    }
+})
+
+const emit = defineEmits(['update-payment-status'])
+
+const selectedPayment = ref(null)
+const isDialogOpen = ref(false)
+
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A'
+  // Check if dateString is a Firestore Timestamp object
+  const date = dateString.toDate ? dateString.toDate() : new Date(dateString)
+  if (isNaN(date.getTime())) return 'Invalid Date' // Add check for invalid date
+  return date.toLocaleDateString('en-MY', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+const viewDetails = (payment) => {
+  selectedPayment.value = payment
+  isDialogOpen.value = true
+}
+
+const updatePaymentStatus = (paymentId, status) => {
+  emit('update-payment-status', paymentId, status)
+  isDialogOpen.value = false // Close dialog after action
+}
+
+const getStatusVariant = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'approved':
+      return 'success' // Custom variant
+    case 'rejected':
+      return 'destructive'
+    case 'pending':
+      return 'warning' // Custom variant
+    default:
+      return 'secondary'
   }
-};
-</script> 
+}
+
+// Handle dialog open state changes
+watch(isDialogOpen, (newValue) => {
+  if (!newValue) {
+    selectedPayment.value = null // Clear selection when dialog closes
+  }
+})
+</script>
