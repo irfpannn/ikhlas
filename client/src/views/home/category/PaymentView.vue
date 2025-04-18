@@ -283,7 +283,7 @@ const handleWalletConnected = (walletInfo) => {
                   class="bg-primary/20 border rounded-lg p-3 cursor-pointer hover:border-[#75a868]"
                 >
                   <div class="flex items-center space-x-4">
-                    <img src="../../public/tng.png" alt="Touch 'n Go" class="h-11 mr-3" />
+                    <img src="/tng.png" alt="Touch 'n Go" class="h-11 mr-3" />
                     <span>Touch 'n Go</span>
                   </div>
                 </div>
@@ -292,7 +292,7 @@ const handleWalletConnected = (walletInfo) => {
                   class="bg-primary/20 border rounded-lg p-3 cursor-pointer hover:border-[#75a868]"
                 >
                   <div class="flex items-center space-x-4">
-                    <img src="../../public/grab.png" alt="GrabPay" class="h-11 mr-3" />
+                    <img src="/grab.png" alt="GrabPay" class="h-11 mr-3" />
                     <span>GrabPay</span>
                   </div>
                 </div>
@@ -301,7 +301,7 @@ const handleWalletConnected = (walletInfo) => {
                   class="bg-primary/20 border rounded-lg p-3 cursor-pointer hover:border-[#75a868]"
                 >
                   <div class="flex items-center space-x-4">
-                    <img src="../../public/boost.png" alt="Boost" class="h-11" />
+                    <img src="/boost.png" alt="Boost" class="h-11" />
                     <span>Boost</span>
                   </div>
                 </div>
@@ -310,7 +310,7 @@ const handleWalletConnected = (walletInfo) => {
                   class="bg-primary/20 border rounded-lg p-3 cursor-pointer hover:border-[#75a868]"
                 >
                   <div class="flex items-center space-x-4">
-                    <img src="../../public/mae.png" alt="MAE" class="h-11" />
+                    <img src="/mae.png" alt="MAE" class="h-11" />
                     <span>MAE</span>
                   </div>
                 </div>
