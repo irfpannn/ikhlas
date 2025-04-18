@@ -1,9 +1,9 @@
 <template>
   <!-- Wrap the entire relevant section in the Dialog component -->
   <Dialog v-model:open="isDialogOpen">
-    <div class="p-4 sm:p-6 space-y-4">
+    <div class="space-y-4 w-full">
       <div v-if="loading" class="text-center py-10 text-muted-foreground">Loading data...</div>
-      <div v-else class="border rounded-lg overflow-hidden">
+      <div v-else class="border rounded-lg overflow-hidden bg-gray-50 p-3">
         <Table>
           <TableHeader>
             <TableRow>
