@@ -206,32 +206,37 @@ router.beforeEach(async (to, from, next) => {
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
   const requiresAdmin = to.matched.some((record) => record.meta.requiresAdmin)
   const requiresUserAuth = to.matched.some((record) => record.meta.requiresUserAuth)
+  const isAdminRoute = to.path.startsWith('/admin')
 
   const currentUser = getCurrentUser()
 
-  if (requiresAuth && !currentUser) {
-    next('/admin/login')
-  } else if (requiresAdmin) {
-    // Check if user is an admin
-    if (!currentUser) {
-      next('/admin/login')
-      return
-    }
-
-    try {
-      const isAdmin = await checkIsAdmin(currentUser.uid)
-      if (isAdmin) {
-        next()
-      } else {
-        // Redirect non-admin users to home page
-        console.warn('Non-admin user attempted to access admin route')
+  // If trying to access any admin route (including /admin/login)
+  if (isAdminRoute) {
+    // If user is logged in, check if they're an admin
+    if (currentUser) {
+      try {
+        const isAdmin = await checkIsAdmin(currentUser.uid)
+        if (isAdmin) {
+          // Admin user can proceed to any admin route
+          next()
+        } else {
+          // Non-admin users shouldn't access any admin routes
+          console.warn('Non-admin user attempted to access admin route:', to.path)
+          next('/')
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error)
         next('/')
       }
-    } catch (error) {
-      console.error('Error checking admin status:', error)
+    } else if (to.path !== '/admin/login') {
+      // Not logged in and trying to access admin route other than login
       next('/admin/login')
+    } else {
+      // Not logged in and trying to access admin login page
+      next()
     }
   } else if (requiresUserAuth && !currentUser) {
+    // Regular auth check for non-admin routes
     next('/login')
   } else {
     next()

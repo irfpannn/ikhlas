@@ -138,6 +138,19 @@
           </div>
         </CardContent>
       </Card>
+
+      <!-- Logout button card -->
+      <Card class="overflow-hidden shadow-sm mt-4">
+        <CardContent class="py-4">
+          <Button
+            @click="handleLogout"
+            class="w-full bg-red-500 hover:bg-red-600 text-white"
+            size="sm"
+          >
+            Log Keluar
+          </Button>
+        </CardContent>
+      </Card>
     </div>
     <BottomNavigation />
   </div>
@@ -155,12 +168,15 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { BottomNavigation } from '@/components/ui/bottom-navigation'
 import { useProfileStore } from '@/stores/profileStore'
+import { useAuthStore } from '@/stores/authStore'
 
 const router = useRouter()
 const profileStore = useProfileStore()
+const authStore = useAuthStore()
 // Use storeToRefs to keep reactivity
 const { profile, loading, error } = storeToRefs(profileStore)
 const { fetchProfile, updateProfile } = profileStore // Actions can be destructured directly
+const { signOut } = authStore // Get the signOut action from authStore
 
 onMounted(() => {
   fetchProfile()
@@ -209,6 +225,16 @@ const handleUpdate = async () => {
     alert('Profil berjaya dikemas kini!')
   } else {
     console.error('Profile update failed:', profileStore.error) // Log error
+  }
+}
+
+const handleLogout = async () => {
+  try {
+    await signOut()
+    console.log('Logged out successfully')
+    router.push('/login')
+  } catch (error) {
+    console.error('Logout failed:', error)
   }
 }
 
