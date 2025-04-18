@@ -340,7 +340,7 @@ const handleLogout = async () => {
   try {
     const auth = getAuth()
     await signOut(auth)
-    router.push('/admin/login')
+    router.push('/login')
   } catch (error) {
     console.error('Error signing out:', error)
   }

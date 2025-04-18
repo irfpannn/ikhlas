@@ -11,6 +11,8 @@ import ZakatSahamView from '@/views/home/category/ZakatSahamView.vue'
 import ZakatFitrahView from '@/views/home/category/ZakatFitrahView.vue'
 import ZakatStatsView from '@/views/home/category/ZakatStatsView.vue' // Import the new view
 import { auth } from '@/services/firebaseService'
+// Import the updated auth service functions
+import { getCurrentUser, checkAdminRole, getUserRole } from '@/services/authService' // Updated import
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,13 +22,13 @@ const router = createRouter({
       path: '/signup',
       name: 'signup',
       component: () => import('@/views/auth/SignupView.vue'),
-      meta: { requiresUserAuth: false },
+      meta: { requiresUserAuth: false, requiresNoAuth: true }, // Add requiresNoAuth
     },
     {
       path: '/login',
       name: 'login',
       component: () => import('@/views/auth/LoginView.vue'),
-      meta: { requiresUserAuth: false },
+      meta: { requiresUserAuth: false, requiresNoAuth: true }, // Add requiresNoAuth
     },
     {
       path: '/profile-complete',
@@ -121,22 +123,18 @@ const router = createRouter({
       meta: { requiresUserAuth: true }, // Added meta tag
     },
     {
-      path: '/admin/login',
-      name: 'AdminLogin',
-      component: () => import('../views/admin/LoginView.vue'),
-      meta: { requiresAuth: false }, // Keep admin auth logic separate for now
-    },
-    {
       path: '/admin/dashboard',
       name: 'AdminDashboard',
       component: () => import('../views/admin/DashboardView.vue'),
-      meta: { requiresAuth: true, requiresAdmin: true, requiresUserAuth: true }, // Added requiresUserAuth
+      // Keep requiresAdmin, requiresUserAuth ensures a user is logged in
+      meta: { requiresUserAuth: true, requiresAdmin: true },
     },
     {
       path: '/admin/impact-monitoring',
       name: 'ImpactMonitoring',
       component: () => import('../views/admin/ImpactMonitoringView.vue'),
-      meta: { requiresAuth: true, requiresAdmin: true, requiresUserAuth: true }, // Added requiresUserAuth
+      // Keep requiresAdmin, requiresUserAuth ensures a user is logged in
+      meta: { requiresUserAuth: true, requiresAdmin: true },
     },
     {
       path: '/donation',
@@ -157,9 +155,9 @@ const router = createRouter({
       props: (route) => ({
         id: route.params.id,
         amount: route.query.amount,
-        currency: route.query.currency
+        currency: route.query.currency,
       }),
-      meta: { requiresUserAuth: true }
+      meta: { requiresUserAuth: true },
     },
     {
       path: '/donation/:id/success',
@@ -205,54 +203,71 @@ const router = createRouter({
       name: 'TransactionHistory',
       component: () => import('../views/home/TransactionHistoryView.vue'),
       meta: {
-        requiresAuth: true
-      }
+        requiresAuth: true,
+      },
     },
   ],
 })
 
-// Add user authentication guard
-import { getCurrentUser, checkIsAdmin } from '@/services/authService'
-
+// Updated Navigation Guard
 router.beforeEach(async (to, from, next) => {
-  // Admin guard (existing)
-  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
-  const requiresAdmin = to.matched.some((record) => record.meta.requiresAdmin)
   const requiresUserAuth = to.matched.some((record) => record.meta.requiresUserAuth)
-  const isAdminRoute = to.path.startsWith('/admin')
-
+  const requiresAdmin = to.matched.some((record) => record.meta.requiresAdmin)
+  const requiresNoAuth = to.matched.some((record) => record.meta.requiresNoAuth) // Check for routes that require no auth
   const currentUser = getCurrentUser()
 
-  // If trying to access any admin route (including /admin/login)
-  if (isAdminRoute) {
-    // If user is logged in, check if they're an admin
-    if (currentUser) {
+  if (requiresUserAuth) {
+    // Route requires user to be logged in
+    if (!currentUser) {
+      console.log('User not logged in, redirecting to login for route:', to.path)
+      return next({ name: 'login', query: { redirect: to.fullPath } }) // Redirect to login, pass intended destination
+    }
+
+    // If route requires admin privileges, check the role
+    if (requiresAdmin) {
       try {
-        const isAdmin = await checkIsAdmin(currentUser.uid)
+        const isAdmin = await checkAdminRole(currentUser.uid) // Use checkAdminRole
         if (isAdmin) {
-          // Admin user can proceed to any admin route
-          next()
+          console.log('Admin user verified, allowing access to admin route:', to.path)
+          return next() // Allow access
         } else {
-          // Non-admin users shouldn't access any admin routes
           console.warn('Non-admin user attempted to access admin route:', to.path)
-          next('/')
+          return next({ name: 'home' }) // Redirect non-admins away from admin routes
         }
       } catch (error) {
         console.error('Error checking admin status:', error)
-        next('/')
+        return next({ name: 'home' }) // Redirect on error
       }
-    } else if (to.path !== '/admin/login') {
-      // Not logged in and trying to access admin route other than login
-      next('/admin/login')
     } else {
-      // Not logged in and trying to access admin login page
-      next()
+      // Route requires auth but not admin, allow access
+      return next()
     }
-  } else if (requiresUserAuth && !currentUser) {
-    // Regular auth check for non-admin routes
-    next('/login')
+  } else if (requiresNoAuth && currentUser) {
+    // Route should only be accessed by logged-out users (like login/signup), but user is logged in
+    console.log('User already logged in, redirecting from auth route:', to.path)
+    // Redirect logged-in users away from login/signup pages
+    // We need to determine if they are admin or regular user to redirect correctly
+    try {
+      // Fetch the role instead of just checking admin status
+      const role = await getUserRole(currentUser.uid)
+      if (role === 'admin') {
+        return next({ name: 'AdminDashboard' })
+      } else {
+        return next({ name: 'home' })
+      }
+    } catch (error) {
+      console.error('Error checking role for redirect:', error)
+      // Attempt logout on error to clear state, then redirect to login
+      try {
+        await logout() // Assuming logout is available from authService
+      } catch (logoutError) {
+        console.error('Failed to logout after role check error:', logoutError)
+      }
+      return next({ name: 'login' }) // Redirect to login on error
+    }
   } else {
-    next()
+    // Public route or route doesn't have specific auth requirements handled here
+    return next()
   }
 })
 
