@@ -154,7 +154,12 @@ const router = createRouter({
       path: '/donation/:id/payment',
       name: 'DonationPayment',
       component: () => import('@/views/home/category/DonationPaymentView.vue'),
-      meta: { requiresUserAuth: true }, // Added meta tag
+      props: (route) => ({
+        id: route.params.id,
+        amount: route.query.amount,
+        currency: route.query.currency
+      }),
+      meta: { requiresUserAuth: true }
     },
     {
       path: '/donation/:id/success',
@@ -194,6 +199,14 @@ const router = createRouter({
       name: 'pay-request',
       component: () => import('@/views/donation/PayRequestView.vue'),
       meta: { requiresUserAuth: false }, // Allow anyone with the link to pay
+    },
+    {
+      path: '/transactions',
+      name: 'TransactionHistory',
+      component: () => import('../views/home/TransactionHistoryView.vue'),
+      meta: {
+        requiresAuth: true
+      }
     },
   ],
 })

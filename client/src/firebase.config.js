@@ -1,24 +1,37 @@
 // Firebase configuration
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+import { initializeApp, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBK4CYpmG5LJx3f5DegbD8XCsmx90njh5E",
-  authDomain: "ikhlas-umhack.firebaseapp.com",
-  projectId: "ikhlas-umhack",
-  storageBucket: "ikhlas-umhack.firebasestorage.app",
-  messagingSenderId: "536348940153",
-  appId: "1:536348940153:web:2f4cb4a9b236f233a981a8",
-  measurementId: "G-VWSH0BJRVR"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const db = getFirestore(app);
-const auth = getAuth(app);
+// Initialize Firebase only if it hasn't been initialized yet
+let firebaseApp;
+let db;
+let auth;
+let storage;
 
-export { app, analytics, db, auth }; 
+try {
+  // Try to get the existing app
+  firebaseApp = getApp();
+} catch (e) {
+  // Initialize if no app exists
+  firebaseApp = initializeApp(firebaseConfig);
+}
+
+// Initialize services
+db = getFirestore(firebaseApp);
+auth = getAuth(firebaseApp);
+storage = getStorage(firebaseApp);
+
+export { firebaseApp, db, auth, storage }; 

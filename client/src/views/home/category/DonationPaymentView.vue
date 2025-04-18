@@ -9,6 +9,11 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import WalletConnect from '@/components/ui/wallet/WalletConnect.vue'
+import { saveDonationTransaction } from '@/services/donationService'
+import { getAuth } from 'firebase/auth'
+import { getDoc, doc } from 'firebase/firestore'
+import { db } from '@/firebase.config'
 
 const route = useRoute()
 const router = useRouter()
@@ -22,8 +27,7 @@ const { currentDonation, loading: storeLoading, error: storeError } = storeToRef
 
 // Local state
 const paymentMethod = ref('credit-card') // Default for traditional
-const selectedWallet = ref(null) // For crypto
-const walletConnected = ref(false)
+const walletInfo = ref(null) // For crypto wallet info
 const isProcessing = ref(false)
 
 onMounted(() => {
@@ -31,11 +35,22 @@ onMounted(() => {
   if (!currentDonation.value || currentDonation.value.id !== donationId) {
     donationStore.fetchDonationById(donationId)
   }
+  
+  // Check if MetaMask is installed
+  checkIfMetaMaskExists()
 })
 
 const isCrypto = computed(() => {
   return ['BTC', 'ETH', 'USDT'].includes(donationCurrency.value)
 })
+
+// Check if MetaMask exists
+const isMetaMaskInstalled = ref(false)
+function checkIfMetaMaskExists() {
+  if (window.ethereum) {
+    isMetaMaskInstalled.value = true
+  }
+}
 
 // Use currentDonation from the store
 const donation = computed(() => currentDonation.value || {}) // Renamed from campaign
@@ -58,25 +73,174 @@ const goBack = () => {
   router.push(`/donation/${donationId}`)
 }
 
-const connectWallet = (wallet) => {
-  // Simulate wallet connection
-  selectedWallet.value = wallet
-  isProcessing.value = true
-  setTimeout(() => {
-    walletConnected.value = true
-    isProcessing.value = false
-  }, 1500)
+// Handle wallet connection and update wallet info
+const handleWalletConnected = (info) => {
+  walletInfo.value = info
+}
+
+// Handle wallet disconnection
+const handleWalletDisconnected = () => {
+  walletInfo.value = null
 }
 
 const processPayment = () => {
   isProcessing.value = true
-  // Simulate payment processing
-  setTimeout(() => {
-    router.push(
-      // Ensure the route name/path is correct for success view
-      `/donation/${donationId}/success?amount=${donationAmount}&currency=${donationCurrency.value}`,
-    )
-  }, 1500)
+  
+  if (isCrypto.value && walletInfo.value) {
+    // For crypto payments, should integrate with actual blockchain transaction here
+    // This is a simplified example
+    processCryptoPayment()
+  } else {
+    // For traditional payment methods
+    processTraditionalPayment()
+  }
+}
+
+const processCryptoPayment = async () => {
+  try {
+    // Here you would typically:
+    // 1. Prepare transaction data (recipient address, amount, etc.)
+    // 2. Request transaction signature from MetaMask
+    // 3. Send transaction
+    
+    // Use a properly formatted Ethereum address (this is just an example address)
+    const recipientAddress = '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
+    
+    // Example of how to send a transaction using MetaMask
+    const transactionParameters = {
+      to: recipientAddress, // Complete Ethereum address
+      from: walletInfo.value.address,
+      value: '0x' + (Number(donationAmount) * 1e18).toString(16), // Convert to wei and then to hex
+      // gas: '0x5208', // Optional: 21000 gas
+      // gasPrice: '0x' // Optional: gas price
+    }
+    
+    // This would trigger MetaMask transaction approval dialog
+    const txHash = await window.ethereum.request({
+      method: 'eth_sendTransaction',
+      params: [transactionParameters],
+    })
+    
+    console.log('Transaction Hash:', txHash)
+    
+    // Get current user from auth
+    const auth = getAuth()
+    const user = auth.currentUser
+    
+    if (user) {
+      // Get user data from Firestore to ensure we have the correct name
+      const userDoc = await getDoc(doc(db, 'users', user.uid))
+      const userData = userDoc.exists() ? userDoc.data() : null
+      
+      // Use Firestore user data if available, otherwise fall back to Auth data
+      const senderName = userData?.user_fullname || user.displayName || user.email || 'Anonymous'
+      
+      // Prepare donation data for crypto transaction
+      const donationData = {
+        senderId: user.uid,
+        senderName: senderName,
+        recipientId: donation.value.id || donationId,
+        recipientName: donation.value.title || 'Unknown Recipient',
+        amount: parseFloat(donationAmount),
+        currency: donationCurrency.value,
+        paymentMethod: 'crypto-wallet',
+        category: donation.value.category || 'Crypto Donation',
+        notes: `Transaction Hash: ${txHash}`,
+        type: 'crypto-donation',
+        walletAddress: walletInfo.value.address,
+        transactionHash: txHash
+      }
+      
+      // Save the donation transaction
+      await saveDonationTransaction(donationData)
+    }
+    
+    // Redirect to success page
+    setTimeout(() => {
+      router.push(
+        `/donation/${donationId}/success?amount=${donationAmount}&currency=${donationCurrency.value}&txHash=${txHash}`,
+      )
+    }, 1000)
+  } catch (error) {
+    console.error('Transaction error:', error)
+    alert('Transaction failed: ' + (error.message || 'Unknown error'))
+    isProcessing.value = false
+  }
+}
+
+const processTraditionalPayment = async () => {
+  try {
+    // Get current user from auth
+    const auth = getAuth()
+    const user = auth.currentUser
+    
+    if (!user) {
+      console.error('User not authenticated')
+      return
+    }
+    
+    // Get user data from Firestore to ensure we have the correct name
+    const userDoc = await getDoc(doc(db, 'users', user.uid))
+    const userData = userDoc.exists() ? userDoc.data() : null
+    
+    // Use Firestore user data if available, otherwise fall back to Auth data
+    const senderName = userData?.user_fullname || user.displayName || user.email || 'Anonymous'
+    
+    // Prepare donation data
+    const donationData = {
+      senderId: user.uid,
+      senderName: senderName,
+      recipientId: donation.value.id || donationId,
+      recipientName: donation.value.title || 'Unknown Recipient',
+      amount: parseFloat(donationAmount),
+      currency: donationCurrency.value,
+      paymentMethod: paymentMethod.value,
+      category: donation.value.category || 'General Donation',
+      notes: '',
+      type: 'donation'
+    }
+    
+    // Save the donation transaction
+    await saveDonationTransaction(donationData)
+    
+    // Redirect to success page
+    setTimeout(() => {
+      router.push(
+        `/donation/${donationId}/success?amount=${donationAmount}&currency=${donationCurrency.value}`
+      )
+    }, 1500)
+  } catch (error) {
+    console.error('Error processing donation:', error)
+    isProcessing.value = false
+  }
+}
+
+async function handlePaymentSuccess(paymentDetails) {
+  try {
+    // Assuming you have user data and recipient data available
+    const donationData = {
+      senderId: this.currentUser.uid,
+      senderName: this.currentUser.displayName || 'Anonymous',
+      recipientId: this.recipient.id,
+      recipientName: this.recipient.name,
+      amount: this.donationAmount,
+      paymentMethod: paymentDetails.method,
+      category: this.category,
+      notes: this.notes || ''
+    };
+    
+    // Save the donation transaction
+    await saveDonationTransaction(donationData);
+    
+    // Show success message
+    this.$toast.success('Donation completed successfully!');
+    
+    // Redirect to thank you page or transaction history
+    this.$router.push('/donation/thank-you');
+  } catch (error) {
+    console.error('Error processing donation:', error);
+    this.$toast.error('There was an error processing your donation.');
+  }
 }
 </script>
 
@@ -185,113 +349,45 @@ const processPayment = () => {
       <!-- Payment Method Selection - Crypto -->
       <div v-if="isCrypto" class="bg-white p-4 mb-4">
         <h3 class="font-medium mb-3">Sambung Dompet Kripto</h3>
-        <div v-if="!walletConnected" class="space-y-3">
-          <!-- MetaMask -->
-          <Button
-            @click="connectWallet('metamask')"
-            variant="outline"
-            class="w-full flex items-center justify-between p-3 h-auto"
-            :disabled="isProcessing"
-          >
-            <div class="flex items-center">
-              <div class="w-8 h-8 mr-3 flex-shrink-0">
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg"
-                  alt="MetaMask"
-                  class="w-full h-full"
-                />
-              </div>
-              <span>MetaMask</span>
-            </div>
-            <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">Popular</span>
-          </Button>
-
-          <!-- Coinbase Wallet -->
-          <Button
-            @click="connectWallet('coinbase')"
-            variant="outline"
-            class="w-full flex items-center justify-between p-3 h-auto"
-            :disabled="isProcessing"
-          >
-            <div class="flex items-center">
-              <div
-                class="w-8 h-8 mr-3 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0"
-              >
-                <span class="text-white font-bold">CB</span>
-              </div>
-              <span>Coinbase Wallet</span>
-            </div>
-          </Button>
-
-          <!-- Trust Wallet -->
-          <Button
-            @click="connectWallet('trust')"
-            variant="outline"
-            class="w-full flex items-center justify-between p-3 h-auto"
-            :disabled="isProcessing"
-          >
-            <div class="flex items-center">
-              <div
-                class="w-8 h-8 mr-3 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0"
-              >
-                <span class="text-white font-bold">TW</span>
-              </div>
-              <span>Trust Wallet</span>
-            </div>
-          </Button>
-
-          <!-- WalletConnect -->
-          <Button
-            @click="connectWallet('walletconnect')"
-            variant="outline"
-            class="w-full flex items-center justify-between p-3 h-auto"
-            :disabled="isProcessing"
-          >
-            <div class="flex items-center">
-              <div
-                class="w-8 h-8 mr-3 bg-blue-700 rounded-full flex items-center justify-center flex-shrink-0"
-              >
-                <span class="text-white font-bold">WC</span>
-              </div>
-              <span>WalletConnect</span>
-            </div>
-          </Button>
+        
+        <!-- Not installed warning -->
+        <div v-if="!isMetaMaskInstalled" class="p-4 border border-yellow-300 bg-yellow-50 rounded-lg mb-4">
+          <p class="text-yellow-800 text-sm">
+            MetaMask tidak dipasang. Sila pasang
+            <a href="https://metamask.io/download/" target="_blank" class="underline font-medium">
+              MetaMask
+            </a>
+            untuk menyambung dompet anda.
+          </p>
         </div>
-        <div v-else class="border rounded-lg p-4">
-          <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center">
-              <div class="w-8 h-8 mr-3 bg-green-100 rounded-full flex items-center justify-center">
-                <span class="text-green-600">✓</span>
-              </div>
-              <span class="font-medium">Dompet Disambungkan</span>
-            </div>
-            <Button variant="ghost" size="sm" @click="walletConnected = false">
-              Putuskan Sambungan
-            </Button>
-          </div>
-
-          <div class="bg-gray-100 p-3 rounded-lg">
-            <div class="flex justify-between mb-2">
-              <span class="text-sm text-gray-600">Dompet</span>
-              <span class="font-medium">{{
-                selectedWallet === 'metamask'
-                  ? 'MetaMask'
-                  : selectedWallet === 'coinbase'
-                    ? 'Coinbase Wallet'
-                    : selectedWallet === 'trust'
-                      ? 'Trust Wallet'
-                      : 'WalletConnect'
-              }}</span>
+        
+        <!-- MetaMask Wallet Connection -->
+        <WalletConnect 
+          buttonText="Sambung dengan MetaMask" 
+          @wallet-connected="handleWalletConnected"
+          @wallet-disconnected="handleWalletDisconnected"
+        />
+        
+        <!-- Transaction Details (when wallet is connected) -->
+        <div v-if="walletInfo" class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h4 class="font-medium mb-2 text-blue-800">Butiran Transaksi</h4>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span class="text-gray-600">Jumlah</span>
+              <span class="font-medium">{{ formatAmount(donationAmount) }}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-sm text-gray-600">Alamat</span>
-              <span class="font-medium text-xs">0x71C...F3E2</span>
+              <span class="text-gray-600">Daripada</span>
+              <span class="font-mono text-xs truncate max-w-[180px]">{{ walletInfo.address }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Kepada</span>
+              <span class="font-mono text-xs truncate max-w-[180px]">0x71C7656EC7ab88b098defB751B7401B5f6d8976F</span>
             </div>
           </div>
-
-          <div class="mt-3 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
-            Anda akan diminta untuk mengesahkan transaksi ini dalam dompet anda
-          </div>
+          <p class="mt-3 text-xs text-blue-600">
+            Anda akan diminta untuk mengesahkan transaksi ini dalam MetaMask apabila anda menekan butang "Sahkan Pembayaran".
+          </p>
         </div>
       </div>
 
@@ -324,7 +420,7 @@ const processPayment = () => {
       <Button
         @click="processPayment"
         class="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-12"
-        :disabled="isProcessing || (isCrypto && !walletConnected)"
+        :disabled="isProcessing || (isCrypto && !walletInfo)"
       >
         <span v-if="isProcessing">Memproses...</span>
         <span v-else>Sahkan Pembayaran {{ formatAmount(donationAmount) }}</span>

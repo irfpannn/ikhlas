@@ -74,6 +74,26 @@ const proceedToDonate = () => {
     )
   }
 }
+
+const handleDonateClick = () => {
+  // Validate amount
+  if (!donationAmount.value || donationAmount.value <= 0) {
+    // Show error
+    return;
+  }
+  
+  // Log for debugging
+  console.log('Proceeding to payment with amount:', donationAmount.value);
+  
+  // Navigate to payment page with amount as query parameter
+  router.push({
+    path: `/donation/${donationId}/payment`,
+    query: { 
+      amount: donationAmount.value,
+      currency: donationCurrency.value 
+    }
+  });
+};
 </script>
 
 <template>
@@ -455,7 +475,7 @@ const proceedToDonate = () => {
       <!-- Donate Button -->
       <div class="p-4 sticky bottom-0 bg-white border-t">
         <Button
-          @click="proceedToDonate"
+          @click="handleDonateClick"
           class="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-12"
           :disabled="!donationAmount || donationAmount <= 0"
         >
