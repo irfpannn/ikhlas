@@ -139,6 +139,56 @@
       @view-model-details="viewModelDetails"
       @show-batch-assessment="showBatchAssessmentModal = true"
     />
+    
+    <div class="mt-8">
+      <h2 class="text-xl font-bold mb-4">Recent Donations</h2>
+      
+      <div v-if="transactionsLoading" class="flex justify-center my-4">
+        <div class="spinner"></div>
+      </div>
+      
+      <div v-else-if="transactions.length === 0" class="text-center my-4">
+        <p>No donation transactions found.</p>
+      </div>
+      
+      <div v-else class="overflow-x-auto">
+        <table class="min-w-full bg-white">
+          <thead>
+            <tr>
+              <th class="py-2 px-4 border-b">Date</th>
+              <th class="py-2 px-4 border-b">Donor</th>
+              <th class="py-2 px-4 border-b">Recipient</th>
+              <th class="py-2 px-4 border-b">Amount</th>
+              <th class="py-2 px-4 border-b">Category</th>
+              <th class="py-2 px-4 border-b">Method</th>
+              <th class="py-2 px-4 border-b">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="tx in transactions.slice(0, 10)" :key="tx.id" class="hover:bg-gray-50">
+              <td class="py-2 px-4 border-b">{{ formatDate(tx.timestamp) }}</td>
+              <td class="py-2 px-4 border-b">{{ tx.senderName }}</td>
+              <td class="py-2 px-4 border-b">{{ tx.recipientName }}</td>
+              <td class="py-2 px-4 border-b font-medium">RM {{ tx.amount.toFixed(2) }}</td>
+              <td class="py-2 px-4 border-b">{{ tx.category }}</td>
+              <td class="py-2 px-4 border-b">{{ tx.paymentMethod }}</td>
+              <td class="py-2 px-4 border-b">
+                <span class="px-2 py-1 text-xs rounded-full" 
+                      :class="tx.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'">
+                  {{ tx.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="mt-4 text-right">
+          <router-link to="/admin/transactions" class="text-blue-600 hover:underline">
+            View all transactions
+          </router-link>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -146,6 +196,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { getAuth, signOut } from 'firebase/auth';
 import { useRouter } from 'vue-router';
+import { getAllDonationTransactions } from '@/services/donationService';
 
 // Import all dashboard tab components
 import {
@@ -195,6 +246,9 @@ export default {
     const showAssessEligibilityModal = ref(false);
     const showBatchAssessmentModal = ref(false);
     const selectedImage = ref(null);
+
+    const transactions = ref([]);
+    const transactionsLoading = ref(true);
 
     // Computed properties
     const totalUsers = computed(() => {
@@ -265,6 +319,14 @@ export default {
       ]);
       
       fetchAvailablePayments();
+      
+      try {
+        transactions.value = await getAllDonationTransactions();
+      } catch (error) {
+        console.error('Error fetching transactions:', error);
+      } finally {
+        transactionsLoading.value = false;
+      }
     });
     
     // Data fetching methods
@@ -496,6 +558,16 @@ export default {
       console.log('View model details');
     };
 
+    const formatDate = (date) => {
+      return new Intl.DateTimeFormat('en-MY', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date);
+    };
+
     return {
       zakatPayments,
       zakatDistributions,
@@ -543,7 +615,10 @@ export default {
       exportZakatDistributionsFromFirebase,
       importAsnafReportsToFirebase,
       exportAsnafReportsFromFirebase,
-      viewModelDetails
+      viewModelDetails,
+      transactions,
+      transactionsLoading,
+      formatDate
     };
   }
 };
