@@ -199,7 +199,7 @@ const router = createRouter({
 })
 
 // Add user authentication guard
-import { getCurrentUser } from '@/services/authService'
+import { getCurrentUser, checkIsAdmin } from '@/services/authService'
 
 router.beforeEach(async (to, from, next) => {
   // Admin guard (existing)
@@ -213,12 +213,20 @@ router.beforeEach(async (to, from, next) => {
     next('/admin/login')
   } else if (requiresAdmin) {
     // Check if user is an admin
-    // This is a simplified example - you should implement proper admin role checking
-    // For example, checking a user's role in Firestore
+    if (!currentUser) {
+      next('/admin/login')
+      return
+    }
+
     try {
-      // You would check admin status here
-      // For now, we'll just let them through
-      next()
+      const isAdmin = await checkIsAdmin(currentUser.uid)
+      if (isAdmin) {
+        next()
+      } else {
+        // Redirect non-admin users to home page
+        console.warn('Non-admin user attempted to access admin route')
+        next('/')
+      }
     } catch (error) {
       console.error('Error checking admin status:', error)
       next('/admin/login')
