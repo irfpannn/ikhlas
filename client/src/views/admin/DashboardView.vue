@@ -139,6 +139,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { getAuth, signOut } from 'firebase/auth'
+import { useTransactionStore } from '@/stores/transactionStore'
 
 // Import shadcn components
 import { Button } from '@/components/ui/button'
@@ -160,7 +161,6 @@ import {
 import ZakatDistributionView from '@/views/admin/ZakatDistribution.vue'
 
 // Import mock data
-import zakatPaymentsData from '@/data/zakatPayments.json'
 import zakatDistributionsData from '@/data/zakatDistributions.json'
 import asnafRecipientsData from '@/data/asnafRecipients.json'
 import asnafReportsData from '@/data/asnafReports.json'
@@ -169,6 +169,7 @@ import impactDataJson from '@/data/impactData.json'
 
 // Setup
 const router = useRouter()
+const transactionStore = useTransactionStore()
 
 // Refs
 const zakatPayments = ref([])
@@ -178,6 +179,7 @@ const asnafReports = ref([])
 const asnafLocations = ref([])
 const impactData = ref({})
 const availablePayments = ref([])
+const exchangeRate = ref(0.0000053) // Default exchange rate
 
 const loading = ref(true)
 const loadingDistributions = ref(true)
@@ -190,22 +192,56 @@ const showAssessEligibilityModal = ref(false)
 const showBatchAssessmentModal = ref(false)
 const selectedImage = ref(null)
 
+// Fetch BTC exchange rate
+const fetchBTCExchangeRate = async () => {
+  try {
+    const response = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=myr',
+    )
+    const data = await response.json()
+
+    if (data && data.bitcoin && data.bitcoin.myr) {
+      // Calculate BTC/MYR rate (1 BTC = X MYR, so 1 MYR = 1/X BTC)
+      exchangeRate.value = 1 / data.bitcoin.myr
+    }
+  } catch (error) {
+    console.error('Error fetching BTC exchange rate:', error)
+  }
+}
+
+// Convert RM to BTC based on current exchange rate
+const convertRMtoBTC = (amountRM) => {
+  if (!amountRM || !exchangeRate.value) return 0
+  return amountRM * exchangeRate.value
+}
+
 // Computed properties
 const totalUsers = computed(() => {
-  const uniqueUsers = new Set(zakatPayments.value.map((payment) => payment.userId))
+  const uniqueUsers = new Set(transactionStore.transactions
+    .filter(tx => tx.type === 'zakat')
+    .map(tx => tx.senderId))
   return uniqueUsers.size
 })
 
 const totalZakatRM = computed(() => {
-  return zakatPayments.value.reduce((total, payment) => {
-    return total + payment.amountRM
-  }, 0)
+  return transactionStore.transactions
+    .filter(tx => tx.type === 'zakat')
+    .reduce((total, tx) => {
+      return total + (tx.currency === 'RM' ? tx.amount : 0)
+    }, 0)
 })
 
 const totalZakatCrypto = computed(() => {
-  return zakatPayments.value.reduce((total, payment) => {
-    return total + payment.amountCrypto
-  }, 0)
+  return transactionStore.transactions
+    .filter(tx => tx.type === 'zakat')
+    .reduce((total, tx) => {
+      if (tx.currency === 'BTC') {
+        return total + tx.amount
+      } else if (tx.currency === 'RM') {
+        return total + convertRMtoBTC(tx.amount)
+      }
+      return total
+    }, 0)
 })
 
 const totalDistributedRM = computed(() => {
@@ -250,7 +286,8 @@ const groupedAsnaf = computed(() => {
 // Load data
 onMounted(async () => {
   await Promise.all([
-    fetchZakatPayments(),
+    transactionStore.fetchAllTransactions(),
+    fetchBTCExchangeRate(),
     fetchZakatDistributions(),
     fetchAsnafRecipients(),
     fetchAsnafReports(),
@@ -262,23 +299,6 @@ onMounted(async () => {
 })
 
 // Data fetching methods
-const fetchZakatPayments = async () => {
-  try {
-    loading.value = true
-    const payments = zakatPaymentsData.map((payment) => ({
-      ...payment,
-      date: new Date(payment.date),
-      amountRM: Number(payment.amountRM),
-      amountCrypto: Number(payment.amountCrypto),
-    }))
-    zakatPayments.value = payments
-  } catch (error) {
-    console.error('Error fetching zakat payments:', error)
-  } finally {
-    loading.value = false
-  }
-}
-
 const fetchZakatDistributions = async () => {
   try {
     loadingDistributions.value = true
