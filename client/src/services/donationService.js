@@ -1,8 +1,19 @@
 import { db } from './firebaseService' // Assuming firebaseService exports initialized db
-import { collection, getDocs, doc, getDoc, addDoc, query, where, orderBy, Timestamp, serverTimestamp } from 'firebase/firestore'
+import {
+  collection,
+  getDocs,
+  doc,
+  getDoc,
+  addDoc,
+  query,
+  where,
+  orderBy,
+  Timestamp,
+  serverTimestamp,
+} from 'firebase/firestore'
 import { getFirestore } from 'firebase/firestore'
 
-const donationsCollectionRef = collection(db, 'donations')
+const donationsCollectionRef = collection(db, 'donation')
 
 /**
  * Fetches all donations from Firestore.
@@ -63,21 +74,21 @@ export const getDonationById = async (id) => {
  */
 export async function saveDonationTransaction(transactionData) {
   try {
-    const db = getFirestore();
-    const transactionsRef = collection(db, "donations");
-    
+    const db = getFirestore()
+    const transactionsRef = collection(db, 'donations')
+
     // Ensure timestamp is a Firestore timestamp
     if (!transactionData.timestamp) {
-      transactionData.timestamp = serverTimestamp();
+      transactionData.timestamp = serverTimestamp()
     }
-    
+
     // Add the transaction to Firestore
-    const docRef = await addDoc(transactionsRef, transactionData);
-    console.log("Transaction saved with ID:", docRef.id);
-    return docRef.id;
+    const docRef = await addDoc(transactionsRef, transactionData)
+    console.log('Transaction saved with ID:', docRef.id)
+    return docRef.id
   } catch (error) {
-    console.error("Error saving transaction:", error);
-    throw error;
+    console.error('Error saving transaction:', error)
+    throw error
   }
 }
 
@@ -89,31 +100,31 @@ export async function saveDonationTransaction(transactionData) {
  */
 export const getUserDonationTransactions = async (userId, role = 'donor') => {
   try {
-    const fieldToQuery = role === 'donor' ? 'senderId' : 'recipientId';
-    
+    const fieldToQuery = role === 'donor' ? 'senderId' : 'recipientId'
+
     const q = query(
       collection(db, 'donations'),
       where(fieldToQuery, '==', userId),
-      orderBy('timestamp', 'desc')
-    );
-    
-    const querySnapshot = await getDocs(q);
-    const transactions = [];
-    
+      orderBy('timestamp', 'desc'),
+    )
+
+    const querySnapshot = await getDocs(q)
+    const transactions = []
+
     querySnapshot.forEach((doc) => {
       transactions.push({
         id: doc.id,
         ...doc.data(),
-        timestamp: doc.data().timestamp.toDate()
-      });
-    });
-    
-    return transactions;
+        timestamp: doc.data().timestamp.toDate(),
+      })
+    })
+
+    return transactions
   } catch (error) {
-    console.error('Error fetching donation transactions:', error);
-    throw error;
+    console.error('Error fetching donation transactions:', error)
+    throw error
   }
-};
+}
 
 /**
  * Get all donation transactions (for admin)
@@ -121,25 +132,22 @@ export const getUserDonationTransactions = async (userId, role = 'donor') => {
  */
 export const getAllDonationTransactions = async () => {
   try {
-    const q = query(
-      collection(db, 'donations'),
-      orderBy('timestamp', 'desc')
-    );
-    
-    const querySnapshot = await getDocs(q);
-    const transactions = [];
-    
+    const q = query(collection(db, 'donations'), orderBy('timestamp', 'desc'))
+
+    const querySnapshot = await getDocs(q)
+    const transactions = []
+
     querySnapshot.forEach((doc) => {
       transactions.push({
         id: doc.id,
         ...doc.data(),
-        timestamp: doc.data().timestamp.toDate()
-      });
-    });
-    
-    return transactions;
+        timestamp: doc.data().timestamp.toDate(),
+      })
+    })
+
+    return transactions
   } catch (error) {
-    console.error('Error fetching all donation transactions:', error);
-    throw error;
+    console.error('Error fetching all donation transactions:', error)
+    throw error
   }
-};
+}
