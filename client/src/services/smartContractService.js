@@ -1,7 +1,8 @@
 /**
  * Smart Contract Service
- * This service provides functionality for interacting with Ethereum smart contracts
+ * This service provides functionality for interacting with cryptocurrency transactions via Luno API
  */
+import * as lunoService from './lunoWalletService';
 
 /**
  * Convert RM amount to cryptocurrency (ETH)
@@ -28,54 +29,118 @@ export const getPusatUrusZakatAddress = () => {
 }
 
 /**
- * Execute a zakat payment through the blockchain
- * This is a mock implementation for demonstration
+ * Execute a zakat payment through Luno
  * @param {Object} paymentData 
- * @returns {Object} Transaction result
+ * @returns {Promise<Object>} Transaction result
  */
 export const executeZakatPayment = async (paymentData) => {
-  // In a real application, this would interact with a smart contract
-  console.log('Executing zakat payment:', paymentData);
+  console.log('Executing zakat payment via Luno:', paymentData);
   
-  // Simulate blockchain processing time
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  // Return mock transaction data
-  return {
-    success: true,
-    transactionHash: '0x' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
-    from: paymentData.walletAddress,
-    to: paymentData.recipientAddress,
-    amount: paymentData.amount,
-    currency: paymentData.currency,
-    timestamp: new Date().toISOString(),
-    status: 'confirmed',
-    gasUsed: '21000',
-    blockNumber: Math.floor(Math.random() * 1000000) + 15000000
-  };
+  try {
+    // Use Luno API to send crypto
+    const result = await lunoService.sendCrypto({
+      currency: paymentData.currency || 'XBT',  // Default to Bitcoin
+      amount: paymentData.amount.toString(),
+      address: paymentData.recipientAddress || getPusatUrusZakatAddress(),
+      description: `Zakat Payment - ${new Date().toISOString()}`
+    });
+    
+    // Return transaction data 
+    return {
+      success: true,
+      transactionId: result.id || `luno-tx-${Date.now()}`,
+      from: paymentData.walletInfo?.id || 'unknown',
+      to: paymentData.recipientAddress || getPusatUrusZakatAddress(),
+      amount: paymentData.amount,
+      currency: paymentData.currency || 'XBT',
+      timestamp: new Date().toISOString(),
+      status: 'pending',
+      provider: 'Luno'
+    };
+  } catch (error) {
+    console.error('Error processing Luno payment:', error);
+    throw error;
+  }
 }
 
 /**
- * Get transaction details from the blockchain
- * @param {string} txHash - Transaction hash 
+ * Process crypto payment using Luno
+ * @param {Object} params Transaction parameters
+ * @returns {Promise<Object>} Transaction result
+ */
+export const processCryptoPayment = async (params) => {
+  const { amount, currency, recipientAddress, walletInfo, description } = params;
+  
+  try {
+    // Use Luno API to send cryptocurrency
+    const result = await lunoService.sendCrypto({
+      currency: currency || 'XBT', // Default to Bitcoin
+      amount: amount.toString(),
+      address: recipientAddress,
+      description: description || `Payment - ${new Date().toISOString()}`
+    });
+    
+    // Return transaction result
+    const txId = result.id || `luno-tx-${Date.now()}`;
+    return {
+      success: true,
+      id: txId,
+      transactionId: txId,  // Include both for compatibility
+      from: walletInfo?.id || 'unknown',
+      to: recipientAddress,
+      amount,
+      currency: currency || 'XBT',
+      timestamp: new Date().toISOString(),
+      status: 'pending',
+      provider: 'Luno'
+    };
+  } catch (error) {
+    console.error('Error processing Luno payment:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get transaction details from Luno
+ * @param {string} txId - Transaction ID 
  * @returns {Promise<Object>} Transaction details
  */
-export const getTransactionDetails = async (txHash) => {
-  // In a real application, this would query the blockchain
-  console.log('Getting transaction details for:', txHash);
-  
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Return mock transaction data
-  return {
-    hash: txHash,
-    from: '0x' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
-    to: getPusatUrusZakatAddress(),
-    value: '0.01',
-    gasUsed: '21000',
-    status: 'success',
-    timestamp: new Date().toISOString(),
-    blockNumber: Math.floor(Math.random() * 1000000) + 15000000
-  };
-} 
+export const getTransactionDetails = async (txId) => {
+  try {
+    // Get transactions from Luno
+    const transactions = await lunoService.getTransactions();
+    
+    // Find the specific transaction
+    const transaction = transactions.find(tx => tx.id === txId);
+    
+    if (transaction) {
+      return {
+        id: transaction.id,
+        timestamp: transaction.time,
+        amount: transaction.amount,
+        fee: transaction.fee,
+        currency: transaction.currency,
+        status: transaction.status,
+        type: transaction.type,
+        description: transaction.description || '',
+        provider: 'Luno'
+      };
+    }
+    
+    // If transaction not found, return mock data
+    return {
+      id: txId,
+      timestamp: new Date().toISOString(),
+      amount: '0',
+      fee: '0',
+      currency: 'XBT',
+      status: 'unknown',
+      type: 'unknown',
+      description: 'Transaction not found',
+      provider: 'Luno'
+    };
+  } catch (error) {
+    console.error('Error getting transaction details:', error);
+    throw error;
+  }
+}; 

@@ -9,9 +9,11 @@ import {
   convertRMToCrypto,
   executeZakatPayment,
   getPusatUrusZakatAddress,
+  processCryptoPayment as processPaymentWithLuno
 } from '@/services/smartContractService'
 import { saveDonationTransaction } from '@/services/donationService'
 import { getAuth } from 'firebase/auth'
+import { isLunoApiAccessible } from '@/services/lunoWalletService'
 
 const route = useRoute()
 const router = useRouter()
@@ -35,12 +37,15 @@ const paymentData = ref({
 // Payment processing state
 const isProcessing = ref(false)
 const transactionResult = ref(null)
-const isMetaMaskInstalled = ref(false)
+const isLunoAvailable = ref(false)
 
-// Check if MetaMask is installed on mount
-onMounted(() => {
-  if (window.ethereum) {
-    isMetaMaskInstalled.value = true
+// Check if Luno API is available on mount
+onMounted(async () => {
+  try {
+    isLunoAvailable.value = await isLunoApiAccessible()
+  } catch (error) {
+    console.error('Error checking Luno API availability:', error)
+    isLunoAvailable.value = false
   }
 })
 
@@ -91,61 +96,51 @@ const processPayment = async () => {
       return
     }
 
-    // Execute crypto payment using MetaMask
-    await processCryptoPayment()
+    // Execute crypto payment using Luno
+    await handleCryptoPayment()
   } catch (error) {
     console.error('Error processing zakat payment:', error)
     isProcessing.value = false
   }
 }
 
-// Process crypto payment using MetaMask
-const processCryptoPayment = async () => {
+// Process crypto payment using Luno
+const handleCryptoPayment = async () => {
   try {
-    // Prepare transaction parameters
-    // Make sure we have a valid Ethereum address
+    // Get recipient address
     let recipientAddress = getPusatUrusZakatAddress()
     
-    // Fallback to a valid address if the service doesn't provide one
+    // Ensure it's a valid address
     if (!recipientAddress || !recipientAddress.startsWith('0x') || recipientAddress.length !== 42) {
       recipientAddress = '0x71C7656EC7ab88b098defB751B7401B5f6d8976F' // Example valid address
     }
     
-    const amountInWei = '0x' + (Number(cryptoAmount.value) * 1e18).toString(16) // Convert ETH to Wei and then to hex
-    
-    // Transaction parameters for MetaMask
-    const transactionParameters = {
-      to: recipientAddress, // Valid Ethereum address
-      from: paymentData.value.walletInfo.address,
-      value: amountInWei,
-      // gas: '0x5208', // Optional: 21000 gas in hex
-      // gasPrice: '0x', // Optional: gas price in hex
-    }
-    
-    console.log('Sending transaction to:', recipientAddress)
-    
-    // Request transaction signature and send transaction
-    const txHash = await window.ethereum.request({
-      method: 'eth_sendTransaction',
-      params: [transactionParameters],
+    // Use the processCryptoPayment function from the smartContractService
+    const paymentResult = await processPaymentWithLuno({
+      amount: cryptoAmount.value,
+      currency: 'ETH', // Using ETH for this example
+      recipientAddress: recipientAddress,
+      walletInfo: paymentData.value.walletInfo,
+      description: `Zakat Payment - ${paymentData.value.zakatType}`
     })
     
-    console.log('Transaction Hash:', txHash)
+    console.log('Payment result:', paymentResult)
     
     // Create transaction record
     const txData = {
       success: true,
-      transactionHash: txHash,
-      from: paymentData.value.walletInfo.address,
+      transactionId: paymentResult.transactionId,
+      from: paymentData.value.walletInfo.id,
       to: recipientAddress,
       amount: cryptoAmount.value,
       currency: 'ETH',
       timestamp: new Date().toISOString(),
-      status: 'confirmed',
+      status: paymentResult.status || 'pending',
       paymentMethod: 'crypto',
       name: paymentData.value.name,
       email: paymentData.value.email,
-      phone: paymentData.value.phone
+      phone: paymentData.value.phone,
+      provider: 'Luno'
     }
     
     // Save transaction data
@@ -157,25 +152,28 @@ const processCryptoPayment = async () => {
     history.unshift(txData)
     localStorage.setItem('transactionHistory', JSON.stringify(history))
     
-    // Redirect to transaction history page after a short delay
+    // Redirect to the success page
     setTimeout(() => {
-      router.push('/transaction-history')
+      router.push({
+        path: '/payment/success',
+        query: {
+          txId: paymentResult.transactionId,
+          amount: paymentData.value.amount,
+          currency: 'RM',
+          type: paymentData.value.zakatType
+        }
+      })
     }, 1500)
-    
-    return txData
   } catch (error) {
-    console.error('Crypto payment error:', error)
-    // Check if user rejected transaction
-    if (error.code === 4001) {
-      throw new Error('Transaction rejected by user')
-    }
-    throw error
+    console.error('Error processing payment:', error)
+    isProcessing.value = false
+    alert('Payment failed: ' + error.message)
   }
 }
 
 // Handle wallet connection
-const handleWalletConnected = (walletInfo) => {
-  paymentData.value.walletInfo = walletInfo
+const handleWalletConnected = (info) => {
+  paymentData.value.walletInfo = info
 }
 
 // Handle wallet disconnection
@@ -236,12 +234,12 @@ const handleWalletDisconnected = () => {
           <div class="mb-6">
             <h3 class="font-medium mb-3">Pembayaran Cryptocurrency</h3>
 
-            <!-- MetaMask Not Installed Warning -->
-            <div v-if="!isMetaMaskInstalled" class="p-4 border border-yellow-300 bg-yellow-50 rounded-lg mb-4">
+            <!-- Luno API Not Available Warning -->
+            <div v-if="!isLunoAvailable" class="p-4 border border-yellow-300 bg-yellow-50 rounded-lg mb-4">
               <p class="text-yellow-800 text-sm">
-                MetaMask tidak dipasang. Sila pasang
-                <a href="https://metamask.io/download/" target="_blank" class="underline font-medium">
-                  MetaMask
+                Luno API tidak tersedia. Sila periksa kelayakan API atau
+                <a href="https://www.luno.com/" target="_blank" class="underline font-medium">
+                  daftar untuk Luno
                 </a>
                 untuk menyambung dompet anda.
               </p>
@@ -274,7 +272,7 @@ const handleWalletDisconnected = () => {
               <div class="mb-4">
                 <label class="block text-sm text-gray-600 mb-2">Sambungkan Dompet Kripto</label>
                 <WalletConnect 
-                  buttonText="Sambung dengan MetaMask" 
+                  buttonText="Sambung dengan Luno" 
                   @wallet-connected="handleWalletConnected"
                   @wallet-disconnected="handleWalletDisconnected" 
                 />
@@ -296,7 +294,7 @@ const handleWalletDisconnected = () => {
                   </span>
                 </p>
                 <p class="text-xs text-blue-600 mt-2">
-                  Apabila anda menekan butang "Bayar Sekarang", MetaMask akan meminta anda mengesahkan transaksi ini.
+                  Apabila anda menekan butang "Bayar Sekarang", transaksi akan diproses melalui wallet Luno anda.
                 </p>
               </div>
             </div>
@@ -311,7 +309,7 @@ const handleWalletDisconnected = () => {
           <div class="text-sm text-gray-600">
             <p class="mb-1">
               <span class="font-medium">Hash Transaksi:</span>
-              <span class="font-mono text-xs">{{ transactionResult.transactionHash }}</span>
+              <span class="font-mono text-xs">{{ transactionResult.transactionId }}</span>
             </p>
             <p class="mb-1">
               <span class="font-medium">Dari:</span>

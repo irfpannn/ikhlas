@@ -13,4 +13,13 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    proxy: {
+      '/luno-api': {
+        target: 'https://api.luno.com/api/1',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/luno-api/, '')
+      }
+    }
+  }
 })

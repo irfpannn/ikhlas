@@ -14,6 +14,8 @@ import { saveDonationTransaction } from '@/services/donationService'
 import { getAuth } from 'firebase/auth'
 import { getDoc, doc } from 'firebase/firestore'
 import { db } from '@/firebase.config'
+import { isLunoApiAccessible } from '@/services/lunoWalletService'
+import { processCryptoPayment as processPaymentWithLuno } from '@/services/smartContractService'
 
 const route = useRoute()
 const router = useRouter()
@@ -30,27 +32,30 @@ const paymentMethod = ref('credit-card') // Default for traditional
 const walletInfo = ref(null) // For crypto wallet info
 const isProcessing = ref(false)
 
+// Check if Luno API is available
+const isLunoAvailable = ref(false)
+async function checkLunoApiAvailability() {
+  try {
+    isLunoAvailable.value = await isLunoApiAccessible()
+  } catch (error) {
+    console.error('Error checking Luno API availability:', error)
+    isLunoAvailable.value = false
+  }
+}
+
 onMounted(() => {
   // Fetch donation details if not already loaded or if needed for display
   if (!currentDonation.value || currentDonation.value.id !== donationId) {
     donationStore.fetchDonationById(donationId)
   }
   
-  // Check if MetaMask is installed
-  checkIfMetaMaskExists()
+  // Check if Luno API is available
+  checkLunoApiAvailability()
 })
 
 const isCrypto = computed(() => {
   return ['BTC', 'ETH', 'USDT'].includes(donationCurrency.value)
 })
-
-// Check if MetaMask exists
-const isMetaMaskInstalled = ref(false)
-function checkIfMetaMaskExists() {
-  if (window.ethereum) {
-    isMetaMaskInstalled.value = true
-  }
-}
 
 // Use currentDonation from the store
 const donation = computed(() => currentDonation.value || {}) // Renamed from campaign
@@ -98,30 +103,19 @@ const processPayment = () => {
 
 const processCryptoPayment = async () => {
   try {
-    // Here you would typically:
-    // 1. Prepare transaction data (recipient address, amount, etc.)
-    // 2. Request transaction signature from MetaMask
-    // 3. Send transaction
-    
     // Use a properly formatted Ethereum address (this is just an example address)
     const recipientAddress = '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
     
-    // Example of how to send a transaction using MetaMask
-    const transactionParameters = {
-      to: recipientAddress, // Complete Ethereum address
-      from: walletInfo.value.address,
-      value: '0x' + (Number(donationAmount) * 1e18).toString(16), // Convert to wei and then to hex
-      // gas: '0x5208', // Optional: 21000 gas
-      // gasPrice: '0x' // Optional: gas price
-    }
-    
-    // This would trigger MetaMask transaction approval dialog
-    const txHash = await window.ethereum.request({
-      method: 'eth_sendTransaction',
-      params: [transactionParameters],
+    // Process crypto payment using Luno
+    const result = await processPaymentWithLuno({
+      amount: donationAmount,
+      currency: donationCurrency.value === 'ETH' ? 'ETH' : 'XBT', // Map currencies appropriately
+      recipientAddress,
+      walletInfo: walletInfo.value,
+      description: `Donation to ${donation.value.title}`
     })
     
-    console.log('Transaction Hash:', txHash)
+    console.log('Transaction Result:', result)
     
     // Get current user from auth
     const auth = getAuth()
@@ -145,10 +139,10 @@ const processCryptoPayment = async () => {
         currency: donationCurrency.value,
         paymentMethod: 'crypto-wallet',
         category: donation.value.category || 'Crypto Donation',
-        notes: `Transaction Hash: ${txHash}`,
+        notes: `Transaction Hash: ${result}`,
         type: 'crypto-donation',
         walletAddress: walletInfo.value.address,
-        transactionHash: txHash
+        transactionHash: result
       }
       
       // Save the donation transaction
@@ -158,12 +152,11 @@ const processCryptoPayment = async () => {
     // Redirect to success page
     setTimeout(() => {
       router.push(
-        `/donation/${donationId}/success?amount=${donationAmount}&currency=${donationCurrency.value}&txHash=${txHash}`,
+        `/donation/${donationId}/success?amount=${donationAmount}&currency=${donationCurrency.value}&txHash=${result}`,
       )
     }, 1000)
   } catch (error) {
-    console.error('Transaction error:', error)
-    alert('Transaction failed: ' + (error.message || 'Unknown error'))
+    console.error('Error processing crypto payment:', error)
     isProcessing.value = false
   }
 }
@@ -350,20 +343,20 @@ async function handlePaymentSuccess(paymentDetails) {
       <div v-if="isCrypto" class="bg-white p-4 mb-4">
         <h3 class="font-medium mb-3">Sambung Dompet Kripto</h3>
         
-        <!-- Not installed warning -->
-        <div v-if="!isMetaMaskInstalled" class="p-4 border border-yellow-300 bg-yellow-50 rounded-lg mb-4">
+        <!-- API not available warning -->
+        <div v-if="!isLunoAvailable" class="p-4 border border-yellow-300 bg-yellow-50 rounded-lg mb-4">
           <p class="text-yellow-800 text-sm">
-            MetaMask tidak dipasang. Sila pasang
-            <a href="https://metamask.io/download/" target="_blank" class="underline font-medium">
-              MetaMask
+            Luno API tidak tersedia. Sila periksa kelayakan API atau
+            <a href="https://www.luno.com/" target="_blank" class="underline font-medium">
+              daftar untuk Luno
             </a>
             untuk menyambung dompet anda.
           </p>
         </div>
         
-        <!-- MetaMask Wallet Connection -->
+        <!-- Luno Wallet Connection -->
         <WalletConnect 
-          buttonText="Sambung dengan MetaMask" 
+          buttonText="Sambung dengan Luno" 
           @wallet-connected="handleWalletConnected"
           @wallet-disconnected="handleWalletDisconnected"
         />
@@ -386,7 +379,7 @@ async function handlePaymentSuccess(paymentDetails) {
             </div>
           </div>
           <p class="mt-3 text-xs text-blue-600">
-            Anda akan diminta untuk mengesahkan transaksi ini dalam MetaMask apabila anda menekan butang "Sahkan Pembayaran".
+            Anda akan diminta untuk mengesahkan transaksi ini dalam Luno apabila anda menekan butang "Sahkan Pembayaran".
           </p>
         </div>
       </div>
