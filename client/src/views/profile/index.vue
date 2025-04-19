@@ -1,6 +1,39 @@
 <template>
   <div class="flex flex-col min-h-screen bg-gray-100 overflow-y-auto pb-20">
-    <div class="p-4 flex-grow">
+    <!-- Loading State -->
+    <div v-if="authLoading || profileLoading" class="flex-grow flex items-center justify-center">
+      <p>Loading profile...</p>
+      <!-- Or a spinner component -->
+    </div>
+
+    <!-- Error State -->
+    <div
+      v-else-if="authError || profileError"
+      class="flex-grow flex items-center justify-center p-4"
+    >
+      <Card class="w-full max-w-sm bg-red-50 border border-red-200">
+        <CardHeader>
+          <CardTitle class="text-red-700">Error</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p class="text-red-600">{{ authError || profileError }}</p>
+          <Button
+            v-if="authError === 'Not authenticated'"
+            @click="goToLogin"
+            variant="destructive"
+            size="sm"
+            class="mt-4"
+            >Go to Login</Button
+          >
+          <Button v-else @click="retryFetchProfile" variant="secondary" size="sm" class="mt-4"
+            >Retry</Button
+          >
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- Profile Content -->
+    <div v-else class="p-4 flex-grow">
       <h1 class="text-xl font-semibold text-center mb-5 text-gray-800">Profil Saya</h1>
       <Card class="overflow-hidden shadow-sm mb-4 bg-green-50">
         <CardHeader class="p-4 flex flex-col sm:flex-row items-center gap-4">
@@ -45,10 +78,10 @@
                 type="submit"
                 size="sm"
                 class="bg-[#75a868] hover:bg-[#75a868]/90 w-full sm:w-auto"
-                :disabled="loading"
+                :disabled="profileLoading"
                 >Kemas Kini Profil</Button
               >
-              <p v-if="error" class="text-red-500 text-sm">{{ error }}</p>
+              <p v-if="profileError" class="text-red-500 text-sm">{{ profileError }}</p>
             </form>
           </div>
         </CardContent>
@@ -159,7 +192,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { storeToRefs } from 'pinia' // Import storeToRefs
+import { storeToRefs } from 'pinia'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -173,14 +206,13 @@ import { useAuthStore } from '@/stores/authStore'
 const router = useRouter()
 const profileStore = useProfileStore()
 const authStore = useAuthStore()
-// Use storeToRefs to keep reactivity
-const { profile, loading, error } = storeToRefs(profileStore)
-const { fetchProfile, updateProfile } = profileStore // Actions can be destructured directly
-const { signOut } = authStore // Get the signOut action from authStore
 
-onMounted(() => {
-  fetchProfile()
-})
+// Use storeToRefs for reactivity
+const { profile, loading: profileLoading, error: profileError } = storeToRefs(profileStore)
+const { user, loading: authLoading, error: authError } = storeToRefs(authStore) // Get auth state
+
+const { fetchProfile, updateProfile } = profileStore
+const { signOut } = authStore
 
 const form = ref({
   name: '',
@@ -189,11 +221,44 @@ const form = ref({
   address: '',
 })
 
-// Watch the reactive 'profile' ref from the store
+// Watch for auth state to be ready before fetching profile
+onMounted(() => {
+  let stopAuthWatcher = null // Declare with let, initialize to null
+
+  stopAuthWatcher = watch(
+    authLoading,
+    (newAuthLoading, oldAuthLoading) => {
+      console.log('Auth loading state changed:', newAuthLoading)
+
+      // Only proceed if the loading state has actually finished (transitioned from true to false)
+      // or if it was already false on the immediate run.
+      if (!newAuthLoading) {
+        if (user.value) {
+          console.log('Auth ready, user found. Fetching profile...')
+          fetchProfile()
+        } else {
+          console.log('Auth ready, but no user logged in.')
+          // Fetch profile anyway to get the 'Not authenticated' error state in profileStore
+          fetchProfile()
+        }
+
+        // Stop watching authLoading once it's confirmed false
+        // Check if stopAuthWatcher has been assigned (it should be by now)
+        if (stopAuthWatcher) {
+          console.log('Stopping auth loading watcher.')
+          stopAuthWatcher()
+        }
+      }
+    },
+    { immediate: true },
+  ) // immediate: true checks the initial state
+})
+
+// Watch the profile store's profile data to update the local form
 watch(
   profile,
   (newProfile) => {
-    console.log('Profile Store Changed:', newProfile) // Log when profile store changes
+    console.log('Profile Store Changed:', newProfile)
     if (newProfile) {
       form.value = {
         name: newProfile.user_fullname || '',
@@ -201,14 +266,13 @@ watch(
         phone: newProfile.user_phone || '',
         address: newProfile.user_address || '',
       }
-      console.log('Form updated:', form.value) // Log the updated form value
+      console.log('Form updated:', form.value)
     } else {
-      // Reset form if profile becomes null (e.g., on logout)
       form.value = { name: '', email: '', phone: '', address: '' }
-      console.log('Form reset due to null profile') // Log form reset
+      console.log('Form reset due to null profile')
     }
   },
-  { immediate: true }, // immediate: true ensures the form is populated initially if profile is already loaded
+  { immediate: true }, // Populate form initially if profile is already available
 )
 
 const handleUpdate = async () => {
@@ -218,13 +282,13 @@ const handleUpdate = async () => {
     user_phone: form.value.phone,
     user_address: form.value.address,
   }
-  console.log('Attempting to update profile with:', updateData) // Log data before sending update
+  console.log('Attempting to update profile with:', updateData)
   await updateProfile(updateData)
   if (!profileStore.error) {
-    console.log('Profile update successful (according to store)') // Log success
+    console.log('Profile update successful (according to store)')
     alert('Profil berjaya dikemas kini!')
   } else {
-    console.error('Profile update failed:', profileStore.error) // Log error
+    console.error('Profile update failed:', profileStore.error)
   }
 }
 
@@ -250,13 +314,26 @@ const getInitials = (name) => {
 
 const formatDate = (date) => {
   if (!date) return ''
-  return new Date(date).toLocaleDateString('ms-MY', {
+  // Ensure date is a Date object if it's a Firestore Timestamp
+  const dateObj = date.toDate ? date.toDate() : new Date(date)
+  return dateObj.toLocaleDateString('ms-MY', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   })
 }
 
+// Function to navigate to login
+const goToLogin = () => {
+  router.push('/login')
+}
+
+// Function to retry fetching profile
+const retryFetchProfile = () => {
+  fetchProfile()
+}
+
+// --- Mock Data (Keep or replace with actual data fetching) ---
 const donations = ref([
   {
     amount: 100.0,
