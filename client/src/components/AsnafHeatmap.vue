@@ -56,9 +56,9 @@ export default {
     // Generate dummy data with decreasing impact over years
     const generateYearBasedData = (baseLocations) => {
       const yearMultipliers = {
-        '2024': 1.0,
+        '2024': 0.4,
         '2023': 0.7,
-        '2022': 0.4
+        '2022': 1.0
       };
 
       return baseLocations.map(location => ({
