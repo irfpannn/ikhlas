@@ -267,45 +267,146 @@ const redeemReward = (reward) => {
       <!-- Missions Tab -->
       <TabsContent value="missions">
         <div class="p-4">
-          <Card class="shadow-sm mb-4">
-            <CardContent>
-              <h3 class="font-semibold mb-2">Misi Harian</h3>
-              <div class="space-y-3">
-                <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                  <div>
-                    <p class="font-medium">Buat sumbangan</p>
-                    <p class="text-sm text-gray-500">+50 mata</p>
-                  </div>
-                  <Button size="sm" variant="outline">Selesai</Button>
+          <!-- User points summary for missions tab -->
+          <Card class="shadow-sm mb-4 bg-gradient-to-r from-[#75a868] to-[#5d8652] text-white">
+            <CardContent class="p-4">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h3 class="font-semibold text-lg">Misi Aktif</h3>
+                  <p class="text-sm opacity-90">Selesaikan misi untuk mata tambahan</p>
                 </div>
-                <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                  <div>
-                    <p class="font-medium">Kongsi di media sosial</p>
-                    <p class="text-sm text-gray-500">+20 mata</p>
-                  </div>
-                  <Button size="sm" variant="outline">Selesai</Button>
+                <div class="text-right">
+                  <p class="text-sm">Mata PUZ Anda</p>
+                  <p class="font-bold text-xl">{{ userPoints }} ⭐</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card class="shadow-sm">
-            <CardContent>
-              <h3 class="font-semibold mb-2">Misi Bulanan</h3>
-              <div class="space-y-3">
-                <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                  <div>
-                    <p class="font-medium">Sumbang 3 kali</p>
-                    <p class="text-sm text-gray-500">+200 mata</p>
+          <!-- Daily Missions with icons and improved design -->
+          <Card class="shadow-sm mb-4 overflow-hidden border border-green-100">
+            <div class="bg-[#75a868]/10 px-4 py-3 border-b border-green-100">
+              <h3 class="font-semibold text-[#75a868] flex items-center">
+                <span class="mr-2 text-lg">🔄</span> Misi Harian
+              </h3>
+            </div>
+            <CardContent class="p-4">
+              <div class="space-y-4">
+                <div
+                  class="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:border-[#75a868] transition-colors"
+                >
+                  <div class="flex items-center">
+                    <div class="bg-[#75a868]/10 p-2 rounded-full mr-3">
+                      <span class="text-xl">💰</span>
+                    </div>
+                    <div>
+                      <p class="font-medium">Buat sumbangan</p>
+                      <p class="text-sm text-gray-500 flex items-center">
+                        <span class="text-yellow-500 mr-1">⭐</span> +50 mata
+                      </p>
+                    </div>
                   </div>
-                  <div class="text-sm">1/3</div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    class="bg-white hover:bg-[#75a868] hover:text-white transition-colors"
+                  >
+                    Selesai
+                  </Button>
                 </div>
-                <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                  <div>
-                    <p class="font-medium">Rujuk rakan</p>
-                    <p class="text-sm text-gray-500">+100 mata setiap rujukan</p>
+
+                <div
+                  class="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:border-[#75a868] transition-colors"
+                >
+                  <div class="flex items-center">
+                    <div class="bg-[#75a868]/10 p-2 rounded-full mr-3">
+                      <span class="text-xl">📱</span>
+                    </div>
+                    <div>
+                      <p class="font-medium">Kongsi di media sosial</p>
+                      <p class="text-sm text-gray-500 flex items-center">
+                        <span class="text-yellow-500 mr-1">⭐</span> +20 mata
+                      </p>
+                    </div>
                   </div>
-                  <Button size="sm" variant="outline">Rujuk</Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    class="bg-white hover:bg-[#75a868] hover:text-white transition-colors"
+                  >
+                    Selesai
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <!-- Monthly Missions with progress indicators -->
+          <Card class="shadow-sm overflow-hidden border border-green-100">
+            <div class="bg-[#75a868]/10 px-4 py-3 border-b border-green-100">
+              <h3 class="font-semibold text-[#75a868] flex items-center">
+                <span class="mr-2 text-lg">📅</span> Misi Bulanan
+              </h3>
+            </div>
+            <CardContent class="p-4">
+              <div class="space-y-4">
+                <div
+                  class="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:border-[#75a868] transition-colors"
+                >
+                  <div class="flex items-center">
+                    <div class="bg-[#75a868]/10 p-2 rounded-full mr-3">
+                      <span class="text-xl">🔄</span>
+                    </div>
+                    <div>
+                      <p class="font-medium">Sumbang 3 kali</p>
+                      <p class="text-sm text-gray-500 flex items-center">
+                        <span class="text-yellow-500 mr-1">⭐</span> +200 mata
+                      </p>
+                    </div>
+                  </div>
+                  <div class="text-center">
+                    <div class="text-sm font-medium text-[#75a868]">1/3</div>
+                    <div class="w-16 h-2 bg-gray-200 rounded-full mt-1">
+                      <div class="w-1/3 h-full bg-[#75a868] rounded-full"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  class="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:border-[#75a868] transition-colors"
+                >
+                  <div class="flex items-center">
+                    <div class="bg-[#75a868]/10 p-2 rounded-full mr-3">
+                      <span class="text-xl">👥</span>
+                    </div>
+                    <div>
+                      <p class="font-medium">Rujuk rakan</p>
+                      <p class="text-sm text-gray-500 flex items-center">
+                        <span class="text-yellow-500 mr-1">⭐</span> +100 mata setiap rujukan
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    class="bg-[#75a868] text-white hover:bg-[#5d8652] transition-colors"
+                  >
+                    Rujuk
+                  </Button>
+                </div>
+              </div>
+
+              <!-- Mission rewards summary -->
+              <div class="mt-6 pt-4 border-t border-dashed border-gray-200">
+                <h4 class="text-sm font-medium text-gray-600 mb-2">Kemajuan Misi</h4>
+                <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                  <div>
+                    <p class="text-sm font-medium">Misi selesai minggu ini</p>
+                    <p class="text-xs text-gray-500">Teruskan untuk lebih banyak mata</p>
+                  </div>
+                  <div class="flex items-center">
+                    <span class="text-2xl mr-2">🏆</span>
+                    <span class="text-lg font-bold text-[#75a868]">3/7</span>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -317,21 +418,20 @@ const redeemReward = (reward) => {
       <TabsContent value="redeem">
         <div class="p-4">
           <!-- User tier and points -->
-          <Card class="shadow-sm mb-4 bg-[#75a868] text-white">
-            <CardContent>
+          <Card class="shadow-sm mb-4 bg-gradient-to-r from-[#75a868] to-[#5d8652] text-white">
+            <CardContent class="p-4">
               <div class="flex justify-between items-center">
                 <div>
-                  <h3 class="font-semibold text-lg">
-                    {{ userTier }}
-                  </h3>
-                  <div class="flex items-center mt-1">
-                    <p class="text-sm">Mata PUZ</p>
-                  </div>
-                  <p class="font-bold text-xl">{{ userPoints }} mata</p>
+                  <h3 class="font-semibold text-lg">{{ userTier }}</h3>
+                  <p class="text-sm opacity-90">Tebus mata anda untuk ganjaran</p>
                 </div>
-                <Button variant="secondary" class="bg-white hover:bg-gray-100 text-black">
-                  Ganjaran Saya
-                </Button>
+                <div class="text-right">
+                  <p class="text-sm">Mata PUZ Anda</p>
+                  <p class="font-bold text-xl flex items-center justify-end">
+                    <span class="text-yellow-300 mr-1">⭐</span>
+                    {{ userPoints }}
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
