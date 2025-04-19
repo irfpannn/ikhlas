@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,49 +8,180 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 
 const router = useRouter()
 const searchQuery = ref('')
-const isLoading = ref(false)
-const transactions = ref([
+const isLoading = ref(true)
+
+// Data structures similar to ZakatDistribution
+const zakatTransactions = ref([])
+const recipients = ref([])
+const distributionComplete = ref(true) // Set to true to show distribution by default
+
+// Original transactions data as backup
+const originalTransactions = ref([
   {
     id: 'TX123456789',
     date: '2023-10-15',
-    amount: '0.05 BTC',
+    amount: 1500,
+    amountFormatted: '0.05 BTC',
     status: 'Selesai',
+    userName: 'Anda',
     userWallet: '0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t',
     asnafWallet: '0x9s8r7q6p5o4n3m2l1k0j9i8h7g6f5e4d3c2b1a0',
     asnafName: 'Ahmad bin Abdullah',
     asnafCategory: 'Fakir',
     evidenceImage: 'bantuan.jpg',
     description: 'Bayaran zakat bulanan untuk sokongan pendidikan',
+    type: 'Zakat Pendapatan',
+    allocated: true,
   },
   {
     id: 'TX987654321',
     date: '2023-11-20',
-    amount: '1.2 ETH',
+    amount: 2000,
+    amountFormatted: '1.2 ETH',
     status: 'Selesai',
+    userName: 'Anda',
     userWallet: '0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t',
     asnafWallet: '0x5t4s3r2q1p0o9n8m7l6k5j4i3h2g1f0e9d8c7b6a',
     asnafName: 'Fatimah binti Ismail',
     asnafCategory: 'Miskin',
     evidenceImage: 'bantuan.jpg',
     description: 'Program bantuan makanan dan tempat tinggal',
+    type: 'Zakat Pendapatan',
+    allocated: true,
   },
   {
     id: 'TX567891234',
     date: '2023-12-05',
-    amount: '500 USDT',
+    amount: 500,
+    amountFormatted: '500 USDT',
     status: 'Menunggu',
+    userName: 'Anda',
     userWallet: '0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t',
     asnafWallet: '0x3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1a2b',
     asnafName: 'Muhammad bin Hassan',
     asnafCategory: 'Fi-sabilillah',
     evidenceImage: 'bantuan.jpg',
     description: 'Pembiayaan projek pembangunan komuniti',
+    type: 'Zakat Pendapatan',
+    allocated: false,
   },
 ])
+
+// Total zakat amount
+const totalZakatAmount = computed(() => {
+  return zakatTransactions.value.reduce((total, transaction) => total + transaction.amount, 0)
+})
+
+// Filtered transactions based on search query
 const filteredTransactions = ref([])
 
-onMounted(() => {
-  filteredTransactions.value = [...transactions.value]
+// Format number with commas
+const formatNumber = (num) => {
+  return num.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+// Format date
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString('en-MY')
+}
+
+// Get recipient status
+const getRecipientStatus = (recipient) => {
+  if (recipient.amountReceived >= recipient.amountNeeded) {
+    return 'Sepenuhnya Disalurkan'
+  } else if (recipient.amountReceived > 0) {
+    return `Sebahagian Disalurkan (${Math.round((recipient.amountReceived / recipient.amountNeeded) * 100)}%)`
+  } else {
+    return 'Belum Disalurkan'
+  }
+}
+
+// Setup mock asnaf recipients data
+const mockFetchAsnafRecipients = () => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const mockData = [
+        {
+          id: 1,
+          name: 'Program Bantuan Fakir',
+          description: 'Sokongan untuk individu yang sangat miskin',
+          amountNeeded: 5000,
+          amountReceived: 1500,
+          contributors: [{ name: 'Anda', amount: 1500 }],
+        },
+        {
+          id: 2,
+          name: 'Sokongan Keluarga Miskin',
+          description: 'Bantuan untuk keluarga berpendapatan rendah',
+          amountNeeded: 3500,
+          amountReceived: 2000,
+          contributors: [{ name: 'Anda', amount: 2000 }],
+        },
+        {
+          id: 3,
+          name: 'Operasi Amil',
+          description: 'Sokongan untuk pengutip zakat',
+          amountNeeded: 1000,
+          amountReceived: 500,
+          contributors: [{ name: 'Anda', amount: 500 }],
+        },
+        {
+          id: 4,
+          name: 'Pusat Pendidikan Muallaf',
+          description: 'Pendidikan untuk penganut baru',
+          amountNeeded: 2500,
+          amountReceived: 0,
+          contributors: [],
+        },
+        {
+          id: 5,
+          name: 'Pemulihan Riqab',
+          description: 'Kebebasan daripada bentuk perhambaan moden',
+          amountNeeded: 3000,
+          amountReceived: 0,
+          contributors: [],
+        },
+        {
+          id: 6,
+          name: 'Bantuan Hutang Gharimin',
+          description: 'Bantuan untuk mereka yang berhutang',
+          amountNeeded: 4000,
+          amountReceived: 0,
+          contributors: [],
+        },
+        {
+          id: 7,
+          name: 'Projek Komuniti Fi Sabilillah',
+          description: 'Projek pembangunan komuniti',
+          amountNeeded: 6000,
+          amountReceived: 0,
+          contributors: [],
+        },
+        {
+          id: 8,
+          name: 'Bantuan Musafir Ibnu Sabil',
+          description: 'Sokongan untuk musafir yang terputus perjalanan',
+          amountNeeded: 1500,
+          amountReceived: 0,
+          contributors: [],
+        },
+      ]
+      resolve(mockData)
+    }, 500)
+  })
+}
+
+onMounted(async () => {
+  isLoading.value = true
+  // Populate zakat transactions
+  zakatTransactions.value = [...originalTransactions.value]
+  // Populate filtered transactions initially
+  filteredTransactions.value = [...zakatTransactions.value]
+
+  // Get recipients data
+  recipients.value = await mockFetchAsnafRecipients()
+
+  isLoading.value = false
 })
 
 const goBack = () => {
@@ -63,10 +194,10 @@ const handleSearch = () => {
   // Simulate API call with timeout
   setTimeout(() => {
     if (searchQuery.value.trim() === '') {
-      filteredTransactions.value = [...transactions.value]
+      filteredTransactions.value = [...zakatTransactions.value]
     } else {
       const query = searchQuery.value.toLowerCase()
-      filteredTransactions.value = transactions.value.filter(
+      filteredTransactions.value = zakatTransactions.value.filter(
         (tx) =>
           tx.id.toLowerCase().includes(query) ||
           tx.asnafName.toLowerCase().includes(query) ||
@@ -81,6 +212,13 @@ const handleSearch = () => {
 const truncateAddress = (address) => {
   if (!address) return ''
   return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`
+}
+
+// Calculate percentage for progress bar
+const calculatePercentage = (received, needed) => {
+  if (!needed) return 0
+  const percentage = (received / needed) * 100
+  return Math.min(percentage, 100) // Cap at 100%
 }
 </script>
 
@@ -127,75 +265,102 @@ const truncateAddress = (address) => {
       </Card>
     </div>
 
-    <!-- Transactions List -->
-    <div class="px-4">
-      <h2 class="text-lg font-medium mb-3">Sejarah Transaksi</h2>
+    <!-- Summary Section -->
+    <div class="px-4 mb-6">
+      <Card class="shadow-sm bg-blue-50">
+        <CardHeader class="pb-2">
+          <CardTitle class="text-base">Ringkasan Zakat Anda</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div class="stat-card p-3 bg-white rounded shadow">
+              <p class="text-gray-600 text-sm">Jumlah Zakat Anda</p>
+              <p class="text-xl font-bold">RM {{ formatNumber(totalZakatAmount) }}</p>
+            </div>
+            <div class="stat-card p-3 bg-white rounded shadow">
+              <p class="text-gray-600 text-sm">Status</p>
+              <p class="text-xl font-bold text-green-600">Telah Diagihkan</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
 
-      <div v-if="filteredTransactions.length === 0" class="text-center py-8">
-        <p class="text-gray-500">Tiada transaksi ditemui</p>
+    <!-- Zakat Distribution Section -->
+    <div class="px-4 mb-6">
+      <h2 class="text-lg font-medium mb-3">Pengagihan Zakat Anda</h2>
+
+      <div v-if="isLoading" class="space-y-4 mb-6">
+        <div v-for="i in 3" :key="`loading-${i}`" class="bg-white rounded-lg shadow-sm p-4">
+          <div class="h-4 bg-gray-200 rounded w-3/4 mb-3 animate-pulse"></div>
+          <div class="h-3 bg-gray-200 rounded w-full mb-4 animate-pulse"></div>
+          <div class="h-5 bg-gray-200 rounded w-2/3 mb-2 animate-pulse"></div>
+          <div class="h-2 bg-gray-200 rounded w-full animate-pulse"></div>
+        </div>
       </div>
 
-      <div v-else class="space-y-4">
-        <Card v-for="tx in filteredTransactions" :key="tx.id" class="shadow-sm overflow-hidden">
+      <div v-else-if="recipients.length > 0" class="space-y-4 mb-6">
+        <Card
+          v-for="recipient in recipients.filter((r) => r.amountReceived > 0)"
+          :key="recipient.id"
+          class="shadow-sm overflow-hidden"
+        >
           <CardHeader class="pb-2">
-            <div class="flex justify-between items-center">
-              <CardTitle class="text-base">{{ tx.id }}</CardTitle>
-              <span
-                class="text-sm font-medium"
-                :class="{
-                  'text-green-600': tx.status === 'Selesai',
-                  'text-yellow-600': tx.status === 'Menunggu',
-                }"
-                >{{ tx.status }}</span
-              >
-            </div>
-            <p class="text-sm text-gray-500">{{ tx.date }} • {{ tx.amount }}</p>
+            <CardTitle class="text-base">{{ recipient.name }}</CardTitle>
+            <p class="text-sm text-gray-600">{{ recipient.description }}</p>
           </CardHeader>
 
-          <CardContent class="pt-4">
+          <CardContent>
             <div class="space-y-3">
               <div>
-                <h3 class="text-sm font-medium text-gray-700">Dompet Anda</h3>
-                <p class="text-xs bg-gray-100 p-2 rounded-md overflow-x-auto whitespace-nowrap">
-                  {{ tx.userWallet }}
-                </p>
-                <p class="text-xs text-gray-500 mt-1">
-                  <span class="font-medium">Salin:</span> {{ truncateAddress(tx.userWallet) }}
-                </p>
+                <div class="flex justify-between mb-1 text-sm">
+                  <span
+                    >Sumbangan Anda:
+                    <span class="font-medium"
+                      >RM
+                      {{
+                        formatNumber(
+                          recipient.contributors.find((c) => c.name === 'Anda')?.amount || 0,
+                        )
+                      }}</span
+                    ></span
+                  >
+                  <span>{{ getRecipientStatus(recipient) }}</span>
+                </div>
+
+                <!-- Progress bar -->
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mb-1">
+                  <div
+                    class="bg-green-600 h-2.5 rounded-full"
+                    :style="`width: ${calculatePercentage(recipient.amountReceived, recipient.amountNeeded)}%`"
+                  ></div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500">
+                  <span>RM {{ formatNumber(recipient.amountReceived) }}</span>
+                  <span>RM {{ formatNumber(recipient.amountNeeded) }}</span>
+                </div>
               </div>
 
-              <div>
-                <h3 class="text-sm font-medium text-gray-700">Dompet Asnaf</h3>
-                <p class="text-xs bg-gray-100 p-2 rounded-md overflow-x-auto whitespace-nowrap">
-                  {{ tx.asnafWallet }}
-                </p>
-                <p class="text-xs text-gray-500 mt-1">
-                  <span class="font-medium">Salin:</span> {{ truncateAddress(tx.asnafWallet) }}
-                </p>
-              </div>
-
-              <div>
-                <h3 class="text-sm font-medium text-gray-700">Butiran Asnaf</h3>
-                <p class="text-sm">
-                  {{ tx.asnafName }} <span class="text-gray-500">({{ tx.asnafCategory }})</span>
-                </p>
-                <p class="text-sm text-gray-600">{{ tx.description }}</p>
-              </div>
-
-              <div>
-                <h3 class="text-sm font-medium text-gray-700">Bukti</h3>
-                <div class="mt-2 border rounded-lg overflow-hidden">
-                  <img :src="tx.evidenceImage" alt="Bukti transaksi" class="w-full h-auto" />
+              <div v-if="recipient.contributors && recipient.contributors.length > 0">
+                <p class="text-sm font-medium mb-1">Penyumbang:</p>
+                <div class="bg-gray-50 p-2 rounded-md">
+                  <div
+                    v-for="(contributor, cIndex) in recipient.contributors"
+                    :key="`cont-${cIndex}`"
+                    class="text-sm flex justify-between mb-1 last:mb-0"
+                  >
+                    <span>{{ contributor.name }}</span>
+                    <span>RM {{ formatNumber(contributor.amount) }}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </CardContent>
-
-          <CardFooter class="flex gap-8 items-center justify-center">
-            <Button variant="outline" size="sm">Sahkan</Button>
-            <Button variant="outline" size="sm">Lapor Isu</Button>
-          </CardFooter>
         </Card>
+      </div>
+
+      <div v-else class="text-center py-6 bg-white rounded-lg shadow-sm">
+        <p class="text-gray-500">Tiada maklumat pengagihan zakat tersedia</p>
       </div>
     </div>
 
@@ -212,5 +377,19 @@ const truncateAddress = (address) => {
 
 .overflow-x-auto::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Edge */
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 </style>
