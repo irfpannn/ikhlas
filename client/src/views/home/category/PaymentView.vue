@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
@@ -9,9 +9,9 @@ import {
   convertRMToCrypto,
   executeZakatPayment,
   getPusatUrusZakatAddress,
-  processCryptoPayment as processPaymentWithLuno
+  processCryptoPayment as processPaymentWithLuno,
 } from '@/services/smartContractService'
-import { saveDonationTransaction } from '@/services/donationService'
+import { addZakatPayment } from '@/services/zakatTransactionService'
 import { getAuth } from 'firebase/auth'
 import { isLunoApiAccessible } from '@/services/lunoWalletService'
 import { getDoc, doc } from 'firebase/firestore'
@@ -21,29 +21,20 @@ const route = useRoute()
 const router = useRouter()
 
 // Get zakat amount and type from route query parameters
-const zakatAmount = computed(() => {
-  return route.query.amount ? parseFloat(route.query.amount) : 250.00
-})
-const zakatType = computed(() => route.query.type || 'Zakat')
-const zakatCurrency = computed(() => route.query.currency || 'RM')
+const zakatAmount = route.query.amount ? parseFloat(route.query.amount) : 250.0
+const zakatType = route.query.type || 'Zakat'
+const zakatCurrency = route.query.currency || 'RM'
 
 // Payment data
 const paymentData = ref({
-  amount: zakatAmount.value.toString(),
+  amount: zakatAmount.toString(),
   name: '',
   email: '',
   phone: '',
   walletInfo: null,
   paymentMethod: 'crypto', // Only crypto is supported now
-  zakatType: zakatType.value,
-  currency: zakatCurrency.value
-})
-
-// Watch for changes in route query parameters
-watch([zakatAmount, zakatType, zakatCurrency], ([newAmount, newType, newCurrency]) => {
-  paymentData.value.amount = newAmount.toString()
-  paymentData.value.zakatType = newType
-  paymentData.value.currency = newCurrency
+  zakatType: zakatType,
+  currency: zakatCurrency,
 })
 
 // Payment processing state
@@ -79,19 +70,19 @@ const processPayment = async () => {
     // Get current user from auth
     const auth = getAuth()
     const user = auth.currentUser
-    
+
     if (!user) {
       console.error('User not authenticated')
       return
     }
-    
+
     // Get user data from Firestore to ensure we have the correct name
     const userDoc = await getDoc(doc(db, 'users', user.uid))
     const userData = userDoc.exists() ? userDoc.data() : null
-    
+
     // Use Firestore user data if available, otherwise fall back to Auth data
     const senderName = userData?.user_fullname || user.displayName || user.email || 'Anonymous'
-    
+
     // Prepare zakat payment data
     const zakatData = {
       senderId: user.uid,
@@ -106,9 +97,9 @@ const processPayment = async () => {
       type: 'zakat',
       zakatType: paymentData.value.zakatType,
       timestamp: new Date().toISOString(),
-      status: 'pending'
+      status: 'pending',
     }
-    
+
     if (!paymentData.value.walletInfo) {
       alert('Please connect your wallet first')
       isProcessing.value = false
@@ -117,14 +108,14 @@ const processPayment = async () => {
 
     // Execute crypto payment using Luno
     const paymentResult = await handleCryptoPayment()
-    
+
     // Update transaction status and add transaction hash
     zakatData.status = 'completed'
     zakatData.transactionHash = paymentResult.transactionId
-    
+
     // Save the zakat transaction to Firebase
-    await saveDonationTransaction(zakatData)
-    
+    await addZakatPayment(zakatData)
+
     // Redirect to success page
     setTimeout(() => {
       router.push({
@@ -133,8 +124,8 @@ const processPayment = async () => {
           txId: paymentResult.transactionId,
           amount: paymentData.value.amount,
           currency: paymentData.value.currency || 'RM',
-          type: paymentData.value.zakatType
-        }
+          type: paymentData.value.zakatType,
+        },
       })
     }, 1500)
   } catch (error) {
@@ -149,23 +140,23 @@ const handleCryptoPayment = async () => {
   try {
     // Get recipient address
     let recipientAddress = getPusatUrusZakatAddress()
-    
+
     // Ensure it's a valid address
     if (!recipientAddress || !recipientAddress.startsWith('0x') || recipientAddress.length !== 42) {
       recipientAddress = '0x71C7656EC7ab88b098defB751B7401B5f6d8976F' // Example valid address
     }
-    
+
     // Use the processCryptoPayment function from the smartContractService
     const paymentResult = await processPaymentWithLuno({
       amount: cryptoAmount.value,
       currency: 'ETH', // Using ETH for this example
       recipientAddress: recipientAddress,
       walletInfo: paymentData.value.walletInfo,
-      description: `Zakat Payment - ${paymentData.value.zakatType}`
+      description: `Zakat Payment - ${paymentData.value.zakatType}`,
     })
-    
+
     console.log('Payment result:', paymentResult)
-    
+
     // Create transaction record
     const txData = {
       success: true,
@@ -180,18 +171,18 @@ const handleCryptoPayment = async () => {
       name: paymentData.value.name,
       email: paymentData.value.email,
       phone: paymentData.value.phone,
-      provider: 'Luno'
+      provider: 'Luno',
     }
-    
+
     // Save transaction data
     transactionResult.value = txData
     localStorage.setItem('zakatTransaction', JSON.stringify(txData))
-    
+
     // Add to transaction history
     const history = JSON.parse(localStorage.getItem('transactionHistory') || '[]')
     history.unshift(txData)
     localStorage.setItem('transactionHistory', JSON.stringify(history))
-    
+
     // Redirect to the success page
     setTimeout(() => {
       router.push({
@@ -200,8 +191,8 @@ const handleCryptoPayment = async () => {
           txId: paymentResult.transactionId,
           amount: paymentData.value.amount,
           currency: 'RM',
-          type: paymentData.value.zakatType
-        }
+          type: paymentData.value.zakatType,
+        },
       })
     }, 1500)
 
@@ -242,9 +233,7 @@ const handleWalletDisconnected = () => {
           <div class="text-center">
             <p class="text-white/80 mb-1">Jumlah Pembayaran</p>
             <h2 class="text-2xl font-bold">RM {{ paymentData.amount }}</h2>
-            <p class="text-sm mt-1">
-              ≈ {{ cryptoAmount }} ETH
-            </p>
+            <p class="text-sm mt-1">≈ {{ cryptoAmount }} ETH</p>
           </div>
         </CardContent>
       </Card>
@@ -277,7 +266,10 @@ const handleWalletDisconnected = () => {
             <h3 class="font-medium mb-3">Pembayaran Cryptocurrency</h3>
 
             <!-- Luno API Not Available Warning -->
-            <div v-if="!isLunoAvailable" class="p-4 border border-yellow-300 bg-yellow-50 rounded-lg mb-4">
+            <div
+              v-if="!isLunoAvailable"
+              class="p-4 border border-yellow-300 bg-yellow-50 rounded-lg mb-4"
+            >
               <p class="text-yellow-800 text-sm">
                 Luno API tidak tersedia. Sila periksa kelayakan API atau
                 <a href="https://www.luno.com/" target="_blank" class="underline font-medium">
@@ -313,17 +305,19 @@ const handleWalletDisconnected = () => {
 
               <div class="mb-4">
                 <label class="block text-sm text-gray-600 mb-2">Sambungkan Dompet Kripto</label>
-                <WalletConnect 
-                  buttonText="Sambung dengan Luno" 
+                <WalletConnect
+                  buttonText="Sambung dengan Luno"
                   @wallet-connected="handleWalletConnected"
-                  @wallet-disconnected="handleWalletDisconnected" 
+                  @wallet-disconnected="handleWalletDisconnected"
                 />
               </div>
-              
             </div>
 
             <!-- Wallet information when connected -->
-            <div v-if="paymentData.walletInfo" class="p-4 bg-green-50 border border-green-200 rounded-lg mt-3">
+            <div
+              v-if="paymentData.walletInfo"
+              class="p-4 bg-green-50 border border-green-200 rounded-lg mt-3"
+            >
               <div class="flex items-center mb-2">
                 <div class="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
                 <span class="font-medium text-green-800">Dompet Disambungkan</span>
@@ -332,11 +326,16 @@ const handleWalletDisconnected = () => {
                 <p class="mb-1">
                   <span class="font-medium">Alamat: </span>
                   <span class="font-mono text-xs">
-                    {{ paymentData.walletInfo.address.substring(0, 6) }}...{{ paymentData.walletInfo.address.substring(paymentData.walletInfo.address.length - 4) }}
+                    {{ paymentData.walletInfo.address.substring(0, 6) }}...{{
+                      paymentData.walletInfo.address.substring(
+                        paymentData.walletInfo.address.length - 4,
+                      )
+                    }}
                   </span>
                 </p>
                 <p class="text-xs text-blue-600 mt-2">
-                  Apabila anda menekan butang "Bayar Sekarang", transaksi akan diproses melalui wallet Luno anda.
+                  Apabila anda menekan butang "Bayar Sekarang", transaksi akan diproses melalui
+                  wallet Luno anda.
                 </p>
               </div>
             </div>
