@@ -120,6 +120,62 @@ const getTransactionIcon = (transaction) => {
   }
 }
 
+const convertRMtoBTC = (amountRM) => {
+  const btcRate = 250000 // 1 BTC = 250,000 RM (update as needed)
+  if (!amountRM || isNaN(amountRM)) return '0.000000'
+  return (parseFloat(amountRM) / btcRate).toFixed(6)
+}
+
+// Function to convert Crypto (BTC/ETH) to RM (using example rates from previous template logic)
+const convertCryptoToRM = (amountCrypto, currency) => {
+  if (!amountCrypto || isNaN(amountCrypto)) return 'RM 0.00'
+
+  // NOTE: These rates are placeholders based on previous logic and likely need updating
+  const btcToRmRate = (1 / 0.000001) * 3.5 // Example rate for BTC to RM
+  const ethToRmRate = 1 / 0.0001 // Example rate for ETH to RM
+
+  let amountRM = 0
+  if (currency === 'BTC') {
+    amountRM = parseFloat(amountCrypto) * btcToRmRate
+  } else if (currency === 'ETH') {
+    amountRM = parseFloat(amountCrypto) * ethToRmRate
+  } else {
+    // Handle other cryptos or return default if unknown
+    return 'RM ?.?' // Indicate unknown conversion
+  }
+
+  return `RM ${amountRM.toFixed(2)}`
+}
+
+// Helper to get the primary display amount (always RM)
+const getDisplayRMAmount = (transaction) => {
+  if (transaction.currency === 'RM') {
+    return formatCurrency(transaction.amount, 'RM')
+  } else if (transaction.currency === 'BTC' || transaction.currency === 'ETH') {
+    // Use amountCrypto if available (assuming it holds the crypto value), otherwise fallback to amount
+    const cryptoAmount = transaction.amountCrypto || transaction.amount
+    return convertCryptoToRM(cryptoAmount, transaction.currency)
+  }
+  // Fallback for other currencies or unexpected data
+  return formatCurrency(transaction.amount, transaction.currency)
+}
+
+// Helper to get the secondary display amount (always Crypto equivalent)
+const getDisplayCryptoAmount = (transaction) => {
+  // Use amountCrypto if available, otherwise fallback to amount
+  const cryptoAmount = transaction.amountCrypto || transaction.amount
+
+  if (transaction.currency === 'RM') {
+    // Show BTC equivalent for RM transactions
+    return `≈ ${convertRMtoBTC(transaction.amount)} BTC`
+  } else if (transaction.currency === 'BTC' || transaction.currency === 'ETH') {
+    // Show the original crypto amount
+    return formatCurrency(cryptoAmount, transaction.currency)
+  }
+  // Fallback if currency is neither RM, BTC, nor ETH
+  return '' // Or display something else like '-'
+}
+
 // View transaction details
 const viewTransactionDetails = (transaction) => {
   // Set the selected transaction and open the modal dialog
@@ -203,7 +259,7 @@ const getStatusBadge = (status) => {
           <div v-else-if="transactions.length > 0">
             <div
               v-for="transaction in transactions"
-              :key="transaction.transactionHash"
+              :key="transaction.transactionHash || transaction.id"
               class="p-4 border-b last:border-b-0 flex justify-between items-center cursor-pointer hover:bg-gray-50"
               @click="viewTransactionDetails(transaction)"
             >
@@ -226,41 +282,13 @@ const getStatusBadge = (status) => {
                 </div>
               </div>
               <div class="text-right">
+                <!-- Always show RM amount on top -->
                 <p class="font-medium text-green-600">
-                  <template v-if="transaction.currency !== 'RM'">
-                    {{ parseFloat(transaction.amountCrypto || transaction.amount).toFixed(6) }}
-                    {{ transaction.currency }}
-                  </template>
-                  <template v-else>
-                    {{ formatCurrency(transaction.amount, transaction.currency) }}
-                  </template>
+                  {{ getDisplayRMAmount(transaction) }}
                 </p>
-                <!-- For zakat payments, show the direct amountRM -->
-                <p
-                  v-if="
-                    (transaction.currency === 'BTC' || transaction.currency === 'ETH') &&
-                    transaction.type === 'zakat-payment'
-                  "
-                  class="text-xs text-gray-500"
-                >
-                  ≈ RM {{ transaction.amountRM }}
-                </p>
-                <!-- For donations, calculate and show conversion -->
-                <p
-                  v-else-if="transaction.currency === 'BTC' || transaction.currency === 'ETH'"
-                  class="text-xs text-gray-500"
-                >
-                  ≈ RM
-                  {{
-                    transaction.currency === 'BTC'
-                      ? (
-                          (parseFloat(transaction.amountCrypto || transaction.amount) / 0.000001) *
-                          3.5
-                        ).toFixed(2)
-                      : (
-                          parseFloat(transaction.amountCrypto || transaction.amount) / 0.0001
-                        ).toFixed(2)
-                  }}
+                <!-- Always show Crypto equivalent/amount at the bottom -->
+                <p class="text-xs text-gray-500">
+                  {{ getDisplayCryptoAmount(transaction) }}
                 </p>
                 <Button
                   variant="ghost"
@@ -291,13 +319,13 @@ const getStatusBadge = (status) => {
 
     <!-- Transaction Details Modal -->
     <Dialog :open="isDialogOpen" @update:open="isDialogOpen = $event">
-      <DialogContent class="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent class="sm:max-w-[700px] max-h-[90vh] overflow-y-auto max-w-2xl">
         <DialogHeader>
           <DialogTitle>Detail Transaksi</DialogTitle>
           <DialogDescription> Informasi lengkap tentang transaksi ini </DialogDescription>
         </DialogHeader>
 
-        <!-- Loading skeleton for transaction details -->
+        <!-- Loading skeleton -->
         <div v-if="isLoading && selectedTransaction" class="py-4">
           <div class="mb-4 text-center">
             <div class="w-16 h-16 rounded-full bg-slate-400 animate-pulse mx-auto mb-2"></div>
@@ -341,94 +369,96 @@ const getStatusBadge = (status) => {
             <div class="text-center">
               <h4 class="text-sm text-gray-500 mb-1">Jumlah</h4>
               <p class="text-2xl font-semibold text-green-600">
-                <template v-if="selectedTransaction.currency !== 'RM'">
-                  {{
-                    parseFloat(
-                      selectedTransaction.amountCrypto || selectedTransaction.amount,
-                    ).toFixed(6)
-                  }}
-                  {{ selectedTransaction.currency }}
-                </template>
-                <template v-else>
-                  {{ formatCurrency(selectedTransaction.amount, selectedTransaction.currency) }}
-                </template>
+                {{ formatCurrency(selectedTransaction.amount, selectedTransaction.currency) }}
               </p>
-              <!-- For zakat payments, show the direct amountRM -->
-              <p
-                v-if="
-                  (selectedTransaction.currency === 'BTC' ||
-                    selectedTransaction.currency === 'ETH') &&
-                  selectedTransaction.type === 'zakat-payment'
-                "
-                class="text-sm text-gray-500"
-              >
-                ≈ RM {{ selectedTransaction.amountRM }}
-              </p>
-              <!-- For donations, calculate and show conversion -->
-              <p
-                v-else-if="
-                  selectedTransaction.currency === 'BTC' || selectedTransaction.currency === 'ETH'
-                "
-                class="text-sm text-gray-500"
-              >
-                ≈ RM
-                {{
-                  selectedTransaction.currency === 'BTC'
-                    ? (
-                        (parseFloat(
-                          selectedTransaction.amountCrypto || selectedTransaction.amount,
-                        ) /
-                          0.000001) *
-                        3.5
-                      ).toFixed(2)
-                    : (
-                        parseFloat(selectedTransaction.amountCrypto || selectedTransaction.amount) /
-                        0.0001
-                      ).toFixed(2)
-                }}
+              <p v-if="selectedTransaction.currency === 'RM'" class="text-sm text-gray-500 mt-1">
+                ≈ {{ convertRMtoBTC(selectedTransaction.amount) }} BTC
               </p>
             </div>
           </div>
 
-          <!-- Transaction details -->
+          <!-- Transaction Details -->
           <div class="space-y-3">
             <div class="flex justify-between">
-              <span class="text-gray-500">ID Transaksi</span>
-              <span class="font-medium">{{
-                selectedTransaction.id || selectedTransaction.transactionId || 'Tidak tersedia'
+              <span class="text-gray-500">Kategori</span>
+              <span class="font-medium">{{ selectedTransaction.category || '-' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-500">Mata Wang</span>
+              <span class="font-medium">{{ selectedTransaction.currency }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-500">Kaedah Pembayaran</span>
+              <span class="font-medium">{{ selectedTransaction.paymentMethod || '-' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-500">Penerima</span>
+              <span class="font-medium">{{ selectedTransaction.recipientName || '-' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-500">Pengirim</span>
+              <span class="font-medium">{{ selectedTransaction.senderName || '-' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-500">Tarikh & Masa</span>
+              <span class="font-medium">{{ formatShortDate(selectedTransaction.timestamp) }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-500">Status</span>
+              <span class="font-medium">{{ selectedTransaction.status }}</span>
+            </div>
+
+            <div class="flex justify-between">
+              <span class="text-gray-500">ID Transaksi (Ikhlas)</span>
+              <span class="font-mono text-xs">{{ selectedTransaction.id }}</span>
+            </div>
+          </div>
+
+          <!-- Crypto Transaction Hash Details -->
+          <div
+            v-if="
+              selectedTransaction.transactionHash &&
+              selectedTransaction.type !== 'zakat' &&
+              selectedTransaction.type !== 'zakat-payment'
+            "
+            class="mt-4 pt-4 border-t border-gray-200 space-y-3"
+          >
+            <h4 class="font-medium text-gray-700 mb-2">Butiran Hash Transaksi Crypto</h4>
+            <div class="flex justify-between">
+              <span class="text-gray-500">ID Transaksi (Provider)</span>
+              <span class="font-mono text-xs">{{
+                selectedTransaction.transactionHash.id || '-'
               }}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-500">Tarikh</span>
-              <span class="font-medium">{{ formatShortDate(selectedTransaction.timestamp) }}</span>
-            </div>
-            <div v-if="selectedTransaction.userName" class="flex justify-between">
-              <span class="text-gray-500">Nama</span>
-              <span class="font-medium">{{ selectedTransaction.userName }}</span>
-            </div>
-            <div v-if="selectedTransaction.userEmail" class="flex justify-between">
-              <span class="text-gray-500">Email</span>
-              <span class="font-medium">{{ selectedTransaction.userEmail }}</span>
-            </div>
-            <div v-if="selectedTransaction.paymentMethod" class="flex justify-between">
-              <span class="text-gray-500">Kaedah Pembayaran</span>
-              <span class="font-medium">{{ selectedTransaction.paymentMethod }}</span>
-            </div>
-            <div v-if="selectedTransaction.walletAddress" class="flex justify-between">
-              <span class="text-gray-500">Alamat Dompet</span>
-              <span class="font-medium text-xs break-all">{{
-                selectedTransaction.walletAddress
+              <span class="text-gray-500">Provider</span>
+              <span class="font-mono text-xs">{{
+                selectedTransaction.transactionHash.provider || '-'
               }}</span>
             </div>
-            <div v-if="selectedTransaction.transactionHash" class="flex justify-between">
-              <span class="text-gray-500">Hash Transaksi</span>
-              <span class="font-medium text-xs break-all">{{
-                selectedTransaction.transactionHash
+            <div class="flex justify-between">
+              <span class="text-gray-500">Status (Provider)</span>
+              <span class="font-mono text-xs">{{
+                selectedTransaction.transactionHash.status || '-'
               }}</span>
             </div>
-            <div v-if="selectedTransaction.description" class="flex justify-between">
-              <span class="text-gray-500">Keterangan</span>
-              <span class="font-medium">{{ selectedTransaction.description }}</span>
+            <div class="flex justify-between">
+              <span class="text-gray-500">Alamat Wallet (Dari)</span>
+              <span class="font-mono text-xs">{{
+                selectedTransaction.transactionHash.from || '-'
+              }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-500">Alamat Wallet (Ke)</span>
+              <span class="font-mono text-xs">{{
+                selectedTransaction.transactionHash.to || '-'
+              }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-500">Masa (Provider)</span>
+              <span class="font-mono text-xs">{{
+                formatShortDate(selectedTransaction.transactionHash.timestamp)
+              }}</span>
             </div>
           </div>
         </div>

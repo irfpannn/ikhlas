@@ -1,7 +1,16 @@
-import { collection, addDoc, query, where, orderBy, getDocs, limit } from 'firebase/firestore'
+import {
+  collection,
+  addDoc,
+  query,
+  where,
+  orderBy,
+  getDocs,
+  limit,
+  serverTimestamp,
+} from 'firebase/firestore'
 import { db, auth } from '@/services/firebaseService'
 
-const ZAKAT_PAYMENTS_COLLECTION = 'zakatPayments' // Collection name in Firestore
+const ZAKAT_PAYMENTS_COLLECTION = 'transactions' // Collection name in Firestore
 
 // Function to get zakat payment history for the current user
 export const getZakatPaymentHistory = async () => {
@@ -9,38 +18,47 @@ export const getZakatPaymentHistory = async () => {
     const currentUser = auth.currentUser
 
     if (!currentUser) {
-      console.warn('No authenticated user found')
+      console.warn('No authenticated user found for fetching zakat history')
       return []
     }
 
     const userId = currentUser.uid
 
-    // Query Firestore for zakat payments where userId matches the current user's ID
-    const zakatPaymentsRef = collection(db, ZAKAT_PAYMENTS_COLLECTION)
-    const q = query(zakatPaymentsRef, where('userId', '==', userId), orderBy('createdAt', 'desc'))
+    // Query Firestore for transactions where senderId matches and type is 'zakat'
+    const transactionsRef = collection(db, ZAKAT_PAYMENTS_COLLECTION)
+    const q = query(
+      transactionsRef,
+      where('senderId', '==', userId),
+      where('type', '==', 'zakat'), // Filter by type 'zakat'
+      orderBy('timestamp', 'desc'), // Order by the 'timestamp' field
+    )
 
     const querySnapshot = await getDocs(q)
     const zakatPayments = []
 
     querySnapshot.forEach((doc) => {
-      // Convert Firestore timestamps to ISO strings for consistent handling
       const data = doc.data()
+      // Map Firestore data to the new format
       const formattedData = {
-        ...data,
         id: doc.id,
-        // Format timestamps for consistent handling with other transaction data
-        timestamp: data.createdAt || data.date,
-        // Add default fields to match donation data structure
-        type: 'zakat-payment',
-        currency: data.cryptoType || 'RM',
-        // For RM transactions, use amountRM. For crypto, use amountCrypto.
-        amount: data.cryptoType ? data.amountCrypto || 0 : data.amountRM || 0,
-        status: data.status || 'completed',
+        amount: data.amount || 0,
+        category: data.category || '',
+        currency: data.currency || 'RM', // Default currency if not present
+        notes: data.notes || '',
+        paymentMethod: data.paymentMethod || '',
+        recipientId: data.recipientId || '',
+        recipientName: data.recipientName || '',
+        senderId: data.senderId,
+        senderName: data.senderName || '',
+        timestamp: data.timestamp, // Use the timestamp field directly
+        type: data.type, // Should be 'zakat' or potentially other types like 'crypto-donation'
+        status: data.status || 'completed', // Keep status mapping
+        transactionHash: data.transactionHash || null, // Add the transactionHash field
       }
-
       zakatPayments.push(formattedData)
     })
 
+    console.log(`Fetched ${zakatPayments.length} zakat transactions for user ${userId}`)
     return zakatPayments
   } catch (error) {
     console.error('Error fetching zakat payment history:', error)
@@ -54,30 +72,36 @@ export const addZakatPayment = async (paymentData) => {
     const currentUser = auth.currentUser
 
     if (!currentUser) {
-      throw new Error('No authenticated user found')
+      throw new Error('No authenticated user found for adding zakat payment')
     }
 
-    // Add user info to the payment data
+    // Prepare data according to the new format
     const zakatPaymentData = {
-      ...paymentData,
-      userId: currentUser.uid,
-      userEmail: currentUser.email,
-      userName: currentUser.displayName || '',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      status: paymentData.status || 'Pending',
+      amount: paymentData.amount || 0,
+      category: paymentData.category || 'Zakat Payment', // Default category
+      currency: paymentData.currency || 'RM',
+      notes: paymentData.notes || '',
+      paymentMethod: paymentData.paymentMethod || 'unknown',
+      recipientId: paymentData.recipientId || 'zakat-authority', // Default recipient
+      recipientName: paymentData.recipientName || 'Zakat Authority',
+      senderId: currentUser.uid,
+      senderName: currentUser.displayName || currentUser.email || 'Anonymous User',
+      timestamp: serverTimestamp(), // Use Firestore server timestamp for accuracy
+      type: 'zakat', // Explicitly set type
+      status: paymentData.status || 'completed', // Default status
     }
 
-    // Add to Firestore
+    // Add to Firestore 'transactions' collection
     const docRef = await addDoc(collection(db, ZAKAT_PAYMENTS_COLLECTION), zakatPaymentData)
+    console.log(`Added zakat transaction with ID: ${docRef.id}`)
 
-    // Return the payment with the Firestore document ID
+    // Return the added data including the ID and server-generated timestamp (once fetched)
+    // Note: The timestamp will be null initially until the server confirms it.
+    // For immediate use, you might want to return a client-side timestamp or fetch the doc again.
     return {
       id: docRef.id,
       ...zakatPaymentData,
-      // Format for consistent handling with other transaction data
-      timestamp: zakatPaymentData.createdAt,
-      type: 'zakat-payment',
+      timestamp: new Date(), // Return client time for immediate feedback, actual is serverTimestamp
     }
   } catch (error) {
     console.error('Error adding zakat payment:', error)
@@ -91,42 +115,51 @@ export const getLatestZakatPayment = async () => {
     const currentUser = auth.currentUser
 
     if (!currentUser) {
-      console.warn('No authenticated user found')
+      console.warn('No authenticated user found for fetching latest zakat payment')
       return null
     }
 
     const userId = currentUser.uid
 
-    // Query Firestore for the most recent zakat payment
-    const zakatPaymentsRef = collection(db, ZAKAT_PAYMENTS_COLLECTION)
+    // Query Firestore for the most recent transaction of type 'zakat'
+    const transactionsRef = collection(db, ZAKAT_PAYMENTS_COLLECTION)
     const q = query(
-      zakatPaymentsRef,
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc'),
+      transactionsRef,
+      where('senderId', '==', userId),
+      where('type', '==', 'zakat'), // Filter by type 'zakat'
+      orderBy('timestamp', 'desc'), // Order by the 'timestamp' field
       limit(1),
     )
 
     const querySnapshot = await getDocs(q)
 
     if (querySnapshot.empty) {
+      console.log(`No zakat transactions found for user ${userId}`)
       return null
     }
 
-    // Return the first (most recent) document
+    // Return the first (most recent) document, formatted
     const doc = querySnapshot.docs[0]
     const data = doc.data()
 
-    return {
+    const latestPayment = {
       id: doc.id,
-      ...data,
-      // Format for consistent handling with other transaction data
-      timestamp: data.createdAt || data.date,
-      type: 'zakat-payment',
-      currency: data.cryptoType || 'RM',
-      // For RM transactions, use amountRM. For crypto, use amountCrypto.
-      amount: data.cryptoType ? data.amountCrypto || 0 : data.amountRM || 0,
+      amount: data.amount || 0,
+      category: data.category || '',
+      currency: data.currency || 'RM',
+      notes: data.notes || '',
+      paymentMethod: data.paymentMethod || '',
+      recipientId: data.recipientId || '',
+      recipientName: data.recipientName || '',
+      senderId: data.senderId,
+      senderName: data.senderName || '',
+      timestamp: data.timestamp, // Use the timestamp field directly
+      type: data.type,
       status: data.status || 'completed',
+      transactionHash: data.transactionHash || null, // Add the transactionHash field
     }
+    console.log(`Fetched latest zakat transaction for user ${userId}:`, latestPayment)
+    return latestPayment
   } catch (error) {
     console.error('Error fetching latest zakat payment:', error)
     return null
