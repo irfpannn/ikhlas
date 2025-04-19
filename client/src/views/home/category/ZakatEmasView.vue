@@ -242,56 +242,53 @@ const showResult = ref(false)
 onMounted(async () => {
   isLoadingData.value = true
   try {
-    // WARNING: Using a public CORS proxy. This is NOT recommended for production.
-    // Public proxies can be unreliable, slow, or disappear.
-    // The proper solution is to create your own backend proxy endpoint.
-    const proxyUrl = 'https://cors-anywhere.herokuapp.com/' // Example public proxy
-    const targetUrl = 'https://www.zakat2u.com.my/nisab-list'
-    const response = await fetch(proxyUrl + targetUrl) // Prepend proxy URL
+    // Import local JSON file instead of fetching from external API
+    import('@/data/emasPrice.json')
+      .then((module) => {
+        const data = module.default || module
+        historicalNisabData.value = data // Store raw data if needed elsewhere
 
-    if (!response.ok) {
-      // Handle potential errors from the proxy or the target URL
-      throw new Error(`Fetch error! status: ${response.status}`)
-    }
-    const data = await response.json()
-    historicalNisabData.value = data // Store raw data if needed elsewhere
+        // Process data to populate historicalGoldPrices
+        const prices = {}
+        let latestData = null // To find the latest uruf/nisab values
 
-    // Process data to populate historicalGoldPrices
-    const prices = {}
-    let latestData = null // To find the latest uruf/nisab values
+        data.forEach((item) => {
+          const year = parseInt(item.tahun)
+          const price = parseFloat(item.hargaemas)
+          if (!isNaN(year) && !isNaN(price) && price > 0) {
+            prices[year] = price
 
-    data.forEach((item) => {
-      const year = parseInt(item.tahun)
-      const price = parseFloat(item.hargaemas)
-      if (!isNaN(year) && !isNaN(price) && price > 0) {
-        prices[year] = price
+            // Keep track of the latest entry (assuming the first item is the latest)
+            if (!latestData) {
+              latestData = item
+            }
+          }
+        })
+        historicalGoldPrices.value = prices
 
-        // Keep track of the latest entry (assuming the first item is the latest)
-        if (!latestData) {
-          latestData = item
+        // Update constants based on the latest available data
+        if (latestData) {
+          const latestNisab = parseFloat(latestData.uruf_simpan)
+          const latestUruf = parseFloat(latestData.uruf_pakai)
+          if (!isNaN(latestNisab) && latestNisab > 0) {
+            nisabSimpanan.value = latestNisab
+          }
+          if (!isNaN(latestUruf) && latestUruf > 0) {
+            urufPerhiasan.value = latestUruf
+          }
         }
-      }
-    })
-    historicalGoldPrices.value = prices
 
-    // Update constants based on the latest available data
-    if (latestData) {
-      const latestNisab = parseFloat(latestData.uruf_simpan)
-      const latestUruf = parseFloat(latestData.uruf_pakai)
-      if (!isNaN(latestNisab) && latestNisab > 0) {
-        nisabSimpanan.value = latestNisab
-      }
-      if (!isNaN(latestUruf) && latestUruf > 0) {
-        urufPerhiasan.value = latestUruf
-      }
-    }
-
-    toast.success('Data harga emas terkini berjaya dimuat.', { duration: 2000 })
+        toast.success('Data harga emas terkini berjaya dimuat.', { duration: 2000 })
+        isLoadingData.value = false
+      })
+      .catch((error) => {
+        console.error('Failed to load local gold price data:', error)
+        toast.error('Gagal memuatkan data harga emas. Menggunakan nilai lalai.', { duration: 4000 })
+        isLoadingData.value = false
+      })
   } catch (error) {
-    console.error('Failed to fetch or process historical gold data:', error) // Updated error message
+    console.error('Error in initialization:', error)
     toast.error('Gagal memuatkan data harga emas. Menggunakan nilai lalai.', { duration: 4000 })
-    // Keep default values if fetch fails
-  } finally {
     isLoadingData.value = false
   }
 })
@@ -437,21 +434,21 @@ const resetForm = () => {
 // Go to payment function
 const goToPayment = () => {
   if (totalZakat.value > 0) {
-    router.push({ 
-      name: 'payment', 
-      query: { 
-        amount: totalZakat.value.toFixed(2), 
+    router.push({
+      name: 'payment',
+      query: {
+        amount: totalZakat.value.toFixed(2),
         type: 'Emas',
-        currency: 'RM',  // Explicitly specify currency
+        currency: 'RM', // Explicitly specify currency
         description: `Zakat Emas - ${totalUnitsHaul.value} unit (${formatCurrency(totalValueHaul.value)})`,
         metadata: JSON.stringify({
           totalUnits: totalUnitsHaul.value,
           totalValue: totalValueHaul.value,
           netValue: netZakatableValue.value,
           nisabValue: currentNisabValue.value,
-          calculationDetails: calculationDetails.value
-        })
-      } 
+          calculationDetails: calculationDetails.value,
+        }),
+      },
     })
   } else {
     toast.error('Tiada jumlah zakat untuk dibayar.')

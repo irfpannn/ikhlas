@@ -262,44 +262,48 @@ const showResult = ref(false)
 onMounted(async () => {
   isLoadingData.value = true
   try {
-    // Using the same proxy approach as ZakatEmasView for consistency
-    // WARNING: Using a public CORS proxy. NOT recommended for production.
-    const proxyUrl = 'https://cors-anywhere.herokuapp.com/'
-    const targetUrl = 'https://www.zakat2u.com.my/nisab-list' // Assuming this has the latest gold price
-    const response = await fetch(proxyUrl + targetUrl)
+    // Import local JSON file instead of fetching from external API
+    import('@/data/emasPrice.json')
+      .then((module) => {
+        const data = module.default || module
 
-    if (!response.ok) {
-      throw new Error(`Fetch error! status: ${response.status}`)
-    }
-    const data = await response.json()
-
-    // Find the latest gold price from the data (assuming first entry is latest)
-    if (data && data.length > 0) {
-      const latestData = data[0]
-      const price = parseFloat(latestData.hargaemas)
-      if (!isNaN(price) && price > 0) {
-        currentGoldPrice.value = price
-        toast.success(`Harga emas terkini (RM ${formatCurrency(price)}/g) berjaya dimuat.`, {
-          duration: 2500,
+        // Find the latest gold price from the data (assuming first entry is latest)
+        if (data && data.length > 0) {
+          const latestData = data[0]
+          const price = parseFloat(latestData.hargaemas)
+          if (!isNaN(price) && price > 0) {
+            currentGoldPrice.value = price
+            toast.success(`Harga emas terkini (RM ${formatCurrency(price)}/g) berjaya dimuat.`, {
+              duration: 2500,
+            })
+          } else {
+            throw new Error('Invalid gold price data received.')
+          }
+        } else {
+          throw new Error('No gold price data received.')
+        }
+        isLoadingData.value = false
+      })
+      .catch((error) => {
+        console.error('Failed to load local gold price data:', error)
+        toast.error('Gagal memuatkan harga emas untuk Nisab. Kiraan mungkin tidak tepat.', {
+          duration: 4000,
         })
-      } else {
-        throw new Error('Invalid gold price data received.')
-      }
-    } else {
-      throw new Error('No gold price data received.')
-    }
+        // Set a default or handle the error appropriately, maybe disable calculation
+        currentGoldPrice.value = 300 // Example fallback - adjust as needed
+        toast.warning(
+          `Menggunakan anggaran harga emas RM ${formatCurrency(currentGoldPrice.value)}/g.`,
+          { duration: 3000 },
+        )
+        isLoadingData.value = false
+      })
   } catch (error) {
-    console.error('Failed to fetch gold price for Nisab calculation:', error)
+    console.error('Error in initialization:', error)
     toast.error('Gagal memuatkan harga emas untuk Nisab. Kiraan mungkin tidak tepat.', {
       duration: 4000,
     })
     // Set a default or handle the error appropriately, maybe disable calculation
     currentGoldPrice.value = 300 // Example fallback - adjust as needed
-    toast.warning(
-      `Menggunakan anggaran harga emas RM ${formatCurrency(currentGoldPrice.value)}/g.`,
-      { duration: 3000 },
-    )
-  } finally {
     isLoadingData.value = false
   }
 })
@@ -452,12 +456,12 @@ const resetForm = () => {
 // Go to payment function
 const goToPayment = () => {
   if (isEligible.value && totalZakat.value > 0) {
-    router.push({ 
-      name: 'payment', 
-      query: { 
-        amount: totalZakat.value.toFixed(2), 
+    router.push({
+      name: 'payment',
+      query: {
+        amount: totalZakat.value.toFixed(2),
         type: 'Saham',
-        currency: 'RM',  // Explicitly specify currency
+        currency: 'RM', // Explicitly specify currency
         description: `Zakat Saham - ${totalUnitsHaul.value} unit (${formatCurrency(totalValueHaul.value)})`,
         metadata: JSON.stringify({
           totalUnits: totalUnitsHaul.value,
@@ -465,9 +469,9 @@ const goToPayment = () => {
           netValue: netZakatableValue.value,
           nisabValue: currentNisabValue.value,
           calculationDetails: calculationDetails.value,
-          shareEntries: shareEntries.value
-        })
-      } 
+          shareEntries: shareEntries.value,
+        }),
+      },
     })
   } else {
     toast.error('Tiada jumlah zakat untuk dibayar atau nilai tidak layak dizakat.')
