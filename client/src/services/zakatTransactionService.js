@@ -7,6 +7,8 @@ import {
   getDocs,
   limit,
   serverTimestamp,
+  doc,
+  getDoc,
 } from 'firebase/firestore'
 import { db, auth } from '@/services/firebaseService'
 
@@ -66,6 +68,24 @@ export const getZakatPaymentHistory = async () => {
   }
 }
 
+// Function to get user's full name from Firestore
+const getUserFullName = async (userId) => {
+  try {
+    const userDocRef = doc(db, 'users', userId)
+    const userDoc = await getDoc(userDocRef)
+
+    if (userDoc.exists()) {
+      // Get the user_fullname field from the user document
+      const userData = userDoc.data()
+      return userData.user_fullname || null
+    }
+    return null
+  } catch (error) {
+    console.error('Error fetching user full name:', error)
+    return null
+  }
+}
+
 // Function to add a new zakat payment record
 export const addZakatPayment = async (paymentData) => {
   try {
@@ -74,6 +94,16 @@ export const addZakatPayment = async (paymentData) => {
     if (!currentUser) {
       throw new Error('No authenticated user found for adding zakat payment')
     }
+
+    // Generate a mock transaction hash
+    const generateMockTransactionHash = () => {
+      // Create a random number string (using current timestamp + random number for uniqueness)
+      const randomNum = Date.now() + Math.floor(Math.random() * 1000000)
+      return `mock-tx-${randomNum}`
+    }
+
+    // Fetch the user's full name from Firestore
+    const userFullName = await getUserFullName(currentUser.uid)
 
     // Prepare data according to the new format
     const zakatPaymentData = {
@@ -85,10 +115,11 @@ export const addZakatPayment = async (paymentData) => {
       recipientId: paymentData.recipientId || 'zakat-authority', // Default recipient
       recipientName: paymentData.recipientName || 'Zakat Authority',
       senderId: currentUser.uid,
-      senderName: currentUser.displayName || currentUser.email || 'Anonymous User',
+      senderName: userFullName || currentUser.displayName || 'Anonymous User', // Prioritize user_fullname from Firestore
       timestamp: serverTimestamp(), // Use Firestore server timestamp for accuracy
       type: 'zakat', // Explicitly set type
       status: paymentData.status || 'completed', // Default status
+      transactionHash: paymentData.transactionHash || generateMockTransactionHash(), // Add transaction hash
     }
 
     // Add to Firestore 'transactions' collection
