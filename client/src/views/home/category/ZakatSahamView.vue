@@ -452,7 +452,14 @@ const resetForm = () => {
 // Go to payment function
 const goToPayment = () => {
   if (isEligible.value && totalZakat.value > 0) {
-    router.push({ name: 'payment', query: { amount: totalZakat.value.toFixed(2), type: 'Saham' } })
+    router.push({ 
+      name: 'payment', 
+      query: { 
+        amount: totalZakat.value.toFixed(2), 
+        type: 'Saham',
+        currency: 'RM'  // Explicitly specify currency
+      } 
+    })
   } else {
     toast.error('Tiada jumlah zakat untuk dibayar atau nilai tidak layak dizakat.')
   }

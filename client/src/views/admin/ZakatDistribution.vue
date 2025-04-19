@@ -54,31 +54,6 @@
       <div class="recipients-section mb-6 p-4 bg-gray-50 rounded-lg">
         <h2 class="text-lg font-semibold mb-3">Recipients Management</h2>
         
-        <!-- Add Recipient Form -->
-        <div class="add-recipient-form mb-4 p-3 border rounded">
-          <h3 class="font-medium mb-2">Add New Recipient</h3>
-          <div class="flex flex-wrap gap-3 items-end">
-            <div>
-              <label class="block text-sm">Name</label>
-              <input v-model="newRecipient.name" type="text" class="border rounded p-2" />
-            </div>
-            <div>
-              <label class="block text-sm">Amount Needed (RM)</label>
-              <input v-model="newRecipient.amountNeeded" type="number" class="border rounded p-2" />
-            </div>
-            <div>
-              <label class="block text-sm">Description</label>
-              <input v-model="newRecipient.description" type="text" class="border rounded p-2" />
-            </div>
-            <button 
-              @click="addRecipient" 
-              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              Add Recipient
-            </button>
-          </div>
-        </div>
-        
         <!-- Recipients List -->
         <div class="recipients-list">
           <h3 class="font-medium mb-2">Current Recipients</h3>
@@ -91,7 +66,6 @@
                   <th class="py-2 px-4 text-left">Amount Needed</th>
                   <th class="py-2 px-4 text-left">Amount Received</th>
                   <th class="py-2 px-4 text-left">Status</th>
-                  <th class="py-2 px-4 text-left">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -111,14 +85,6 @@
                     >
                       {{ getRecipientStatus(recipient) }}
                     </span>
-                  </td>
-                  <td class="py-2 px-4">
-                    <button 
-                      @click="removeRecipient(index)" 
-                      class="text-red-600 hover:text-red-800"
-                    >
-                      Remove
-                    </button>
                   </td>
                 </tr>
               </tbody>
@@ -208,13 +174,6 @@
         from: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0],
         to: new Date().toISOString().split('T')[0]
       });
-      const newRecipient = ref({
-        name: '',
-        amountNeeded: 0,
-        description: '',
-        amountReceived: 0,
-        contributors: []
-      });
       const distributionComplete = ref(false);
   
       const totalZakatAmount = computed(() => {
@@ -248,6 +207,18 @@
           });
         } catch (error) {
           console.error('Error fetching zakat data:', error);
+        }
+      };
+  
+      // Fetch asnaf recipients from database
+      const fetchAsnafRecipients = async () => {
+        try {
+          // In a real implementation, this would call your API
+          // For now, we'll use mock data
+          const response = await mockFetchAsnafRecipients();
+          recipients.value = response.data;
+        } catch (error) {
+          console.error('Error fetching asnaf recipients:', error);
         }
       };
   
@@ -304,34 +275,81 @@
         });
       };
   
-      // Add a new recipient
-      const addRecipient = () => {
-        if (!newRecipient.value.name || newRecipient.value.amountNeeded <= 0) {
-          alert('Please enter a valid name and amount needed');
-          return;
-        }
-        
-        recipients.value.push({
-          name: newRecipient.value.name,
-          amountNeeded: parseFloat(newRecipient.value.amountNeeded),
-          description: newRecipient.value.description,
-          amountReceived: 0,
-          contributors: []
+      // Mock API call for asnaf recipients
+      const mockFetchAsnafRecipients = () => {
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            const mockData = {
+              data: [
+                {
+                  id: 1,
+                  name: 'Fakir Relief Program',
+                  description: 'Support for extremely poor individuals',
+                  amountNeeded: 5000,
+                  amountReceived: 0,
+                  contributors: []
+                },
+                {
+                  id: 2,
+                  name: 'Miskin Family Support',
+                  description: 'Aid for low-income families',
+                  amountNeeded: 3500,
+                  amountReceived: 0,
+                  contributors: []
+                },
+                {
+                  id: 3,
+                  name: 'Amil Operations',
+                  description: 'Support for zakat collectors',
+                  amountNeeded: 1000,
+                  amountReceived: 0,
+                  contributors: []
+                },
+                {
+                  id: 4,
+                  name: 'Muallaf Education Center',
+                  description: 'Education for new converts',
+                  amountNeeded: 2500,
+                  amountReceived: 0,
+                  contributors: []
+                },
+                {
+                  id: 5,
+                  name: 'Riqab Rehabilitation',
+                  description: 'Freedom from modern forms of slavery',
+                  amountNeeded: 3000,
+                  amountReceived: 0,
+                  contributors: []
+                },
+                {
+                  id: 6,
+                  name: 'Gharimin Debt Relief',
+                  description: 'Help for those in debt',
+                  amountNeeded: 4000,
+                  amountReceived: 0,
+                  contributors: []
+                },
+                {
+                  id: 7,
+                  name: 'Fi Sabilillah Community Project',
+                  description: 'Community development project',
+                  amountNeeded: 6000,
+                  amountReceived: 0,
+                  contributors: []
+                },
+                {
+                  id: 8,
+                  name: 'Ibnu Sabil Traveler Aid',
+                  description: 'Support for stranded travelers',
+                  amountNeeded: 1500,
+                  amountReceived: 0,
+                  contributors: []
+                }
+              ]
+            };
+            resolve(mockData);
+          }, 500);
         });
-        
-        // Reset form
-        newRecipient.value = {
-          name: '',
-          amountNeeded: 0,
-          description: '',
-          amountReceived: 0,
-          contributors: []
-        };
-      };
-  
-      // Remove a recipient
-      const removeRecipient = (index) => {
-        recipients.value.splice(index, 1);
       };
   
       // Get recipient status
@@ -402,19 +420,17 @@
   
       onMounted(() => {
         fetchZakatData();
+        fetchAsnafRecipients();
       });
   
       return {
         zakatTransactions,
         recipients,
         dateRange,
-        newRecipient,
         totalZakatAmount,
         distributionComplete,
         canDistribute,
         fetchZakatData,
-        addRecipient,
-        removeRecipient,
         getRecipientStatus,
         distributeZakat,
         formatNumber,

@@ -172,8 +172,15 @@ const resetForm = () => {
 
 const bayarZakatSimpanan = () => {
   if (layakZakat.value && jumlahZakat.value > 0) {
-    // Logic to navigate to payment, potentially passing the amount
-    router.push('/payment') // Example route
+    // Logic to navigate to payment, passing the amount and type
+    router.push({ 
+      name: 'payment', 
+      query: { 
+        amount: jumlahZakat.value.toFixed(2), 
+        type: 'Wang Simpanan',
+        currency: 'RM'  // Explicitly specify currency
+      } 
+    })
   } else {
     toast.error('Tiada jumlah zakat untuk dibayar.')
   }
