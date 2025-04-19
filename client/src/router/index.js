@@ -3,7 +3,6 @@ import HomeView from '../views/home/index.vue'
 import CategoriesView from '../views/home/category/CategoriesView.vue'
 import ZakatPendapatanView from '@/views/home/category/ZakatPendapatanView.vue'
 import PaymentView from '@/views/home/category/PaymentView.vue'
-import TransactionHistoryView from '@/views/history/TransactionHistoryView.vue'
 import HistoryView from '@/views/history/index.vue'
 import AsnafReportingView from '@/views/asnaf/index.vue'
 import AuditZakatView from '@/views/home/category/AuditZakatView.vue'
@@ -92,12 +91,6 @@ const router = createRouter({
       meta: { requiresUserAuth: true },
     },
 
-    {
-      path: '/transaction-history',
-      name: 'transaction-history',
-      component: TransactionHistoryView,
-      meta: { requiresUserAuth: true },
-    },
     {
       path: '/history',
       name: 'history',
@@ -197,14 +190,6 @@ const router = createRouter({
       name: 'pay-request',
       component: () => import('@/views/donation/PayRequestView.vue'),
       meta: { requiresUserAuth: false }, // Allow anyone with the link to pay
-    },
-    {
-      path: '/transactions',
-      name: 'TransactionHistory',
-      component: () => import('../views/home/TransactionHistoryView.vue'),
-      meta: {
-        requiresAuth: true,
-      },
     },
   ],
 })
