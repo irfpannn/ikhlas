@@ -43,8 +43,8 @@
     <Tabs v-model="activeTab" class="w-full">
       <TabsList class="w-full overflow-x-auto border-b border-slate-200 mb-6">
         <TabsTrigger value="payments" class="px-4 py-2">Zakat Payments</TabsTrigger>
-        <TabsTrigger value="distributions" class="px-4 py-2">Zakat Distributions</TabsTrigger>
-        <TabsTrigger value="distributions2" class="px-4 py-2">Zakat Distributions 2</TabsTrigger>
+        <!-- <TabsTrigger value="distributions" class="px-4 py-2">Zakat Distributions</TabsTrigger> -->
+        <TabsTrigger value="distributions2" class="px-4 py-2">Zakat Distributions</TabsTrigger>
         <TabsTrigger value="asnaf" class="px-4 py-2">Asnaf Listing</TabsTrigger>
         <TabsTrigger value="reports" class="px-4 py-2">Asnaf Reports</TabsTrigger>
         <TabsTrigger value="impact" class="px-4 py-2">Impact Monitoring</TabsTrigger>
@@ -60,7 +60,7 @@
         />
       </TabsContent>
 
-      <TabsContent value="distributions">
+      <!-- <TabsContent value="distributions">
         <distributions-tab
           :zakat-distributions="zakatDistributions"
           :loading="loadingDistributions"
@@ -72,7 +72,7 @@
           @handle-file-upload="handleFileUpload"
           @handle-asnaf-selection="handleAsnafSelection"
         />
-      </TabsContent>
+      </TabsContent> -->
 
       <TabsContent value="distributions2">
         <zakat-distribution-view />
