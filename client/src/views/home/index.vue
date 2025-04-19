@@ -163,6 +163,39 @@ const formatCurrency = (amount) => {
   }).format(amount)
 }
 
+// Exchange rate for RM to BTC
+const exchangeRate = ref(null)
+
+// Fetch the current exchange rate on component mount
+const fetchBTCExchangeRate = async () => {
+  try {
+    const response = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=myr',
+    )
+    const data = await response.json()
+
+    if (data && data.bitcoin && data.bitcoin.myr) {
+      // Calculate BTC/MYR rate (1 BTC = X MYR, so 1 MYR = 1/X BTC)
+      exchangeRate.value = 1 / data.bitcoin.myr
+      console.log(`Exchange rate fetched: 1 MYR = ${exchangeRate.value} BTC`)
+    } else {
+      console.error('Invalid exchange rate data format:', data)
+      // Fallback exchange rate if API fails
+      exchangeRate.value = 0.0000053 // Example fallback rate (1 MYR ≈ 0.0000053 BTC)
+    }
+  } catch (error) {
+    console.error('Error fetching BTC exchange rate:', error)
+    // Fallback exchange rate if API fails
+    exchangeRate.value = 0.0000053 // Example fallback rate
+  }
+}
+
+// Convert RM to BTC based on current exchange rate
+const convertRMtoBTC = (amountRM) => {
+  if (!amountRM || isNaN(amountRM) || !exchangeRate.value) return '0.000000'
+  return (parseFloat(amountRM) * exchangeRate.value).toFixed(6)
+}
+
 // Format cryptocurrency with appropriate decimal places
 const formatCryptoCurrency = (tx) => {
   if (!tx || !tx.amount) return '0.000000'
@@ -259,6 +292,7 @@ onMounted(async () => {
   isLoading.value = true
   try {
     await transactionStore.fetchHistory()
+    await fetchBTCExchangeRate() // Fetch the BTC exchange rate
   } catch (error) {
     console.error('Error fetching transactions:', error)
   } finally {
@@ -409,7 +443,7 @@ onMounted(async () => {
                 >
                   ≈ RM {{ transaction.original.amountRM }}
                 </p>
-                <!-- For donations, calculate and show conversion -->
+                <!-- For donations, calculate and show conversion using real exchange rates -->
                 <p
                   v-else-if="
                     transaction.original &&
@@ -422,11 +456,9 @@ onMounted(async () => {
                   {{
                     transaction.original.currency === 'BTC'
                       ? (
-                          (parseFloat(
+                          parseFloat(
                             transaction.original.amountCrypto || transaction.original.amount,
-                          ) /
-                            0.000001) *
-                          3.5
+                          ) * (exchangeRate.value ? 1 / exchangeRate.value : 188000)
                         ).toFixed(2)
                       : (
                           parseFloat(
