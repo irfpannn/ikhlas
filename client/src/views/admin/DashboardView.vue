@@ -1,4 +1,3 @@
-// filepath: c:\Users\User\Desktop\ikhlas\client\src\views\admin\DashboardView.vue
 <template>
   <div class="p-5 max-w-7xl mx-auto">
     <!-- Header -->
@@ -48,6 +47,7 @@
         <TabsTrigger value="asnaf" class="px-4 py-2">Asnaf Listing</TabsTrigger>
         <TabsTrigger value="reports" class="px-4 py-2">Asnaf Reports</TabsTrigger>
         <TabsTrigger value="impact" class="px-4 py-2">Impact Monitoring</TabsTrigger>
+        <TabsTrigger value="living-condition" class="px-4 py-2">Asnaf Living Condition</TabsTrigger>
         <TabsTrigger value="admin" class="px-4 py-2">Admin Tools</TabsTrigger>
       </TabsList>
 
@@ -107,6 +107,10 @@
         />
       </TabsContent>
 
+      <TabsContent value="living-condition">
+        <living-condition-tab />
+      </TabsContent>
+
       <TabsContent value="admin">
         <admin-tools-tab
           @import-asnaf-data="importAsnafDataToFirebase"
@@ -143,6 +147,7 @@ import {
   AsnafListingTab,
   ReportsTab,
   ImpactTab,
+  LivingConditionTab,
   AdminToolsTab,
 } from '@/components/dashboard'
 
