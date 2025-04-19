@@ -1,18 +1,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import WalletConnect from '@/components/ui/wallet/WalletConnect.vue'
 import {
   convertRMToCrypto,
@@ -22,39 +13,24 @@ import {
 import { saveDonationTransaction } from '@/services/donationService'
 import { getAuth } from 'firebase/auth'
 
+const route = useRoute()
 const router = useRouter()
+
+// Get zakat amount and type from route query parameters
+const zakatAmount = route.query.amount ? parseFloat(route.query.amount) : 250.00
+const zakatType = route.query.type || 'Zakat'
+const zakatCurrency = route.query.currency || 'RM'
 
 // Payment data
 const paymentData = ref({
-  amount: '250.00',
+  amount: zakatAmount.toString(),
   name: '',
   email: '',
   phone: '',
-  cardNumber: '',
-  expiryDate: '',
-  cvv: '',
-  paymentMethod: 'card', // 'card', 'bank', 'ewallet', 'crypto'
   walletInfo: null,
-  selectedBank: '', // for storing selected bank
+  paymentMethod: 'crypto', // Only crypto is supported now
+  zakatType: zakatType
 })
-
-const malaysianBanks = [
-  { id: 'maybank', name: 'Maybank2u', logo: '/maybank.png' },
-  { id: 'cimb', name: 'CIMB Clicks', logo: '/cimb.png' },
-  { id: 'public', name: 'Public Bank', logo: '/public.png' },
-  { id: 'rhb', name: 'RHB Now', logo: '/rhb.png' },
-  { id: 'bsn', name: 'BSN', logo: '/bsn.png' },
-  { id: 'bankislam', name: 'Bank Islam', logo: '/bankislam.png' },
-  { id: 'hongleong', name: 'Hong Leong Connect', logo: '/hongleong.png' },
-  { id: 'ambank', name: 'AmOnline', logo: '/ambank.png' },
-  { id: 'alliance', name: 'Alliance Bank', logo: '/alliance.png' },
-  { id: 'ocbc', name: 'OCBC', logo: '/ocbc.png' },
-  { id: 'standardchartered', name: 'Standard Chartered', logo: '/sc.png' },
-  { id: 'uob', name: 'UOB', logo: '/uob.png' },
-  { id: 'affin', name: 'Affin Bank', logo: '/affin.png' },
-  { id: 'muamalat', name: 'Bank Muamalat', logo: '/muamalat.png' },
-  { id: 'rakyat', name: 'Bank Rakyat', logo: '/rakyat.png' },
-]
 
 // Payment processing state
 const isProcessing = ref(false)
@@ -101,7 +77,7 @@ const processPayment = async () => {
       amount: parseFloat(paymentData.value.amount),
       currency: 'RM',
       paymentMethod: paymentData.value.paymentMethod,
-      category: 'Zakat Payment',
+      category: `${paymentData.value.zakatType} Payment`,
       notes: '',
       type: 'zakat'
     }
@@ -109,19 +85,14 @@ const processPayment = async () => {
     // Save the zakat transaction
     await saveDonationTransaction(zakatData)
     
-    if (paymentData.value.paymentMethod === 'crypto') {
-      if (!paymentData.value.walletInfo) {
-        alert('Please connect your wallet first')
-        isProcessing.value = false
-        return
-      }
-
-      // Execute crypto payment using MetaMask
-      await processCryptoPayment()
-    } else {
-      // Process traditional payment methods
-      await processTraditionalPayment()
+    if (!paymentData.value.walletInfo) {
+      alert('Please connect your wallet first')
+      isProcessing.value = false
+      return
     }
+
+    // Execute crypto payment using MetaMask
+    await processCryptoPayment()
   } catch (error) {
     console.error('Error processing zakat payment:', error)
     isProcessing.value = false
@@ -202,46 +173,6 @@ const processCryptoPayment = async () => {
   }
 }
 
-// Process traditional payment methods
-const processTraditionalPayment = async () => {
-  // Simulate payment processing delay
-  await new Promise(resolve => setTimeout(resolve, 1500))
-  
-  // Create a mock transaction record
-  const mockTransaction = {
-    success: true,
-    transactionHash: 'TX' + Math.random().toString(36).substring(2, 15),
-    from: paymentData.value.name || 'User',
-    to: 'Pusat Urus Zakat',
-    amount: paymentData.value.amount,
-    currency: 'RM',
-    timestamp: new Date().toISOString(),
-    status: 'confirmed',
-    paymentMethod: paymentData.value.paymentMethod,
-    name: paymentData.value.name,
-    email: paymentData.value.email,
-    phone: paymentData.value.phone
-  }
-  
-  // Save transaction data
-  localStorage.setItem('zakatTransaction', JSON.stringify(mockTransaction))
-  
-  // Add to transaction history
-  const history = JSON.parse(localStorage.getItem('transactionHistory') || '[]')
-  history.unshift(mockTransaction)
-  localStorage.setItem('transactionHistory', JSON.stringify(history))
-  
-  // Redirect to transaction history page
-  router.push('/transaction-history')
-  
-  return mockTransaction
-}
-
-// Set payment method
-const setPaymentMethod = (method) => {
-  paymentData.value.paymentMethod = method
-}
-
 // Handle wallet connection
 const handleWalletConnected = (walletInfo) => {
   paymentData.value.walletInfo = walletInfo
@@ -260,7 +191,7 @@ const handleWalletDisconnected = () => {
       <button @click="goBack" class="mr-4">
         <span class="text-xl">←</span>
       </button>
-      <h1 class="text-lg font-semibold">Bayar Zakat</h1>
+      <h1 class="text-lg font-semibold">Bayar Zakat {{ paymentData.zakatType }}</h1>
     </div>
 
     <!-- Main content -->
@@ -271,230 +202,107 @@ const handleWalletDisconnected = () => {
           <div class="text-center">
             <p class="text-white/80 mb-1">Jumlah Pembayaran</p>
             <h2 class="text-2xl font-bold">RM {{ paymentData.amount }}</h2>
-            <p v-if="paymentData.paymentMethod === 'crypto'" class="text-sm mt-1">
+            <p class="text-sm mt-1">
               ≈ {{ cryptoAmount }} ETH
             </p>
           </div>
         </CardContent>
       </Card>
 
-      <!-- Payment methods tabs -->
-      <Tabs
-        v-model="paymentData.paymentMethod"
-        default-value="card"
-        class="bg-none rounded-lg mb-4 w-ful"
-      >
-        <TabsList class="w-full grid grid-cols-4 bg-slate-200">
-          <TabsTrigger
-            value="card"
-            class="data-[state=active]:text-[#75a868] data-[state=active]:border-[#75a868] text-xs"
-          >
-            Kad Kredit/Debit
-          </TabsTrigger>
-          <TabsTrigger
-            value="bank"
-            class="data-[state=active]:text-[#75a868] data-[state=active]:border-[#75a868] text-xs"
-          >
-            Perbankan Online
-          </TabsTrigger>
-          <TabsTrigger
-            value="ewallet"
-            class="data-[state=active]:text-[#75a868] data-[state=active]:border-[#75a868] text-xs"
-          >
-            E-Wallet
-          </TabsTrigger>
-          <TabsTrigger
-            value="crypto"
-            class="data-[state=active]:text-[#75a868] data-[state=active]:border-[#75a868] text-xs"
-          >
-            Crypto
-          </TabsTrigger>
-        </TabsList>
+      <!-- Payment form -->
+      <Card class="mb-4">
+        <CardContent class="p-4">
+          <!-- Personal information -->
+          <div class="mb-6">
+            <h3 class="font-medium mb-3">Maklumat Peribadi</h3>
 
-        <!-- Payment form -->
-        <Card class="mb-4">
-          <CardContent class="p-4">
-            <!-- Personal information (shown in all tabs) -->
-            <div class="mb-6">
-              <h3 class="font-medium mb-3">Maklumat Peribadi</h3>
-
-              <div class="mb-4">
-                <label class="block text-sm text-gray-600 mb-1">Nama Penuh</label>
-                <Input v-model="paymentData.name" placeholder="Nama penuh anda" />
-              </div>
-
-              <div class="mb-4">
-                <label class="block text-sm text-gray-600 mb-1">E-mel</label>
-                <Input v-model="paymentData.email" type="email" placeholder="contoh@email.com" />
-              </div>
-
-              <div class="mb-4">
-                <label class="block text-sm text-gray-600 mb-1">Nombor Telefon</label>
-                <Input v-model="paymentData.phone" placeholder="01x-xxxxxxx" />
-              </div>
+            <div class="mb-4">
+              <label class="block text-sm text-gray-600 mb-1">Nama Penuh</label>
+              <Input v-model="paymentData.name" placeholder="Nama penuh anda" />
             </div>
 
-            <!-- Tab contents -->
-            <TabsContent value="card" class="mb-6 border-none p-0">
-              <h3 class="font-medium mb-3">Maklumat Kad</h3>
+            <div class="mb-4">
+              <label class="block text-sm text-gray-600 mb-1">E-mel</label>
+              <Input v-model="paymentData.email" type="email" placeholder="contoh@email.com" />
+            </div>
+
+            <div class="mb-4">
+              <label class="block text-sm text-gray-600 mb-1">Nombor Telefon</label>
+              <Input v-model="paymentData.phone" placeholder="01x-xxxxxxx" />
+            </div>
+          </div>
+
+          <!-- Crypto payment section -->
+          <div class="mb-6">
+            <h3 class="font-medium mb-3">Pembayaran Cryptocurrency</h3>
+
+            <!-- MetaMask Not Installed Warning -->
+            <div v-if="!isMetaMaskInstalled" class="p-4 border border-yellow-300 bg-yellow-50 rounded-lg mb-4">
+              <p class="text-yellow-800 text-sm">
+                MetaMask tidak dipasang. Sila pasang
+                <a href="https://metamask.io/download/" target="_blank" class="underline font-medium">
+                  MetaMask
+                </a>
+                untuk menyambung dompet anda.
+              </p>
+            </div>
+
+            <div class="mb-4">
+              <p class="text-sm text-gray-600 mb-3">
+                Zakat anda akan dihantar kepada Pusat Urus Zakat melalui kontrak pintar (smart
+                contract) pada blockchain.
+              </p>
 
               <div class="mb-4">
-                <label class="block text-sm text-gray-600 mb-1">Nombor Kad</label>
-                <Input v-model="paymentData.cardNumber" placeholder="xxxx xxxx xxxx xxxx" />
-              </div>
-
-              <div class="grid grid-cols-2 gap-4">
-                <div class="mb-4">
-                  <label class="block text-sm text-gray-600 mb-1">Tarikh Luput</label>
-                  <Input v-model="paymentData.expiryDate" placeholder="MM/YY" />
-                </div>
-
-                <div class="mb-4">
-                  <label class="block text-sm text-gray-600 mb-1">CVV</label>
-                  <Input v-model="paymentData.cvv" type="password" placeholder="xxx" />
-                </div>
-              </div>
-            </TabsContent>
-            <TabsContent value="bank" class="mb-6 border-none p-0">
-              <h3 class="font-medium mb-3">Pilih Bank</h3>
-
-              <Select v-model="paymentData.selectedBank">
-                <SelectTrigger class="w-full">
-                  <SelectValue placeholder="Pilih bank untuk pembayaran" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem v-for="bank in malaysianBanks" :key="bank.id" :value="bank.id">
-                      <div class="flex items-center gap-3">
-                        <span>{{ bank.name }}</span>
-                      </div>
-                    </SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-
-              <div v-if="paymentData.selectedBank" class="mt-4 p-4 bg-gray-50 rounded-lg">
-                <p class="text-sm text-gray-600">
-                  Anda akan dibawa ke laman
-                  {{ malaysianBanks.find((b) => b.id === paymentData.selectedBank)?.name }}
-                  untuk melengkapkan pembayaran anda.
-                </p>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="ewallet" class="mb-6 border-none p-0">
-              <h3 class="font-medium mb-3">Pilih E-Wallet</h3>
-
-              <div class="grid grid-cols-2 gap-4">
-                <div
-                  class="bg-primary/20 border rounded-lg p-3 cursor-pointer hover:border-[#75a868]"
+                <label class="block text-sm text-gray-600 mb-1"
+                  >Alamat Penerima (Pusat Urus Zakat)</label
                 >
-                  <div class="flex items-center space-x-4">
-                    <img src="/tng.png" alt="Touch 'n Go" class="h-11 mr-3" />
-                    <span>Touch 'n Go</span>
-                  </div>
+                <div class="flex items-center border rounded-md p-2 bg-gray-50">
+                  <span class="text-xs font-mono text-gray-600 truncate">{{
+                    getPusatUrusZakatAddress()
+                  }}</span>
                 </div>
-
-                <div
-                  class="bg-primary/20 border rounded-lg p-3 cursor-pointer hover:border-[#75a868]"
-                >
-                  <div class="flex items-center space-x-4">
-                    <img src="/grab.png" alt="GrabPay" class="h-11 mr-3" />
-                    <span>GrabPay</span>
-                  </div>
-                </div>
-
-                <div
-                  class="bg-primary/20 border rounded-lg p-3 cursor-pointer hover:border-[#75a868]"
-                >
-                  <div class="flex items-center space-x-4">
-                    <img src="/boost.png" alt="Boost" class="h-11" />
-                    <span>Boost</span>
-                  </div>
-                </div>
-
-                <div
-                  class="bg-primary/20 border rounded-lg p-3 cursor-pointer hover:border-[#75a868]"
-                >
-                  <div class="flex items-center space-x-4">
-                    <img src="/mae.png" alt="MAE" class="h-11" />
-                    <span>MAE</span>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="crypto" class="mb-6 border-none p-0">
-              <h3 class="font-medium mb-3">Pembayaran Cryptocurrency</h3>
-
-              <!-- MetaMask Not Installed Warning -->
-              <div v-if="!isMetaMaskInstalled" class="p-4 border border-yellow-300 bg-yellow-50 rounded-lg mb-4">
-                <p class="text-yellow-800 text-sm">
-                  MetaMask tidak dipasang. Sila pasang
-                  <a href="https://metamask.io/download/" target="_blank" class="underline font-medium">
-                    MetaMask
-                  </a>
-                  untuk menyambung dompet anda.
-                </p>
               </div>
 
               <div class="mb-4">
-                <p class="text-sm text-gray-600 mb-3">
-                  Zakat anda akan dihantar kepada Pusat Urus Zakat melalui kontrak pintar (smart
-                  contract) pada blockchain.
+                <label class="block text-sm text-gray-600 mb-1">Jumlah dalam ETH</label>
+                <div class="flex items-center border rounded-md p-2 bg-gray-50">
+                  <span class="text-sm font-medium">{{ cryptoAmount }} ETH</span>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <label class="block text-sm text-gray-600 mb-2">Sambungkan Dompet Kripto</label>
+                <WalletConnect 
+                  buttonText="Sambung dengan MetaMask" 
+                  @wallet-connected="handleWalletConnected"
+                  @wallet-disconnected="handleWalletDisconnected" 
+                />
+              </div>
+              
+            </div>
+
+            <!-- Wallet information when connected -->
+            <div v-if="paymentData.walletInfo" class="p-4 bg-green-50 border border-green-200 rounded-lg mt-3">
+              <div class="flex items-center mb-2">
+                <div class="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
+                <span class="font-medium text-green-800">Dompet Disambungkan</span>
+              </div>
+              <div class="text-sm text-gray-600">
+                <p class="mb-1">
+                  <span class="font-medium">Alamat: </span>
+                  <span class="font-mono text-xs">
+                    {{ paymentData.walletInfo.address.substring(0, 6) }}...{{ paymentData.walletInfo.address.substring(paymentData.walletInfo.address.length - 4) }}
+                  </span>
                 </p>
-
-                <div class="mb-4">
-                  <label class="block text-sm text-gray-600 mb-1"
-                    >Alamat Penerima (Pusat Urus Zakat)</label
-                  >
-                  <div class="flex items-center border rounded-md p-2 bg-gray-50">
-                    <span class="text-xs font-mono text-gray-600 truncate">{{
-                      getPusatUrusZakatAddress()
-                    }}</span>
-                  </div>
-                </div>
-
-                <div class="mb-4">
-                  <label class="block text-sm text-gray-600 mb-1">Jumlah dalam ETH</label>
-                  <div class="flex items-center border rounded-md p-2 bg-gray-50">
-                    <span class="text-sm font-medium">{{ cryptoAmount }} ETH</span>
-                  </div>
-                </div>
-
-                <div class="mb-4">
-                  <label class="block text-sm text-gray-600 mb-2">Sambungkan Dompet Kripto</label>
-                  <WalletConnect 
-                    buttonText="Sambung dengan MetaMask" 
-                    @wallet-connected="handleWalletConnected"
-                    @wallet-disconnected="handleWalletDisconnected" 
-                  />
-                </div>
-                
+                <p class="text-xs text-blue-600 mt-2">
+                  Apabila anda menekan butang "Bayar Sekarang", MetaMask akan meminta anda mengesahkan transaksi ini.
+                </p>
               </div>
-
-              <!-- Wallet information when connected -->
-              <div v-if="paymentData.walletInfo" class="p-4 bg-green-50 border border-green-200 rounded-lg mt-3">
-                <div class="flex items-center mb-2">
-                  <div class="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
-                  <span class="font-medium text-green-800">Dompet Disambungkan</span>
-                </div>
-                <div class="text-sm text-gray-600">
-                  <p class="mb-1">
-                    <span class="font-medium">Alamat: </span>
-                    <span class="font-mono text-xs">
-                      {{ paymentData.walletInfo.address.substring(0, 6) }}...{{ paymentData.walletInfo.address.substring(paymentData.walletInfo.address.length - 4) }}
-                    </span>
-                  </p>
-                  <p class="text-xs text-blue-600 mt-2">
-                    Apabila anda menekan butang "Bayar Sekarang", MetaMask akan meminta anda mengesahkan transaksi ini.
-                  </p>
-                </div>
-              </div>
-            </TabsContent>
-          </CardContent>
-        </Card>
-      </Tabs>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <!-- Transaction result (shown after successful crypto payment) -->
       <Card v-if="transactionResult" class="mb-4 bg-green-50 border-green-200">
@@ -537,7 +345,7 @@ const handleWalletDisconnected = () => {
       <!-- Payment button -->
       <Button
         @click="processPayment"
-        :disabled="isProcessing || (paymentData.paymentMethod === 'crypto' && !paymentData.walletInfo)"
+        :disabled="isProcessing || !paymentData.walletInfo"
         class="w-full bg-[#75a868] hover:bg-[#75a868]/90 text-white py-3 text-lg"
       >
         <span v-if="isProcessing">Memproses...</span>

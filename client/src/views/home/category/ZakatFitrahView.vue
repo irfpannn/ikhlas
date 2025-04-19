@@ -207,7 +207,11 @@ const goToPayment = () => {
   if (totalFitrah.value > 0 && !inputError.value) {
     router.push({
       name: 'payment',
-      query: { amount: totalFitrah.value.toFixed(2), type: 'Fitrah' },
+      query: { 
+        amount: totalFitrah.value.toFixed(2), 
+        type: 'Fitrah',
+        currency: 'RM'  // Explicitly specify currency
+      }
     })
   } else if (inputError.value) {
     toast.error(inputError.value)

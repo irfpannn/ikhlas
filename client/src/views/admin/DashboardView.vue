@@ -43,7 +43,8 @@
     <Tabs v-model="activeTab" class="w-full">
       <TabsList class="w-full overflow-x-auto border-b border-slate-200 mb-6">
         <TabsTrigger value="payments" class="px-4 py-2">Zakat Payments</TabsTrigger>
-        <TabsTrigger value="distributions" class="px-4 py-2">Zakat Distributions</TabsTrigger>
+        <!-- <TabsTrigger value="distributions" class="px-4 py-2">Zakat Distributions</TabsTrigger> -->
+        <TabsTrigger value="distributions2" class="px-4 py-2">Zakat Distributions</TabsTrigger>
         <TabsTrigger value="asnaf" class="px-4 py-2">Asnaf Listing</TabsTrigger>
         <TabsTrigger value="reports" class="px-4 py-2">Asnaf Reports</TabsTrigger>
         <TabsTrigger value="impact" class="px-4 py-2">Impact Monitoring</TabsTrigger>
@@ -59,7 +60,7 @@
         />
       </TabsContent>
 
-      <TabsContent value="distributions">
+      <!-- <TabsContent value="distributions">
         <distributions-tab
           :zakat-distributions="zakatDistributions"
           :loading="loadingDistributions"
@@ -71,6 +72,10 @@
           @handle-file-upload="handleFileUpload"
           @handle-asnaf-selection="handleAsnafSelection"
         />
+      </TabsContent> -->
+
+      <TabsContent value="distributions2">
+        <zakat-distribution-view />
       </TabsContent>
 
       <TabsContent value="asnaf">
@@ -151,6 +156,9 @@ import {
   AdminToolsTab,
 } from '@/components/dashboard'
 
+// Import ZakatDistributionView component
+import ZakatDistributionView from '@/views/admin/ZakatDistribution.vue'
+
 // Import mock data
 import zakatPaymentsData from '@/data/zakatPayments.json'
 import zakatDistributionsData from '@/data/zakatDistributions.json'
@@ -158,6 +166,7 @@ import asnafRecipientsData from '@/data/asnafRecipients.json'
 import asnafReportsData from '@/data/asnafReports.json'
 import asnafLocationsData from '@/data/asnafLocations.json'
 import impactDataJson from '@/data/impactData.json'
+
 
 // Setup
 const router = useRouter()
