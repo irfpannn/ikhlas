@@ -167,7 +167,6 @@ import asnafReportsData from '@/data/asnafReports.json'
 import asnafLocationsData from '@/data/asnafLocations.json'
 import impactDataJson from '@/data/impactData.json'
 
-
 // Setup
 const router = useRouter()
 
