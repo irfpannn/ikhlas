@@ -5,6 +5,18 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
 import BottomNavigation from '@/components/ui/bottom-navigation/BottomNavigation.vue'
+// Import Firebase services
+import { db, storage, auth } from '@/firebase.config'
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  doc,
+  updateDoc,
+  increment,
+  getDoc,
+} from 'firebase/firestore'
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 const router = useRouter()
 const isSubmitting = ref(false)
@@ -93,9 +105,59 @@ const submitReport = async () => {
   isSubmitting.value = true
 
   try {
-    // In a real implementation, you would send the data to your backend
-    // For now, we'll just simulate a successful submission
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    // First, upload all images to Firebase Storage (if any)
+    const uploadedImageUrls = []
+
+    if (formData.value.images.length > 0) {
+      for (const image of formData.value.images) {
+        if (image.file) {
+          // Create a unique filename using timestamp
+          const fileName = `asnaf_reports/${Date.now()}_${image.file.name}`
+          const fileRef = storageRef(storage, fileName)
+
+          // Upload the file
+          await uploadBytes(fileRef, image.file)
+
+          // Get the download URL
+          const downloadURL = await getDownloadURL(fileRef)
+          uploadedImageUrls.push(downloadURL)
+        }
+      }
+    }
+
+    // Prepare report data for Firestore
+    const reportData = {
+      name: formData.value.name,
+      address: formData.value.address,
+      phoneNumber: formData.value.phoneNumber,
+      description: formData.value.description,
+      location: formData.value.location,
+      imageUrls: uploadedImageUrls,
+      status: 'pending', // Default status for new reports
+      reportedAt: serverTimestamp(),
+      reportedBy: auth.currentUser ? auth.currentUser.uid : null,
+      rewardPoints: rewardPoints.value,
+    }
+
+    // Save report to Firestore
+    const reportsRef = collection(db, 'asnafReports')
+    const docRef = await addDoc(reportsRef, reportData)
+    console.log('Report submitted with ID:', docRef.id)
+
+    // If user is logged in, update their reward points
+    if (auth.currentUser) {
+      const userRef = doc(db, 'users', auth.currentUser.uid)
+      const userSnap = await getDoc(userRef)
+
+      if (userSnap.exists()) {
+        // Update user's reward points
+        await updateDoc(userRef, {
+          rewardPoints: increment(rewardPoints.value),
+          totalReportsSubmitted: increment(1),
+        })
+        console.log('User reward points updated')
+      }
+    }
 
     // Show success message
     isSuccess.value = true
@@ -106,6 +168,7 @@ const submitReport = async () => {
     }, 3000)
   } catch (error) {
     console.error('Error submitting report:', error)
+    alert('Maaf, terdapat ralat semasa menghantar laporan. Sila cuba lagi.')
   } finally {
     isSubmitting.value = false
   }
@@ -132,10 +195,12 @@ const submitReport = async () => {
             Terima kasih atas laporan anda. Kami akan menyemak maklumat yang diberikan secepat
             mungkin.
           </p>
-          
+
           <!-- Reward Points Banner -->
           <div class="mt-2 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-            <div class="text-yellow-800 font-medium">🎉 Anda mendapat {{ rewardPoints }} mata ganjaran!</div>
+            <div class="text-yellow-800 font-medium">
+              🎉 Anda mendapat {{ rewardPoints }} mata ganjaran!
+            </div>
             <p class="text-xs text-yellow-700 mt-1">Mata telah ditambah ke baki ganjaran anda</p>
           </div>
         </CardContent>
