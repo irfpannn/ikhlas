@@ -26,6 +26,10 @@ const userData = ref({
   balance: 238874,
 })
 
+// User points and tier data
+const userPoints = ref(4671)
+const userTier = ref('PUZ Elite')
+
 // Categories with route names (match names in router/index.js)
 const categories = [
   { id: 1, name: 'Zakat Pendapatan', icon: '💼', routeName: 'zakat-pendapatan' },
@@ -277,68 +281,27 @@ onMounted(async () => {
         </div>
       </div>
 
-      <!-- Balance Card -->
+      <!-- Mata PUZ Card -->
       <Card class="bg-[#75a868] text-white mb-4 shadow-sm border-none">
-        <CardHeader class="pb-0">
-          <div class="flex justify-between items-center">
-            <div class="flex flex-col">
-              <CardDescription class="text-white/80">Baki Anda</CardDescription>
-              <CardTitle class="text-xl font-bold text-white"
-                >RM {{ formatCurrency(userData.balance) }}</CardTitle
-              >
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              class="bg-white text-[#75a868] hover:text-[#75a868] hover:bg-white/90 border-none"
-              @click="goToTopUp"
-            >
-              Tambah Nilai
-            </Button>
-          </div>
-        </CardHeader>
-
         <CardContent>
-          <!-- Action buttons -->
-          <div class="flex justify-between gap-3">
-            <Button
-              variant="secondary"
-              class="bg-[#217e0a] hover:bg-[#217e0a]/90 text-white flex-1"
-              @click="goToDonation"
-            >
-              Hantar
-            </Button>
-            <Button
-              variant="secondary"
-              class="bg-[#217e0a] hover:bg-[#217e0a]/90 text-white flex-1"
-              @click="goToRequest"
-            >
-              Minta
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <!-- Rewards section -->
-      <Card class="mb-4 shadow-sm py-1">
-        <CardContent class="p-3 flex justify-between items-center">
-          <div class="flex items-center">
-            <div class="bg-blue-100 p-2 rounded-full mr-3">
-              <span class="text-[#75a868] text-xl">🎁</span>
-            </div>
+          <div class="flex justify-between items-center">
             <div>
-              <p class="font-semibold">Ganjaran Mydin</p>
-              <p class="text-xs text-gray-500">Disyorkan: 2</p>
+              <h3 class="font-semibold text-lg">
+                {{ userTier }}
+              </h3>
+              <div class="flex items-center mt-1">
+                <p class="text-sm">Mata PUZ</p>
+              </div>
+              <p class="font-bold text-xl">{{ userPoints }} mata</p>
             </div>
+            <Button
+              variant="secondary"
+              class="bg-white hover:bg-gray-100 text-[#75a868]"
+              @click="goToRewards"
+            >
+              Ganjaran Saya
+            </Button>
           </div>
-          <Button
-            variant="default"
-            size="sm"
-            class="bg-[#75a868] hover:bg-[#75a868]/90 text-white"
-            @click="goToRewards"
-          >
-            Tuntut Sekarang
-          </Button>
         </CardContent>
       </Card>
 
