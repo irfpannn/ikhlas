@@ -457,7 +457,16 @@ const goToPayment = () => {
       query: { 
         amount: totalZakat.value.toFixed(2), 
         type: 'Saham',
-        currency: 'RM'  // Explicitly specify currency
+        currency: 'RM',  // Explicitly specify currency
+        description: `Zakat Saham - ${totalUnitsHaul.value} unit (${formatCurrency(totalValueHaul.value)})`,
+        metadata: JSON.stringify({
+          totalUnits: totalUnitsHaul.value,
+          totalValue: totalValueHaul.value,
+          netValue: netZakatableValue.value,
+          nisabValue: currentNisabValue.value,
+          calculationDetails: calculationDetails.value,
+          shareEntries: shareEntries.value
+        })
       } 
     })
   } else {

@@ -17,8 +17,8 @@ const { currentDonation, loading, error } = storeToRefs(donationStore) // Rename
 
 // Donation state
 const donationAmount = ref(10) // Default amount
-const donationCurrency = ref('RM') // Default currency
-const activeCurrency = ref('RM') // For tabs
+const donationCurrency = ref('BTC') // Default to BTC for Luno
+const activeCurrency = ref('BTC') // For tabs
 const customAmount = ref(false)
 
 onMounted(() => {
@@ -34,14 +34,12 @@ const progressPercentage = computed(() => {
 })
 
 const formatAmount = (amount) => {
-  if (typeof amount !== 'number') return 'RM0'
-  return `RM${amount.toLocaleString()}`
+  if (typeof amount !== 'number') return '0'
+  return amount.toLocaleString()
 }
 
 const formatDonationAmount = () => {
-  if (donationCurrency.value === 'RM') {
-    return `RM${donationAmount.value.toLocaleString()}`
-  } else if (donationCurrency.value === 'BTC') {
+  if (donationCurrency.value === 'BTC') {
     return `${donationAmount.value} BTC`
   } else if (donationCurrency.value === 'ETH') {
     return `${donationAmount.value} ETH`
@@ -191,17 +189,6 @@ const handleDonateClick = () => {
         <div class="mb-4 border-b">
           <div class="flex overflow-x-auto space-x-2 pb-2">
             <button
-              @click="activeCurrency = 'RM'"
-              class="px-4 py-2 whitespace-nowrap"
-              :class="
-                activeCurrency === 'RM'
-                  ? 'border-b-2 border-primary-600 font-medium text-primary-600'
-                  : 'text-gray-500'
-              "
-            >
-              Ringgit Malaysia (RM)
-            </button>
-            <button
               @click="activeCurrency = 'BTC'"
               class="px-4 py-2 whitespace-nowrap"
               :class="
@@ -235,61 +222,6 @@ const handleDonateClick = () => {
               Tether (USDT)
             </button>
           </div>
-        </div>
-
-        <!-- RM Options -->
-        <div v-if="activeCurrency === 'RM'" class="grid grid-cols-3 gap-3 mb-4">
-          <Button
-            @click="setAmount(10, 'RM')"
-            :variant="
-              donationAmount === 10 && donationCurrency === 'RM' && !customAmount
-                ? 'default'
-                : 'outline'
-            "
-            class="h-12"
-          >
-            RM10
-          </Button>
-          <Button
-            @click="setAmount(20, 'RM')"
-            :variant="
-              donationAmount === 20 && donationCurrency === 'RM' && !customAmount
-                ? 'default'
-                : 'outline'
-            "
-            class="h-12"
-          >
-            RM20
-          </Button>
-          <Button
-            @click="setAmount(50, 'RM')"
-            :variant="
-              donationAmount === 50 && donationCurrency === 'RM' && !customAmount
-                ? 'default'
-                : 'outline'
-            "
-            class="h-12"
-          >
-            RM50
-          </Button>
-          <Button
-            @click="setAmount(100, 'RM')"
-            :variant="
-              donationAmount === 100 && donationCurrency === 'RM' && !customAmount
-                ? 'default'
-                : 'outline'
-            "
-            class="h-12"
-          >
-            RM100
-          </Button>
-          <Button
-            @click="setCustomAmount('RM')"
-            :variant="customAmount && donationCurrency === 'RM' ? 'default' : 'outline'"
-            class="col-span-3 h-12"
-          >
-            Jumlah Lain
-          </Button>
         </div>
 
         <!-- BTC Options -->

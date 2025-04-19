@@ -442,7 +442,15 @@ const goToPayment = () => {
       query: { 
         amount: totalZakat.value.toFixed(2), 
         type: 'Emas',
-        currency: 'RM'  // Explicitly specify currency
+        currency: 'RM',  // Explicitly specify currency
+        description: `Zakat Emas - ${totalUnitsHaul.value} unit (${formatCurrency(totalValueHaul.value)})`,
+        metadata: JSON.stringify({
+          totalUnits: totalUnitsHaul.value,
+          totalValue: totalValueHaul.value,
+          netValue: netZakatableValue.value,
+          nisabValue: currentNisabValue.value,
+          calculationDetails: calculationDetails.value
+        })
       } 
     })
   } else {

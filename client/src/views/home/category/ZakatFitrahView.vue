@@ -210,7 +210,13 @@ const goToPayment = () => {
       query: { 
         amount: totalFitrah.value.toFixed(2), 
         type: 'Fitrah',
-        currency: 'RM'  // Explicitly specify currency
+        currency: 'RM',  // Explicitly specify currency
+        description: `Zakat Fitrah - ${numberOfPeople.value} orang @ ${formatCurrency(selectedRate.value)}`,
+        metadata: JSON.stringify({
+          numberOfPeople: numberOfPeople.value,
+          ratePerPerson: selectedRate.value,
+          selectedRateLabel: fitrahRates.value.find(r => r.value === selectedRate.value)?.label || 'Unknown Rate'
+        })
       }
     })
   } else if (inputError.value) {

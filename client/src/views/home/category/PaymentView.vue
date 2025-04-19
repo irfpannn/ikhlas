@@ -14,6 +14,8 @@ import {
 import { saveDonationTransaction } from '@/services/donationService'
 import { getAuth } from 'firebase/auth'
 import { isLunoApiAccessible } from '@/services/lunoWalletService'
+import { getDoc, doc } from 'firebase/firestore'
+import { db } from '@/firebase.config'
 
 const route = useRoute()
 const router = useRouter()
@@ -31,7 +33,8 @@ const paymentData = ref({
   phone: '',
   walletInfo: null,
   paymentMethod: 'crypto', // Only crypto is supported now
-  zakatType: zakatType
+  zakatType: zakatType,
+  currency: zakatCurrency
 })
 
 // Payment processing state
@@ -73,22 +76,29 @@ const processPayment = async () => {
       return
     }
     
+    // Get user data from Firestore to ensure we have the correct name
+    const userDoc = await getDoc(doc(db, 'users', user.uid))
+    const userData = userDoc.exists() ? userDoc.data() : null
+    
+    // Use Firestore user data if available, otherwise fall back to Auth data
+    const senderName = userData?.user_fullname || user.displayName || user.email || 'Anonymous'
+    
     // Prepare zakat payment data
     const zakatData = {
       senderId: user.uid,
-      senderName: user.displayName || user.email || 'Anonymous',
+      senderName: senderName,
       recipientId: 'zakat-authority',
       recipientName: 'Zakat Authority',
       amount: parseFloat(paymentData.value.amount),
-      currency: 'RM',
+      currency: paymentData.value.currency || 'RM',
       paymentMethod: paymentData.value.paymentMethod,
       category: `${paymentData.value.zakatType} Payment`,
       notes: '',
-      type: 'zakat'
+      type: 'zakat',
+      zakatType: paymentData.value.zakatType,
+      timestamp: new Date().toISOString(),
+      status: 'pending'
     }
-    
-    // Save the zakat transaction
-    await saveDonationTransaction(zakatData)
     
     if (!paymentData.value.walletInfo) {
       alert('Please connect your wallet first')
@@ -97,10 +107,31 @@ const processPayment = async () => {
     }
 
     // Execute crypto payment using Luno
-    await handleCryptoPayment()
+    const paymentResult = await handleCryptoPayment()
+    
+    // Update transaction status and add transaction hash
+    zakatData.status = 'completed'
+    zakatData.transactionHash = paymentResult.transactionId
+    
+    // Save the zakat transaction to Firebase
+    await saveDonationTransaction(zakatData)
+    
+    // Redirect to success page
+    setTimeout(() => {
+      router.push({
+        path: '/payment/success',
+        query: {
+          txId: paymentResult.transactionId,
+          amount: paymentData.value.amount,
+          currency: paymentData.value.currency || 'RM',
+          type: paymentData.value.zakatType
+        }
+      })
+    }, 1500)
   } catch (error) {
     console.error('Error processing zakat payment:', error)
     isProcessing.value = false
+    alert('Payment failed: ' + error.message)
   }
 }
 
@@ -164,6 +195,8 @@ const handleCryptoPayment = async () => {
         }
       })
     }, 1500)
+
+    return paymentResult
   } catch (error) {
     console.error('Error processing payment:', error)
     isProcessing.value = false
