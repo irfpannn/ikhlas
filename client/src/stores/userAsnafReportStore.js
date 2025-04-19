@@ -51,13 +51,16 @@ export const useUserAsnafReportStore = defineStore('userAsnafReportStore', () =>
   }
 
   // Handle location selection
-  const handleLocationSelect = () => {
-    // In a real implementation, this would open a map interface
-    // For now, we'll just set a mock location
-    formData.value.location = {
-      latitude: 3.139,
-      longitude: 101.6869,
-      address: 'Kuala Lumpur, Malaysia',
+  const handleLocationSelect = (location) => {
+    // If location is passed, update with that specific location
+    if (location) {
+      formData.value.location = location
+      return
+    }
+
+    // Otherwise, just ensure we have a default value
+    if (!formData.value.location) {
+      formData.value.location = null
     }
   }
 
