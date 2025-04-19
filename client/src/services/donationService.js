@@ -2,7 +2,7 @@ import { db } from './firebaseService' // Assuming firebaseService exports initi
 import { collection, getDocs, doc, getDoc, addDoc, query, where, orderBy, Timestamp, serverTimestamp } from 'firebase/firestore'
 import { getFirestore } from 'firebase/firestore'
 
-const donationsCollectionRef = collection(db, 'donation')
+const donationsCollectionRef = collection(db, 'donations')
 
 /**
  * Fetches all donations from Firestore.
@@ -33,7 +33,7 @@ export const getDonationById = async (id) => {
     throw new Error('ID Derma diperlukan.')
   }
   try {
-    const docRef = doc(db, 'donation', id) // Use 'donation' collection
+    const docRef = doc(db, 'donations', id) // Use 'donations' collection
     const docSnap = await getDoc(docRef)
 
     if (docSnap.exists()) {
@@ -64,7 +64,7 @@ export const getDonationById = async (id) => {
 export async function saveDonationTransaction(transactionData) {
   try {
     const db = getFirestore();
-    const transactionsRef = collection(db, "transactions");
+    const transactionsRef = collection(db, "donations");
     
     // Ensure timestamp is a Firestore timestamp
     if (!transactionData.timestamp) {
