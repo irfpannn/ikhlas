@@ -50,10 +50,40 @@
               <div
                 v-for="(image, index) in report.images"
                 :key="index"
-                class="w-16 h-16 rounded overflow-hidden border cursor-pointer"
-                @click="viewImage(image.url)"
+                class="w-16 h-16 rounded overflow-hidden border cursor-pointer relative group"
               >
-                <img :src="image.url" alt="Report evidence" class="object-cover w-full h-full" />
+                <img
+                  :src="image.url"
+                  alt="Report evidence"
+                  class="object-cover w-full h-full"
+                  @click="viewImage(image.url)"
+                />
+                <div
+                  class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    class="h-7 w-7 rounded-full bg-white/80 hover:bg-white text-gray-800"
+                    @click.stop="analyzeHousingCondition(image.url, report.id)"
+                    :disabled="analyzingImageId === report.id"
+                  >
+                    <HomeIcon class="h-4 w-4" />
+                  </Button>
+                </div>
+                <Badge
+                  v-if="housingAnalysisResults[image.url]"
+                  :variant="
+                    getHousingClassVariant(housingAnalysisResults[image.url].classification)
+                  "
+                  class="absolute bottom-0 right-0 text-[8px] py-0.5"
+                >
+                  {{
+                    translateHousingClass(housingAnalysisResults[image.url].classification).split(
+                      ' ',
+                    )[0]
+                  }}
+                </Badge>
               </div>
             </div>
           </div>
@@ -223,7 +253,84 @@
     <!-- Image Viewer Dialog -->
     <Dialog :open="!!selectedImage" @update:open="selectedImage = null">
       <DialogContent class="max-w-2xl p-0">
-        <img :src="selectedImage" alt="Report evidence" class="w-full h-auto rounded" />
+        <div class="relative">
+          <img :src="selectedImage" alt="Report evidence" class="w-full h-auto rounded" />
+
+          <!-- Housing Analysis Results -->
+          <div
+            v-if="selectedImage && housingAnalysisResults[selectedImage]"
+            class="p-4 bg-white border-t"
+          >
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="font-semibold flex items-center gap-2">
+                <HomeIcon class="h-4 w-4" />
+                House Condition Analysis
+              </h3>
+              <Badge
+                :variant="
+                  getHousingClassVariant(housingAnalysisResults[selectedImage].classification)
+                "
+              >
+                {{
+                  translateHousingClass(housingAnalysisResults[selectedImage].classification).split(
+                    ' ',
+                  )[0]
+                }}
+              </Badge>
+            </div>
+
+            <div class="space-y-2">
+              <div
+                v-for="(probability, className) in housingAnalysisResults[selectedImage]
+                  .probabilities"
+                :key="className"
+                class="space-y-1"
+              >
+                <div class="flex justify-between text-sm">
+                  <span>{{ translateHousingClass(className) }}</span>
+                  <span class="font-medium">{{ (probability * 100).toFixed(1) }}%</span>
+                </div>
+                <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    class="h-full rounded-full"
+                    :class="{
+                      'bg-green-500': className === 'baik',
+                      'bg-yellow-500': className === 'sederhana',
+                      'bg-red-500': className === 'dhoif',
+                    }"
+                    :style="{ width: `${probability * 100}%` }"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 text-sm text-gray-500">
+              <p v-if="housingAnalysisResults[selectedImage].classification === 'dhoif'">
+                This house appears to be in poor condition and may require significant repairs.
+              </p>
+              <p v-else-if="housingAnalysisResults[selectedImage].classification === 'sederhana'">
+                This house appears to be in moderate condition and may benefit from some
+                improvements.
+              </p>
+              <p v-else>This house appears to be in good condition.</p>
+            </div>
+          </div>
+
+          <div v-else-if="selectedImage" class="p-4 border-t">
+            <Button
+              @click="analyzeHousingCondition(selectedImage)"
+              variant="outline"
+              size="sm"
+              class="flex items-center gap-2"
+              :disabled="analyzingImageId !== null"
+            >
+              <BarChart class="h-4 w-4" />
+              Analyze House Condition
+              <Spinner v-if="analyzingImageId !== null" />
+            </Button>
+          </div>
+        </div>
+
         <DialogFooter class="p-4">
           <Button variant="outline" @click="selectedImage = null">Close</Button>
         </DialogFooter>
@@ -289,8 +396,13 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { EyeIcon, CheckIcon, XIcon, ArrowRightIcon } from 'lucide-vue-next'
+import { EyeIcon, CheckIcon, XIcon, ArrowRightIcon, HomeIcon, BarChart } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
+import {
+  analyzeHouseImage,
+  translateHousingClass,
+  getHousingClassVariant,
+} from '@/services/housingAnalysisService'
 
 const props = defineProps({
   reports: {
@@ -314,6 +426,8 @@ const reportActionNotes = ref('')
 const reportToConvert = ref(null)
 const verifyingId = ref(null)
 const rejectingId = ref(null)
+const analyzingImageId = ref(null)
+const housingAnalysisResults = ref({}) // Store analysis results by image URL
 
 const filteredReports = computed(() => {
   if (reportStatusFilter.value === 'all') {
@@ -415,6 +529,30 @@ function onReject(report) {
   setTimeout(() => {
     rejectingId.value = null
   }, 1200)
+}
+
+// Housing condition analysis
+async function analyzeHousingCondition(imageUrl, reportId) {
+  if (housingAnalysisResults.value[imageUrl]) {
+    // If we already analyzed this image, just return the cached result
+    return housingAnalysisResults.value[imageUrl]
+  }
+
+  try {
+    analyzingImageId.value = reportId
+    const result = await analyzeHouseImage(imageUrl)
+
+    // Store the result by image URL for future reference
+    housingAnalysisResults.value[imageUrl] = result
+    return result
+  } catch (error) {
+    toast.error('Failed to analyze house image', {
+      description: error.message || 'Please try again later',
+    })
+    return null
+  } finally {
+    analyzingImageId.value = null
+  }
 }
 
 const Spinner = {
