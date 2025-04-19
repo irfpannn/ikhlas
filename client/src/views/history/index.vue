@@ -120,10 +120,37 @@ const getTransactionIcon = (transaction) => {
   }
 }
 
+// Exchange rate for RM to BTC
+const exchangeRate = ref(null)
+
+// Fetch the current exchange rate (same logic as in PaymentsTab.vue)
+const fetchBTCExchangeRate = async () => {
+  try {
+    const response = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=myr',
+    )
+    const data = await response.json()
+
+    if (data && data.bitcoin && data.bitcoin.myr) {
+      // Calculate BTC/MYR rate (1 BTC = X MYR, so 1 MYR = 1/X BTC)
+      exchangeRate.value = 1 / data.bitcoin.myr
+      console.log(`Exchange rate fetched: 1 MYR = ${exchangeRate.value} BTC`)
+    } else {
+      console.error('Invalid exchange rate data format:', data)
+      // Fallback exchange rate if API fails
+      exchangeRate.value = 0.0000053 // Example fallback rate (1 MYR ≈ 0.0000053 BTC)
+    }
+  } catch (error) {
+    console.error('Error fetching BTC exchange rate:', error)
+    // Fallback exchange rate if API fails
+    exchangeRate.value = 0.0000053 // Example fallback rate
+  }
+}
+
+// Convert RM to BTC based on current exchange rate
 const convertRMtoBTC = (amountRM) => {
-  const btcRate = 250000 // 1 BTC = 250,000 RM (update as needed)
-  if (!amountRM || isNaN(amountRM)) return '0.000000'
-  return (parseFloat(amountRM) / btcRate).toFixed(6)
+  if (!amountRM || isNaN(amountRM) || !exchangeRate.value) return '0.000000'
+  return (parseFloat(amountRM) * exchangeRate.value).toFixed(6)
 }
 
 // Function to convert Crypto (BTC/ETH) to RM (using example rates from previous template logic)
@@ -188,6 +215,7 @@ onMounted(async () => {
   try {
     isLoading.value = true
     await transactionStore.fetchAllHistory()
+    await fetchBTCExchangeRate() // Fetch the BTC exchange rate
   } catch (error) {
     console.error('Error fetching transaction history:', error)
   } finally {

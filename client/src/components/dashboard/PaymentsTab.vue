@@ -26,7 +26,7 @@
                 >
                 <TableCell class="text-right"
                   >{{ payment.amountCrypto?.toFixed(8) || '0.00000000' }}
-                  {{ payment.cryptoType || '' }}</TableCell
+                  {{ payment.cryptoType || 'BTC' }}</TableCell
                 >
                 <TableCell class="font-mono text-xs">
                   <span v-if="payment.walletAddress">
@@ -195,7 +195,39 @@ const emit = defineEmits(['update-payment-status'])
 
 const selectedPayment = ref(null)
 const isDialogOpen = ref(false)
+const exchangeRate = ref(null) // Exchange rate for RM to BTC
 
+// Fetch the current exchange rate on component mount
+const fetchBTCExchangeRate = async () => {
+  try {
+    const response = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=myr',
+    )
+    const data = await response.json()
+
+    if (data && data.bitcoin && data.bitcoin.myr) {
+      // Calculate BTC/MYR rate (1 BTC = X MYR, so 1 MYR = 1/X BTC)
+      exchangeRate.value = 1 / data.bitcoin.myr
+      console.log(`Exchange rate fetched: 1 MYR = ${exchangeRate.value} BTC`)
+    } else {
+      console.error('Invalid exchange rate data format:', data)
+      // Fallback exchange rate if API fails
+      exchangeRate.value = 0.0000053 // Example fallback rate (1 MYR ≈ 0.0000053 BTC)
+    }
+  } catch (error) {
+    console.error('Error fetching BTC exchange rate:', error)
+    // Fallback exchange rate if API fails
+    exchangeRate.value = 0.0000053 // Example fallback rate
+  }
+}
+
+// Convert RM to BTC based on current exchange rate
+const convertRMtoBTC = (amountRM) => {
+  if (!amountRM || !exchangeRate.value) return 0
+  return amountRM * exchangeRate.value
+}
+
+// Format date function
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
   // Check if dateString is a Firestore Timestamp object
@@ -220,24 +252,31 @@ const transactionStore = useTransactionStore()
 // Fetch transactions when component is mounted
 onMounted(async () => {
   await transactionStore.fetchAllTransactions()
+  await fetchBTCExchangeRate() // Fetch the exchange rate when component mounts
 })
 
 // Map transaction data to match the component's expected format
 const zakatPayments = computed(() => {
   return (transactionStore.transactions || [])
-    .filter(tx => tx.type === 'zakat')
-    .map(tx => ({
-      id: tx.id,
-      userName: tx.senderName,
-      date: tx.timestamp,
-      amountRM: tx.currency === 'RM' ? tx.amount : 0,
-      amountCrypto: tx.currency !== 'RM' ? tx.amount : 0,
-      cryptoType: tx.currency !== 'RM' ? tx.currency : '',
-      walletAddress: tx.transactionHash,
-      status: tx.status,
-      userEmail: tx.senderEmail || 'N/A',
-      transactionId: tx.transactionHash
-    }))
+    .filter((tx) => tx.type === 'zakat')
+    .map((tx) => {
+      const rmAmount = tx.currency === 'RM' ? tx.amount : 0
+      // If cryptocurrency is already BTC, use that amount, otherwise convert RM to BTC
+      const btcAmount = tx.currency === 'BTC' ? tx.amount : convertRMtoBTC(rmAmount)
+
+      return {
+        id: tx.id,
+        userName: tx.senderName,
+        date: tx.timestamp,
+        amountRM: rmAmount,
+        amountCrypto: btcAmount,
+        cryptoType: 'BTC', // Always display BTC as crypto type
+        walletAddress: tx.transactionHash,
+        status: tx.status,
+        userEmail: tx.senderEmail || 'N/A',
+        transactionId: tx.transactionHash,
+      }
+    })
 })
 
 // Update loading state based on store
@@ -246,11 +285,11 @@ const loading = computed(() => transactionStore.isLoading)
 // Update payment status
 const updatePaymentStatus = async (paymentId, status) => {
   try {
-    const payment = transactionStore.transactions.find(tx => tx.id === paymentId)
+    const payment = transactionStore.transactions.find((tx) => tx.id === paymentId)
     if (payment) {
       await transactionStore.recordTransaction({
         ...payment,
-        status: status
+        status: status,
       })
       emit('update-payment-status', paymentId, status)
       isDialogOpen.value = false
