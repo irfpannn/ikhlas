@@ -168,6 +168,60 @@ const eliteRewards = ref([
   },
 ])
 
+// Update missions data
+const missions = ref([
+  {
+    id: 1,
+    title: 'DONATION STREAK',
+    subtitle: 'Make donations 3 days in a row',
+    points: 150,
+    daysLeft: 7,
+    icon: '🔥',
+    unlimited: false,
+    progress: '1/3',
+  },
+  {
+    id: 2,
+    title: 'ASNAF REPORTER',
+    subtitle: 'Report 5 potential asnaf cases',
+    points: 200,
+    daysLeft: 30,
+    icon: '📝',
+    unlimited: true,
+    progress: '2/5',
+  },
+  {
+    id: 3,
+    title: 'MONTHLY SUSTAINER',
+    subtitle: 'Complete monthly donation commitment',
+    points: 300,
+    daysLeft: 10,
+    icon: '🌙',
+    unlimited: false,
+    progress: '0/1',
+  },
+  {
+    id: 4,
+    title: 'COMMUNITY CHAMPION',
+    subtitle: 'Help verify 3 asnaf reports',
+    points: 180,
+    daysLeft: 15,
+    icon: '🤝',
+    unlimited: true,
+    progress: '1/3',
+  },
+  {
+    id: 5,
+    title: 'ZAKAT AWARENESS',
+    subtitle: 'Share 3 zakat posts on social media',
+    points: 100,
+    daysLeft: 5,
+    icon: '📢',
+    unlimited: true,
+    progress: '0/3',
+  },
+])
+
 // Active rewards based on selected partner
 const activeRewards = ref(zusRewards.value)
 
@@ -283,134 +337,56 @@ const redeemReward = (reward) => {
             </CardContent>
           </Card>
 
-          <!-- Daily Missions with icons and improved design -->
-          <Card class="shadow-sm mb-4 overflow-hidden border border-green-100">
-            <div class="bg-[#75a868]/10 px-4 py-3 border-b border-green-100">
-              <h3 class="font-semibold text-[#75a868] flex items-center">
-                <span class="mr-2 text-lg">🔄</span> Misi Harian
-              </h3>
+          <h3 class="font-semibold mb-3">Complete missions to help the community</h3>
+
+          <!-- New missions grid -->
+          <div class="grid grid-cols-1 gap-4">
+            <div
+              v-for="mission in missions"
+              :key="mission.id"
+              class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"
+            >
+              <div class="p-4">
+                <div class="mb-2">
+                  <span class="text-3xl">{{ mission.icon }}</span>
+                </div>
+                <div class="space-y-1">
+                  <h4 class="font-semibold text-gray-800">{{ mission.title }}</h4>
+                  <p class="text-sm text-gray-600">{{ mission.subtitle }}</p>
+                </div>
+                <div class="mt-4 flex justify-between items-center">
+                  <div class="flex items-center gap-1">
+                    <span class="text-yellow-500">⭐</span>
+                    <span class="text-sm font-medium">{{ mission.points }} pts</span>
+                  </div>
+                  <div class="flex items-center gap-1 text-gray-500">
+                    <span class="text-sm">⏰</span>
+                    <span class="text-sm">{{ mission.daysLeft }} days left</span>
+                  </div>
+                </div>
+                <!-- Add progress bar -->
+                <div class="mt-3 w-full bg-gray-100 rounded-full h-2">
+                  <div
+                    class="bg-[#75a868] h-2 rounded-full"
+                    :style="{
+                      width: `${(parseInt(mission.progress.split('/')[0]) / parseInt(mission.progress.split('/')[1])) * 100}%`,
+                    }"
+                  ></div>
+                </div>
+                <div class="mt-1 text-xs text-gray-500 text-right">
+                  {{ mission.progress }}
+                </div>
+              </div>
+              <div class="px-4 py-3 bg-gray-50 flex justify-between items-center">
+                <Button variant="default" size="sm" class="w-full bg-[#75a868] hover:bg-[#5d8652]">
+                  {{ mission.progress.startsWith('0') ? 'Start Now' : 'Continue' }}
+                </Button>
+              </div>
+              <div v-if="mission.unlimited" class="px-4 py-2 bg-gray-50 border-t border-gray-100">
+                <p class="text-xs text-center text-gray-500">Repeatable Mission</p>
+              </div>
             </div>
-            <CardContent class="p-4">
-              <div class="space-y-4">
-                <div
-                  class="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:border-[#75a868] transition-colors"
-                >
-                  <div class="flex items-center">
-                    <div class="bg-[#75a868]/10 p-2 rounded-full mr-3">
-                      <span class="text-xl">💰</span>
-                    </div>
-                    <div>
-                      <p class="font-medium">Buat sumbangan</p>
-                      <p class="text-sm text-gray-500 flex items-center">
-                        <span class="text-yellow-500 mr-1">⭐</span> +50 mata
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    class="bg-white hover:bg-[#75a868] hover:text-white transition-colors"
-                  >
-                    Selesai
-                  </Button>
-                </div>
-
-                <div
-                  class="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:border-[#75a868] transition-colors"
-                >
-                  <div class="flex items-center">
-                    <div class="bg-[#75a868]/10 p-2 rounded-full mr-3">
-                      <span class="text-xl">📱</span>
-                    </div>
-                    <div>
-                      <p class="font-medium">Kongsi di media sosial</p>
-                      <p class="text-sm text-gray-500 flex items-center">
-                        <span class="text-yellow-500 mr-1">⭐</span> +20 mata
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    class="bg-white hover:bg-[#75a868] hover:text-white transition-colors"
-                  >
-                    Selesai
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <!-- Monthly Missions with progress indicators -->
-          <Card class="shadow-sm overflow-hidden border border-green-100">
-            <div class="bg-[#75a868]/10 px-4 py-3 border-b border-green-100">
-              <h3 class="font-semibold text-[#75a868] flex items-center">
-                <span class="mr-2 text-lg">📅</span> Misi Bulanan
-              </h3>
-            </div>
-            <CardContent class="p-4">
-              <div class="space-y-4">
-                <div
-                  class="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:border-[#75a868] transition-colors"
-                >
-                  <div class="flex items-center">
-                    <div class="bg-[#75a868]/10 p-2 rounded-full mr-3">
-                      <span class="text-xl">🔄</span>
-                    </div>
-                    <div>
-                      <p class="font-medium">Sumbang 3 kali</p>
-                      <p class="text-sm text-gray-500 flex items-center">
-                        <span class="text-yellow-500 mr-1">⭐</span> +200 mata
-                      </p>
-                    </div>
-                  </div>
-                  <div class="text-center">
-                    <div class="text-sm font-medium text-[#75a868]">1/3</div>
-                    <div class="w-16 h-2 bg-gray-200 rounded-full mt-1">
-                      <div class="w-1/3 h-full bg-[#75a868] rounded-full"></div>
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  class="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:border-[#75a868] transition-colors"
-                >
-                  <div class="flex items-center">
-                    <div class="bg-[#75a868]/10 p-2 rounded-full mr-3">
-                      <span class="text-xl">👥</span>
-                    </div>
-                    <div>
-                      <p class="font-medium">Rujuk rakan</p>
-                      <p class="text-sm text-gray-500 flex items-center">
-                        <span class="text-yellow-500 mr-1">⭐</span> +100 mata setiap rujukan
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    class="bg-[#75a868] text-white hover:bg-[#5d8652] transition-colors"
-                  >
-                    Rujuk
-                  </Button>
-                </div>
-              </div>
-
-              <!-- Mission rewards summary -->
-              <div class="mt-6 pt-4 border-t border-dashed border-gray-200">
-                <h4 class="text-sm font-medium text-gray-600 mb-2">Kemajuan Misi</h4>
-                <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                  <div>
-                    <p class="text-sm font-medium">Misi selesai minggu ini</p>
-                    <p class="text-xs text-gray-500">Teruskan untuk lebih banyak mata</p>
-                  </div>
-                  <div class="flex items-center">
-                    <span class="text-2xl mr-2">🏆</span>
-                    <span class="text-lg font-bold text-[#75a868]">3/7</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          </div>
         </div>
       </TabsContent>
 
