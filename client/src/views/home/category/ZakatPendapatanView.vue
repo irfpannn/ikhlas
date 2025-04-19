@@ -9,6 +9,9 @@ import { toast } from 'vue-sonner'
 
 const router = useRouter()
 
+// Nisab threshold constant (updated based on the latest value)
+const NISAB_THRESHOLD = 21070 // RM 21,070 (current nisab for Pulau Pinang)
+
 // Form data
 const formData = ref({
   pendapatanSendiri: '',
@@ -31,14 +34,89 @@ const goBack = () => {
   router.go(-1)
 }
 
-// Calculate zakat
+// Calculate zakat according to Zakat Pulau Pinang guidelines
 const calculateZakat = () => {
-  toast('Jumlah Pembayaran Berjaya Dikira', {
-    description: 'Sila semak jumlah pembayaran anda',
-    duration: 2000,
-  })
-  // Implement calculation logic here
-  // This is a placeholder
+  try {
+    // Constants
+    const SELF_DEDUCTION = 9000 // Diri sendiri (RM 9,000)
+    const DEDUCTION_PER_WIFE = 3000 // RM 3,000 per wife
+    const DEDUCTION_PER_CHILD = 1000 // RM 1,000 per child
+    const ZAKAT_RATE = 0.025 // 2.5%
+    const MONTHS_IN_YEAR = 12
+
+    // 1. Calculate annual income - directly use the entered amount as yearly income
+    const yearlyIncome = parseFloat(formData.value.pendapatanSendiri) || 0
+
+    // 2. Calculate all allowable deductions (Tolakan Had Kifayah)
+    // Fixed deduction for self
+    const deductionDiriSendiri = SELF_DEDUCTION
+
+    // Dependent deductions
+    const numWives = parseInt(formData.value.bilanganTanggungan.isteri) || 0
+    const deductionIsteri = numWives * DEDUCTION_PER_WIFE
+
+    const numChildren = parseInt(formData.value.bilanganTanggungan.anak) || 0
+    const deductionAnak = numChildren * DEDUCTION_PER_CHILD
+
+    // Monthly parent support converted to annual
+    const monthlyParentSupport = parseFloat(formData.value.nafkahUntukIbuBapa) || 0
+    const yearlyParentSupport = monthlyParentSupport * MONTHS_IN_YEAR
+
+    // KWSP calculation (Note: This is fixed to match the formula in the example)
+    // The example shows RM 3,300 for 11% of RM 30,000, which is 11% of 30,000
+    const kwspPercentage = parseFloat(formData.value.kwsp) || 0
+    // Calculate KWSP directly as a percentage of yearly income
+    const yearlyKwsp = (yearlyIncome * kwspPercentage) / 100
+
+    // Other contributions (like Tabung Haji) - monthly to annual
+    const monthlyContributions = parseFloat(formData.value.caruman) || 0
+    const yearlyContributions = monthlyContributions * MONTHS_IN_YEAR
+
+    // Calculate total deductions
+    const totalDeductions =
+      deductionDiriSendiri +
+      deductionIsteri +
+      deductionAnak +
+      yearlyParentSupport +
+      yearlyKwsp +
+      yearlyContributions
+
+    // 3. Calculate eligible zakat income (Pendapatan Layak Zakat)
+    const pendapatanLayak = Math.max(0, yearlyIncome - totalDeductions)
+
+    // 4. Apply zakat rate regardless of nisab threshold for calculation display
+    // But still check nisab for the notification message
+    const zakatTahunan = pendapatanLayak * ZAKAT_RATE
+    const zakatBulanan = zakatTahunan / MONTHS_IN_YEAR
+
+    // Check if above nisab for notification purposes
+    const isAboveNisab = pendapatanLayak >= NISAB_THRESHOLD
+
+    // Update form display values
+    formData.value.jumlahTaksiran = totalDeductions.toFixed(2)
+    formData.value.pendapatanLayak = pendapatanLayak.toFixed(2)
+    formData.value.zakatTahunan = zakatTahunan.toFixed(2)
+    formData.value.zakatBulanan = zakatBulanan.toFixed(2)
+
+    // Show appropriate notification based on nisab threshold
+    if (isAboveNisab) {
+      toast('Anda wajib mengeluarkan zakat pendapatan', {
+        description: `Pendapatan layak zakat melebihi kadar nisab: RM${NISAB_THRESHOLD.toLocaleString()}`,
+        duration: 3000,
+      })
+    } else {
+      toast('Pendapatan anda tidak mencapai nisab, tetapi boleh dibayar secara sukarela', {
+        description: `Kadar nisab semasa: RM${NISAB_THRESHOLD.toLocaleString()}`,
+        duration: 3000,
+      })
+    }
+  } catch (error) {
+    console.error('Calculation error:', error)
+    toast('Ralat dalam pengiraan', {
+      description: 'Sila periksa semua nilai yang dimasukkan',
+      duration: 3000,
+    })
+  }
 }
 
 // Reset form
@@ -87,7 +165,7 @@ const goToPayment = () => {
             <h2 class="text-center items-center mb-1 font-medium">
               i) Pendapatan dari sumber zakat setahun
             </h2>
-            <p class="text-sm text-gray-600 mb-2">(Gaji/Hasil + Elaun + Lain-lain)</p>
+            <p class="text-sm text-gray-600 mb-2">(Gaji Pokok + Elaun + Lebih Masa)</p>
 
             <div class="flex items-center mb-2 w-full">
               <span class="text-right mr-2">RM</span>
@@ -116,7 +194,7 @@ const goToPayment = () => {
               <div class="flex flex-col space-y-1">
                 <div>
                   <span class="text-sm">Bilangan Isteri</span>
-                  <p class="text-xs text-red-500">*maksimum RM 9,000.00 setiap isteri</p>
+                  <p class="text-xs text-red-500">*Tolakan RM 3,000.00 setiap isteri</p>
                 </div>
                 <div class="flex items-center">
                   <Input
@@ -126,7 +204,7 @@ const goToPayment = () => {
                     type="number"
                   />
                   <span class="w-10 text-right mr-2">RM</span>
-                  <Input type="number" placeholder="Jumlah" />
+                  <Input :value="(formData.bilanganTanggungan.isteri || 0) * 3000" disabled />
                 </div>
               </div>
             </div>
@@ -135,7 +213,7 @@ const goToPayment = () => {
               <div class="flex flex-col space-y-1">
                 <div>
                   <span class="text-sm">Bilangan Anak</span>
-                  <p class="text-xs text-red-500">*maksimum RM 6,000.00 setiap anak</p>
+                  <p class="text-xs text-red-500">*Tolakan RM 1,000.00 setiap anak</p>
                 </div>
                 <div class="flex items-center">
                   <Input
@@ -145,7 +223,7 @@ const goToPayment = () => {
                     type="number"
                   />
                   <span class="w-10 text-right mr-2">RM</span>
-                  <Input type="number" placeholder="Jumlah" />
+                  <Input :value="(formData.bilanganTanggungan.anak || 0) * 1000" disabled />
                 </div>
               </div>
             </div>
@@ -154,11 +232,18 @@ const goToPayment = () => {
               <div class="flex flex-col space-y-1">
                 <div>
                   <span class="text-sm">Nafkah untuk ibu bapa</span>
-                  <p class="text-xs">Sumbangan untuk wajib nafkah</p>
+                  <p class="text-xs">Sumbangan untuk sebulan</p>
                 </div>
                 <div class="flex items-center">
                   <span class="text-right mr-2">RM</span>
-                  <Input v-model="formData.nafkahUntukIbuBapa" type="number" placeholder="Jumlah" />
+                  <Input
+                    v-model="formData.nafkahUntukIbuBapa"
+                    type="number"
+                    placeholder="Jumlah sebulan"
+                    class="mr-2"
+                  />
+                  <span class="text-right mr-2">RM</span>
+                  <Input :value="((formData.nafkahUntukIbuBapa || 0) * 12).toFixed(2)" disabled />
                 </div>
               </div>
             </div>
@@ -169,10 +254,21 @@ const goToPayment = () => {
                   <span class="text-sm">KWSP</span>
                 </div>
                 <div class="flex items-center">
+                  <Input
+                    v-model="formData.kwsp"
+                    placeholder="Peratusan"
+                    class="w-24 mr-2"
+                    type="number"
+                  />
                   <p class="text-xs pr-2">%</p>
-                  <Input v-model="formData.kwsp" placeholder="Peratusan" class="w-24 mr-2" />
                   <span class="w-10 text-right mr-2">RM</span>
-                  <Input type="number" placeholder="Jumlah" />
+                  <Input
+                    :value="
+                      (((formData.pendapatanSendiri || 0) * (formData.kwsp || 0)) / 100).toFixed(2)
+                    "
+                    placeholder="Tahunan"
+                    disabled
+                  />
                 </div>
               </div>
             </div>
@@ -180,12 +276,19 @@ const goToPayment = () => {
             <div class="flex flex-col space-y-2">
               <div class="flex flex-col space-y-1">
                 <div>
-                  <span class="text-sm">Lain-lain Caruman Yang Wajib</span>
-                  <p class="text-xs">Caruman wajiban untuk pekerja</p>
+                  <span class="text-sm">Caruman Tabung Haji</span>
+                  <p class="text-xs">Jumlah caruman untuk sebulan</p>
                 </div>
                 <div class="flex items-center">
                   <span class="w-10 text-right mr-2">RM</span>
-                  <Input v-model="formData.caruman" type="number" placeholder="Jumlah" />
+                  <Input
+                    v-model="formData.caruman"
+                    type="number"
+                    placeholder="Jumlah sebulan"
+                    class="mr-2"
+                  />
+                  <span class="text-right mr-2">RM</span>
+                  <Input :value="((formData.caruman || 0) * 12).toFixed(2)" disabled />
                 </div>
               </div>
             </div>
@@ -197,7 +300,12 @@ const goToPayment = () => {
                 <span class="font-medium text-center">Jumlah Taksiran</span>
                 <div class="flex items-center">
                   <span class="text-right mr-2">RM</span>
-                  <Input v-model="formData.jumlahTaksiran" type="number" placeholder="Jumlah" />
+                  <Input
+                    v-model="formData.jumlahTaksiran"
+                    type="number"
+                    placeholder="Jumlah"
+                    disabled
+                  />
                 </div>
               </div>
             </div>
@@ -215,6 +323,7 @@ const goToPayment = () => {
                     type="number"
                     placeholder="Jumlah"
                     class="w-64"
+                    disabled
                   />
                 </div>
               </div>
@@ -235,6 +344,7 @@ const goToPayment = () => {
                     type="number"
                     placeholder="Jumlah"
                     class="w-64"
+                    disabled
                   />
                 </div>
               </div>
@@ -253,6 +363,7 @@ const goToPayment = () => {
                     type="number"
                     placeholder="Jumlah"
                     class="w-64"
+                    disabled
                   />
                 </div>
               </div>
