@@ -3,6 +3,11 @@
     <div class="heatmap-header">
       <h3>Asnaf Geographic Distribution</h3>
       <div class="heatmap-filters">
+        <select v-model="yearFilter" class="filter-select" @change="updateHeatmap">
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+          <option value="2022">2022</option>
+        </select>
         <select v-model="categoryFilter" class="filter-select" @change="updateHeatmap">
           <option value="all">All Categories</option>
           <option value="Poor (Fakir)">Poor (Fakir)</option>
@@ -46,15 +51,36 @@ export default {
     let heatPlugin = null;
     let isMapInitialized = false;
     const categoryFilter = ref('all');
+    const yearFilter = ref('2024');
+
+    // Generate dummy data with decreasing impact over years
+    const generateYearBasedData = (baseLocations) => {
+      const yearMultipliers = {
+        '2024': 1.0,
+        '2023': 0.7,
+        '2022': 0.4
+      };
+
+      return baseLocations.map(location => ({
+        ...location,
+        weight: (location.weight || 10) * yearMultipliers[yearFilter.value]
+      }));
+    };
 
     const filteredLocations = () => {
-      if (categoryFilter.value === 'all') {
-        return props.locations;
-      } else {
-        return props.locations.filter(location => 
+      let filtered = props.locations;
+      
+      // Apply year-based weight adjustment
+      filtered = generateYearBasedData(filtered);
+
+      // Apply category filter
+      if (categoryFilter.value !== 'all') {
+        filtered = filtered.filter(location => 
           location.category === categoryFilter.value
         );
       }
+
+      return filtered;
     };
 
     const initMap = async () => {
@@ -169,6 +195,7 @@ export default {
     return {
       mapContainer,
       categoryFilter,
+      yearFilter,
       updateHeatmap
     };
   }
@@ -194,6 +221,15 @@ export default {
 .heatmap-filters {
   display: flex;
   gap: 1rem;
+  align-items: center;
+}
+
+.filter-select {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  background-color: white;
+  min-width: 120px;
 }
 
 .legend-label {
