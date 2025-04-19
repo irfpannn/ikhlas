@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
@@ -21,20 +21,29 @@ const route = useRoute()
 const router = useRouter()
 
 // Get zakat amount and type from route query parameters
-const zakatAmount = route.query.amount ? parseFloat(route.query.amount) : 250.00
-const zakatType = route.query.type || 'Zakat'
-const zakatCurrency = route.query.currency || 'RM'
+const zakatAmount = computed(() => {
+  return route.query.amount ? parseFloat(route.query.amount) : 250.00
+})
+const zakatType = computed(() => route.query.type || 'Zakat')
+const zakatCurrency = computed(() => route.query.currency || 'RM')
 
 // Payment data
 const paymentData = ref({
-  amount: zakatAmount.toString(),
+  amount: zakatAmount.value.toString(),
   name: '',
   email: '',
   phone: '',
   walletInfo: null,
   paymentMethod: 'crypto', // Only crypto is supported now
-  zakatType: zakatType,
-  currency: zakatCurrency
+  zakatType: zakatType.value,
+  currency: zakatCurrency.value
+})
+
+// Watch for changes in route query parameters
+watch([zakatAmount, zakatType, zakatCurrency], ([newAmount, newType, newCurrency]) => {
+  paymentData.value.amount = newAmount.toString()
+  paymentData.value.zakatType = newType
+  paymentData.value.currency = newCurrency
 })
 
 // Payment processing state

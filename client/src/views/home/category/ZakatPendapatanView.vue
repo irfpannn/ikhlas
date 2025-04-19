@@ -141,7 +141,14 @@ const resetForm = () => {
 
 // Go to payment page
 const goToPayment = () => {
-  router.push('/payment')
+  router.push({
+    path: '/payment',
+    query: {
+      amount: formData.value.zakatTahunan,
+      type: 'Pendapatan',
+      currency: 'RM'
+    }
+  })
 }
 </script>
 
