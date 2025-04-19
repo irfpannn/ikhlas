@@ -7,27 +7,41 @@
  */
 export async function analyzeHouseImage(imageUrl) {
   try {
-    // Convert image URL to file by fetching it
-    const response = await fetch(imageUrl)
-    const blob = await response.blob()
+    console.log('Attempting to analyze image via backend:', imageUrl)
 
-    // Create form data to send to API
-    const formData = new FormData()
-    formData.append('image', blob, 'house_image.jpg')
+    // Since Firebase Storage has CORS restrictions, we'll pass the image URL directly to the backend
+    // and let the Python backend fetch the image (which doesn't have browser CORS limitations)
 
-    // Call the API
-    const apiResponse = await fetch('http://localhost:5000/analyze-house', {
+    // Call the API with the image URL
+    const apiUrl = 'http://localhost:5000/analyze-house-url'
+    console.log(`Sending request to: ${apiUrl}`)
+
+    const apiResponse = await fetch(apiUrl, {
       method: 'POST',
-      body: formData,
+      headers: {
+        'Content-Type': 'application/json', // Send the URL as JSON
+      },
+      body: JSON.stringify({ image_url: imageUrl }), // Send the URL in the body
     })
 
     if (!apiResponse.ok) {
-      throw new Error(`API error: ${apiResponse.status}`)
+      console.error(`API error status: ${apiResponse.status}`)
+      // Try to get more details from the response body if possible
+      let errorBody = 'No details available'
+      try {
+        errorBody = await apiResponse.text() // or .json() if the backend sends JSON errors
+        console.error(`API error body: ${errorBody}`)
+      } catch (e) {
+        console.error('Could not read error response body:', e)
+      }
+      throw new Error(`API error: ${apiResponse.status} - ${errorBody}`)
     }
 
     return await apiResponse.json()
   } catch (error) {
-    console.error('Error analyzing house image:', error)
+    // Log the specific error caught
+    console.error('Error in analyzeHouseImage function:', error)
+    // Re-throw the error so the calling component can handle it
     throw error
   }
 }

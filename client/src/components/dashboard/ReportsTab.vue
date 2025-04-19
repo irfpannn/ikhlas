@@ -20,7 +20,7 @@
       </div>
     </div>
 
-    <Card v-if="loading" class="p-6 flex justify-center items-center">
+    <Card v-if="asnafReportStore.isLoading" class="p-6 flex justify-center items-center">
       <Spinner class="mr-2" />
       <span>Loading reports...</span>
     </Card>
@@ -92,8 +92,11 @@
               v-if="report.status === 'Pending'"
               size="md"
               variant="success"
-              :loading="verifyingId === report.id"
-              :disabled="verifyingId === report.id || rejectingId === report.id"
+              :loading="asnafReportStore.verifyingId === report.id"
+              :disabled="
+                asnafReportStore.verifyingId === report.id ||
+                asnafReportStore.rejectingId === report.id
+              "
               @click="onVerify(report)"
             >
               <CheckIcon class="h-4 w-4 mr-1" /> Verify
@@ -102,8 +105,11 @@
               v-if="report.status === 'Pending'"
               size="default"
               variant="destructive"
-              :loading="rejectingId === report.id"
-              :disabled="verifyingId === report.id || rejectingId === report.id"
+              :loading="asnafReportStore.rejectingId === report.id"
+              :disabled="
+                asnafReportStore.verifyingId === report.id ||
+                asnafReportStore.rejectingId === report.id
+              "
               @click="onReject(report)"
             >
               <XIcon class="h-4 w-4 mr-1" /> Reject
@@ -218,18 +224,20 @@
               <div class="flex gap-2 mt-2">
                 <Button
                   variant="success"
-                  :loading="verifyingId === selectedReport?.id"
+                  :loading="asnafReportStore.verifyingId === selectedReport?.id"
                   :disabled="
-                    verifyingId === selectedReport?.id || rejectingId === selectedReport?.id
+                    asnafReportStore.verifyingId === selectedReport?.id ||
+                    asnafReportStore.rejectingId === selectedReport?.id
                   "
                   @click="onVerify(selectedReport)"
                   ><CheckIcon class="h-4 w-4 mr-1" /> Verify Report</Button
                 >
                 <Button
                   variant="destructive"
-                  :loading="rejectingId === selectedReport?.id"
+                  :loading="asnafReportStore.rejectingId === selectedReport?.id"
                   :disabled="
-                    verifyingId === selectedReport?.id || rejectingId === selectedReport?.id
+                    asnafReportStore.verifyingId === selectedReport?.id ||
+                    asnafReportStore.rejectingId === selectedReport?.id
                   "
                   @click="onReject(selectedReport)"
                   ><XIcon class="h-4 w-4 mr-1" /> Reject Report</Button
@@ -377,7 +385,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -403,19 +411,12 @@ import {
   translateHousingClass,
   getHousingClassVariant,
 } from '@/services/housingAnalysisService'
+import { useUserAsnafReportStore } from '@/stores/userAsnafReportStore'
 
-const props = defineProps({
-  reports: {
-    type: Array,
-    required: true,
-  },
-  loading: {
-    type: Boolean,
-    default: false,
-  },
-})
-const emit = defineEmits(['verify-report', 'reject-report', 'convert-to-asnaf', 'view-image'])
+// Use the asnaf report store
+const asnafReportStore = useUserAsnafReportStore()
 
+// Local state
 const reportStatusFilter = ref('all')
 const selectedReport = ref(null)
 const selectedImage = ref(null)
@@ -424,16 +425,19 @@ const conversionCategory = ref('')
 const conversionNeeds = ref('')
 const reportActionNotes = ref('')
 const reportToConvert = ref(null)
-const verifyingId = ref(null)
-const rejectingId = ref(null)
 const analyzingImageId = ref(null)
 const housingAnalysisResults = ref({}) // Store analysis results by image URL
 
+// Fetch reports on component mount
+onMounted(async () => {
+  await asnafReportStore.fetchReports()
+})
+
 const filteredReports = computed(() => {
   if (reportStatusFilter.value === 'all') {
-    return props.reports
+    return asnafReportStore.reports
   }
-  return props.reports.filter((report) => {
+  return asnafReportStore.reports.filter((report) => {
     if (reportStatusFilter.value === 'pending') return report.status === 'Pending'
     if (reportStatusFilter.value === 'verified') return report.status === 'Verified'
     if (reportStatusFilter.value === 'rejected') return report.status === 'Rejected'
@@ -443,6 +447,7 @@ const filteredReports = computed(() => {
 })
 
 function formatDate(date) {
+  if (!date) return 'N/A'
   return new Date(date).toLocaleDateString('en-MY', {
     year: 'numeric',
     month: 'short',
@@ -459,22 +464,29 @@ function viewReportDetails(report) {
 
 function viewImage(imageUrl) {
   selectedImage.value = imageUrl
-  emit('view-image', imageUrl)
 }
 
-function verifyReport(report) {
-  emit('verify-report', report, reportActionNotes.value)
-  toast.success('Report verified successfully!')
-  if (selectedReport.value) {
-    selectedReport.value = null
+async function onVerify(report) {
+  const success = await asnafReportStore.verifyReport(report, reportActionNotes.value)
+  if (success) {
+    toast.success('Report verified successfully!')
+    if (selectedReport.value) {
+      selectedReport.value = null
+    }
+  } else {
+    toast.error('Failed to verify report')
   }
 }
 
-function rejectReport(report) {
-  emit('reject-report', report, reportActionNotes.value)
-  toast('Report rejected.', { description: 'The report has been rejected.' })
-  if (selectedReport.value) {
-    selectedReport.value = null
+async function onReject(report) {
+  const success = await asnafReportStore.rejectReport(report, reportActionNotes.value)
+  if (success) {
+    toast('Report rejected.', { description: 'The report has been rejected.' })
+    if (selectedReport.value) {
+      selectedReport.value = null
+    }
+  } else {
+    toast.error('Failed to reject report')
   }
 }
 
@@ -485,28 +497,27 @@ function openConvertModal(report) {
   showConvertModal.value = true
 }
 
-function confirmConvertToAsnaf() {
+async function confirmConvertToAsnaf() {
   if (!conversionCategory.value) {
     toast.error('Please select an Asnaf category')
     return
   }
-  emit('convert-to-asnaf', reportToConvert.value, {
+
+  const result = await asnafReportStore.convertReportToAsnaf(reportToConvert.value, {
     category: conversionCategory.value,
     needs: conversionNeeds.value,
   })
-  toast.success('Report converted to Asnaf!')
-  showConvertModal.value = false
-  if (selectedReport.value) {
-    selectedReport.value = null
+
+  if (result.success) {
+    toast.success('Report converted to Asnaf!')
+    showConvertModal.value = false
+    if (selectedReport.value) {
+      selectedReport.value = null
+    }
+  } else {
+    toast.error('Failed to convert report to Asnaf')
   }
 }
-
-watch(
-  () => props.reports,
-  () => {
-    reportStatusFilter.value = 'all'
-  },
-)
 
 function statusVariant(status) {
   if (status === 'Pending') return 'warning'
@@ -514,21 +525,6 @@ function statusVariant(status) {
   if (status === 'Rejected') return 'destructive'
   if (status === 'Converted to Asnaf') return 'secondary'
   return 'secondary'
-}
-
-function onVerify(report) {
-  verifyingId.value = report.id
-  verifyReport(report)
-  setTimeout(() => {
-    verifyingId.value = null
-  }, 1200)
-}
-function onReject(report) {
-  rejectingId.value = report.id
-  rejectReport(report)
-  setTimeout(() => {
-    rejectingId.value = null
-  }, 1200)
 }
 
 // Housing condition analysis
