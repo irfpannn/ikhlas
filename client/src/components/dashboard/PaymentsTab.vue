@@ -156,7 +156,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue' // Added watch
+import { ref, watch, onMounted, computed } from 'vue'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -177,7 +177,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label' // Added Label import
+import { Label } from '@/components/ui/label'
+import { useTransactionStore } from '@/stores/transactionStore'
 
 const props = defineProps({
   zakatPayments: {
@@ -214,9 +215,49 @@ const viewDetails = (payment) => {
   isDialogOpen.value = true
 }
 
-const updatePaymentStatus = (paymentId, status) => {
-  emit('update-payment-status', paymentId, status)
-  isDialogOpen.value = false // Close dialog after action
+const transactionStore = useTransactionStore()
+
+// Fetch transactions when component is mounted
+onMounted(async () => {
+  await transactionStore.fetchAllTransactions()
+})
+
+// Map transaction data to match the component's expected format
+const zakatPayments = computed(() => {
+  return transactionStore.transactions
+    .filter(tx => tx.type === 'zakat')
+    .map(tx => ({
+      id: tx.id,
+      userName: tx.senderName,
+      date: tx.timestamp,
+      amountRM: tx.currency === 'RM' ? tx.amount : 0,
+      amountCrypto: tx.currency !== 'RM' ? tx.amount : 0,
+      cryptoType: tx.currency !== 'RM' ? tx.currency : '',
+      walletAddress: tx.transactionHash,
+      status: tx.status,
+      userEmail: tx.senderEmail || 'N/A',
+      transactionId: tx.transactionHash
+    }))
+})
+
+// Update loading state based on store
+const loading = computed(() => transactionStore.isLoading)
+
+// Update payment status
+const updatePaymentStatus = async (paymentId, status) => {
+  try {
+    const payment = transactionStore.transactions.find(tx => tx.id === paymentId)
+    if (payment) {
+      await transactionStore.recordTransaction({
+        ...payment,
+        status: status
+      })
+      emit('update-payment-status', paymentId, status)
+      isDialogOpen.value = false
+    }
+  } catch (error) {
+    console.error('Error updating payment status:', error)
+  }
 }
 
 const getStatusVariant = (status) => {
