@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
 import BottomNavigation from '@/components/ui/bottom-navigation/BottomNavigation.vue'
+import LocationPicker from '@/components/ui/map/LocationPicker.vue'
 // Import the asnaf report store
 import { useUserAsnafReportStore } from '@/stores/userAsnafReportStore'
 
@@ -138,21 +139,14 @@ const submitReport = async () => {
                 </p>
               </div>
 
-              <!-- Location -->
+              <!-- Location with Map -->
               <div class="mb-4">
                 <label class="block text-sm font-medium mb-1">Lokasi</label>
-                <div
-                  class="border rounded-md p-3 bg-gray-50 cursor-pointer flex items-center"
-                  @click="handleLocationSelect"
-                >
-                  <div v-if="formData.location" class="flex-1">
-                    <p class="font-medium">{{ formData.location.address }}</p>
-                    <p class="text-xs text-gray-500">
-                      Lat: {{ formData.location.latitude }}, Long: {{ formData.location.longitude }}
-                    </p>
-                  </div>
-                  <div v-else class="flex-1 text-gray-500">Klik untuk pilih lokasi di peta</div>
-                  <span class="text-xl">📍</span>
+                <div class="border rounded-md p-2" :class="errors.location ? 'border-red-500' : ''">
+                  <LocationPicker
+                    v-model="formData.location"
+                    @update:modelValue="handleLocationSelect"
+                  />
                 </div>
                 <p v-if="errors.location" class="text-red-500 text-xs mt-1">
                   {{ errors.location }}
