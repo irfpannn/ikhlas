@@ -224,7 +224,7 @@ onMounted(async () => {
 
 // Map transaction data to match the component's expected format
 const zakatPayments = computed(() => {
-  return transactionStore.transactions
+  return (transactionStore.transactions || [])
     .filter(tx => tx.type === 'zakat')
     .map(tx => ({
       id: tx.id,

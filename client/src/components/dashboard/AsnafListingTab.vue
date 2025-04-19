@@ -4,14 +4,12 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
       <h2 class="text-2xl font-bold tracking-tight">Asnaf (Eligible Recipients) Listing</h2>
       <div class="flex flex-wrap gap-2">
+        <Button @click="validateAllAsnaf" variant="outline" :disabled="validating">
+          <Spinner v-if="validating" class="mr-2" />
+          {{ validating ? 'Validating...' : 'Validate All' }}
+        </Button>
         <Button @click="showAddDialog = true" variant="default">
           <PlusIcon class="h-4 w-4 mr-2" /> Add New Asnaf
-        </Button>
-        <Button @click="showEligibilityDialog = true" variant="secondary">
-          <Bot class="h-4 w-4 mr-2" /> Assess Eligibility
-        </Button>
-        <Button @click="openBatchValidateDialog" variant="outline">
-          <ListChecksIcon class="h-4 w-4 mr-2" /> Batch Validate All
         </Button>
       </div>
     </div>
@@ -53,37 +51,6 @@
             <Button type="submit">{{ editAsnafData ? 'Update' : 'Add' }}</Button>
           </DialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
-
-    <!-- Assess Eligibility Dialog -->
-    <Dialog :open="showEligibilityDialog" @update:open="showEligibilityDialog = $event">
-      <DialogContent class="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Assess Eligibility (ML)</DialogTitle>
-        </DialogHeader>
-        <div class="space-y-2">
-          <p>This will run the ML eligibility assessment for all asnaf in the system.</p>
-          <Button @click="assessEligibility" :loading="eligibilityLoading" class="w-full">
-            <Bot class="h-4 w-4 mr-2" /> Run Assessment
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-
-    <!-- Batch Validate All Dialog -->
-    <Dialog :open="showBatchValidateDialog" @update:open="showBatchValidateDialog = $event">
-      <DialogContent class="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Batch Validate All</DialogTitle>
-        </DialogHeader>
-        <div class="space-y-2">
-          <p>This will validate all asnaf in the system. Are you sure?</p>
-          <DialogFooter>
-            <Button variant="outline" @click="showBatchValidateDialog = false">Cancel</Button>
-            <Button variant="default" @click="confirmBatchValidate">Validate All</Button>
-          </DialogFooter>
-        </div>
       </DialogContent>
     </Dialog>
 
@@ -129,7 +96,6 @@
                   <TableHead>Location</TableHead>
                   <TableHead>Monthly Income</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>ML Assessment</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -144,38 +110,26 @@
                     {{ asnaf.monthly_income ? asnaf.monthly_income.toFixed(2) : '0.00' }}</TableCell
                   >
                   <TableCell>
-                    <Badge
-                      :variant="
-                        asnaf.status === 'Active'
-                          ? 'success'
-                          : asnaf.status === 'Pending'
-                            ? 'warning'
-                            : 'secondary'
-                      "
-                    >
-                      {{ asnaf.status }}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      v-if="asnaf.ml_assessment"
-                      :variant="asnaf.ml_assessment === 'Deserves Help' ? 'success' : 'destructive'"
-                      size="lg"
-                      class="w-full"
-                      disabled
-                    >
-                      <Bot class="h-3 w-3 mr-1" />
-                      {{ asnaf.ml_assessment }}
-                    </Button>
-                    <Button
-                      v-else
-                      size="lg"
-                      variant="secondary"
-                      @click="validateAsnafEligibility(asnaf)"
-                      class="w-full"
-                    >
-                      <Bot class="h-3 w-3 mr-1" /> Validate
-                    </Button>
+                    <div class="flex items-center gap-2">
+                      <Badge
+                        :variant="
+                          asnaf.status === 'Active'
+                            ? 'success'
+                            : asnaf.status === 'Pending'
+                              ? 'warning'
+                              : 'secondary'
+                        "
+                      >
+                        {{ asnaf.status }}
+                      </Badge>
+                      <Badge
+                        v-if="validationResults[asnaf.id]"
+                        :variant="validationResults[asnaf.id].status === 'Eligible' ? 'success' : 'destructive'"
+                      >
+                        {{ validationResults[asnaf.id].status }}
+                        ({{ (validationResults[asnaf.id].confidence * 100).toFixed(1) }}%)
+                      </Badge>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div class="flex gap-2">
@@ -227,8 +181,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { PencilIcon, PlusIcon, Bot, ListChecksIcon } from 'lucide-vue-next'
+import { ref, onMounted } from 'vue'
+import { PencilIcon, PlusIcon } from 'lucide-vue-next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -256,6 +210,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import * as tf from '@tensorflow/tfjs'
 
 const props = defineProps({
   groupedAsnaf: {
@@ -270,16 +225,11 @@ const props = defineProps({
 const emit = defineEmits([
   'add-new-asnaf',
   'edit-asnaf',
-  'validate-asnaf-eligibility',
-  'batch-validate-all-asnaf',
-  'show-assess-eligibility-modal',
+  'delete-asnaf',
 ])
 const showAddDialog = ref(false)
-const showEligibilityDialog = ref(false)
-const showBatchValidateDialog = ref(false)
 const editAsnafData = ref(null)
 const deleteAsnafData = ref(null)
-const eligibilityLoading = ref(false)
 
 const asnafForm = ref({
   name: '',
@@ -293,9 +243,6 @@ const asnafForm = ref({
   status: 'Active',
 })
 
-function openBatchValidateDialog() {
-  showBatchValidateDialog.value = true
-}
 function closeAddEditDialog() {
   showAddDialog.value = false
   editAsnafData.value = null
@@ -325,21 +272,6 @@ function submitAsnafForm() {
   }
   closeAddEditDialog()
 }
-function assessEligibility() {
-  eligibilityLoading.value = true
-  emit('show-assess-eligibility-modal')
-  setTimeout(() => {
-    eligibilityLoading.value = false
-    showEligibilityDialog.value = false
-  }, 1200)
-}
-function confirmBatchValidate() {
-  emit('batch-validate-all-asnaf')
-  showBatchValidateDialog.value = false
-}
-function validateAsnafEligibility(asnaf) {
-  emit('validate-asnaf-eligibility', asnaf)
-}
 function editAsnaf(asnaf) {
   editAsnafData.value = asnaf
   Object.assign(asnafForm.value, asnaf)
@@ -357,5 +289,72 @@ function confirmDeleteAsnaf() {
 const Spinner = {
   name: 'Spinner',
   template: `<div class="animate-spin h-4 w-4 border-2 border-current border-t-transparent text-primary rounded-full"></div>`,
+}
+
+// Add validation function
+async function validateAsnafEligibility(asnaf) {
+  try {
+    // Prepare the data for the API
+    const requestData = {
+      monthly_income: parseFloat(asnaf.monthly_income) || 0,
+      family_members: parseInt(asnaf.family_members) || 1,
+      has_stable_housing: asnaf.has_stable_housing ? 1 : 0,
+      access_to_clean_water: asnaf.access_to_clean_water ? 1 : 0,
+      access_to_electricity: asnaf.access_to_electricity ? 1 : 0,
+      has_significant_health_issues: asnaf.has_significant_health_issues ? 1 : 0
+    }
+
+    // Call the API endpoint
+    const response = await fetch('http://localhost:5001/api/assess-eligibility', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestData)
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to assess eligibility')
+    }
+
+    const result = await response.json()
+    
+    return {
+      status: result.result.prediction === "Deserves Help" ? 'Eligible' : 'Not Eligible',
+      confidence: parseFloat(result.result.probability_deserves_help) / 100,
+      details: {
+        monthlyIncome: requestData.monthly_income,
+        familyMembers: requestData.family_members,
+        criteria: result.result.prediction
+      }
+    }
+  } catch (error) {
+    console.error('Error validating asnaf eligibility:', error)
+    return {
+      status: 'Error',
+      confidence: 0,
+      details: {
+        error: error.message
+      }
+    }
+  }
+}
+
+// Add validation button and status display
+const validating = ref(false)
+const validationResults = ref({})
+
+async function validateAllAsnaf() {
+  validating.value = true
+  validationResults.value = {}
+  
+  for (const [category, asnafList] of Object.entries(props.groupedAsnaf)) {
+    for (const asnaf of asnafList) {
+      const result = await validateAsnafEligibility(asnaf)
+      validationResults.value[asnaf.id] = result
+    }
+  }
+  
+  validating.value = false
 }
 </script>
