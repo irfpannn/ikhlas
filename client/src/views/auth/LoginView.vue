@@ -1,97 +1,115 @@
 <template>
-  <div class="flex flex-col min-h-screen items-center justify-center bg-gray-100">
-    <form
-      @submit.prevent="handleLogin"
-      class="bg-white p-6 rounded shadow w-full max-w-sm space-y-4"
-    >
-      <h2 class="text-xl font-bold">Login</h2>
-      <input v-model="email" type="email" placeholder="Email" required class="input" />
-      <input v-model="password" type="password" placeholder="Password" required class="input" />
-      <button type="submit" class="btn w-full" :disabled="loading">
-        {{ loading ? 'Logging in...' : 'Login' }}
-      </button>
-      <p v-if="error" class="text-red-500 text-sm">{{ error }}</p>
-      <p class="text-sm">Don't have an account? <router-link to="/signup">Sign Up</router-link></p>
-    </form>
+  <div class="flex min-h-screen items-center justify-center bg-background p-4">
+    <Card class="w-full max-w-sm">
+      <CardHeader>
+        <CardTitle class="text-2xl font-bold text-center">Login</CardTitle>
+        <CardDescription class="text-center">
+          Enter your email below to login to your account.
+        </CardDescription>
+      </CardHeader>
+      <CardContent class="grid gap-4">
+        <form @submit.prevent="handleLogin" class="grid gap-4">
+          <div class="grid gap-2">
+            <Label for="email">Email</Label>
+            <Input id="email" v-model="email" type="email" placeholder="m@example.com" required />
+          </div>
+          <div class="grid gap-2">
+            <Label for="password">Password</Label>
+            <Input id="password" v-model="password" type="password" required />
+          </div>
+          <Button type="submit" class="w-full" :disabled="loading">
+            {{ loading ? 'Logging in...' : 'Login' }}
+          </Button>
+          <Alert v-if="error" variant="destructive">
+            <AlertCircle class="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              {{ error }}
+            </AlertDescription>
+          </Alert>
+        </form>
+      </CardContent>
+      <CardFooter class="text-center text-sm">
+        Don't have an account?
+        <router-link to="/signup" class="underline"> Sign Up </router-link>
+      </CardFooter>
+    </Card>
   </div>
 </template>
+
 <script setup>
 import { ref } from 'vue'
-import { useRouter, useRoute } from 'vue-router' // Import useRoute
-import { login, getUserRole, getCurrentUser } from '@/services/authService' // Import getUserRole and getCurrentUser
+import { useRouter, useRoute } from 'vue-router'
+import { login, getUserRole } from '@/services/authService'
+import { AlertCircle } from 'lucide-vue-next' // Icon for alert
+
+// Import shadcn-vue components
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 const email = ref('')
 const password = ref('')
 const error = ref('')
-const loading = ref(false) // Add loading state
+const loading = ref(false)
 const router = useRouter()
-const route = useRoute() // Get current route for redirect query
+const route = useRoute()
 
 const handleLogin = async () => {
   error.value = ''
-  loading.value = true // Set loading true
+  loading.value = true
   try {
     const userCredential = await login(email.value, password.value)
-    const user = userCredential.user // Get user from credential
+    const user = userCredential.user
 
     if (user) {
-      // Fetch user role after successful login
       const role = await getUserRole(user.uid)
-
-      // Determine redirect path based on role
-      let redirectPath = '/' // Default redirect for regular users
+      let redirectPath = '/'
       if (role === 'admin') {
-        redirectPath = '/admin/dashboard' // Redirect admins to dashboard
+        redirectPath = '/admin/dashboard'
       }
 
-      // Check if there was a redirect query parameter
       const redirectQuery = route.query.redirect
       if (redirectQuery) {
-        // Check if the intended redirect is an admin route
         const isAdminRedirect = redirectQuery.startsWith('/admin')
         if (isAdminRedirect && role !== 'admin') {
-          // If a non-admin tries to go to an admin page via redirect, send them home
           console.warn(
             'Non-admin user attempted redirect to admin route after login:',
             redirectQuery,
           )
           router.push('/')
         } else {
-          // Otherwise, proceed to the intended redirect path
           router.push(redirectQuery)
         }
       } else {
-        // No redirect query, use the role-based path
         router.push(redirectPath)
       }
     } else {
-      // Should not happen if login is successful, but handle defensively
       throw new Error('Login successful but user data not found.')
     }
   } catch (e) {
-    error.value = e.message
+    // Improve error message handling
+    if (
+      e.code === 'auth/invalid-credential' ||
+      e.code === 'auth/user-not-found' ||
+      e.code === 'auth/wrong-password'
+    ) {
+      error.value = 'Invalid email or password.'
+    } else {
+      error.value = e.message || 'An unexpected error occurred.'
+    }
+    console.error('Login Error:', e) // Log the full error for debugging
   } finally {
-    loading.value = false // Set loading false
+    loading.value = false
   }
 }
 </script>
-<style scoped>
-.input {
-  border: 1px solid #ccc;
-  padding: 8px;
-  border-radius: 4px;
-  width: 100%;
-}
-.btn {
-  background: #75a868;
-  color: #fff;
-  padding: 8px 0;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.btn:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-</style>
